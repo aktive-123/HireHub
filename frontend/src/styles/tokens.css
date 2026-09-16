@@ -1,0 +1,102 @@
+:root {
+  --hh-primary: #2563eb;
+  --hh-primary-dark: #1d4ed8;
+  --hh-primary-darker: #1e40af;
+  --hh-primary-light: #eff6ff;
+  --hh-primary-soft: #dbeafe;
+  --hh-primary-ring: rgba(37, 99, 235, 0.28);
+
+  --hh-secondary: #0b1f3a;
+  --hh-secondary-dark: #071527;
+  --hh-secondary-deep: #050e1c;
+  --hh-secondary-light: #12294d;
+  --hh-secondary-ring: rgba(11, 31, 58, 0.28);
+
+  --hh-accent: #f59e0b;
+  --hh-accent-dark: #d97706;
+  --hh-accent-soft: #fef3c7;
+
+  --hh-white: #ffffff;
+  --hh-text: #0f172a;
+  --hh-muted: #64748b;
+  --hh-muted-light: #94a3b8;
+
+  --hh-bg: #ffffff;
+  --hh-bg-soft: #f8fafc;
+  --hh-bg-dark: #0b1f3a;
+
+  --hh-border: #e2e8f0;
+  --hh-border-strong: #cbd5e1;
+  --hh-border-dark: rgba(255, 255, 255, 0.12);
+
+  --hh-success: #16a34a;
+  --hh-success-soft: #f0fdf4;
+  --hh-danger: #dc2626;
+  --hh-danger-soft: #fef2f2;
+  --hh-warning: #f59e0b;
+  --hh-warning-soft: #fffbeb;
+  --hh-info: #0891b2;
+  --hh-info-soft: #ecfeff;
+
+  --hh-font-sans: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+
+  --hh-fs-xs: 0.75rem;
+  --hh-fs-sm: 0.875rem;
+  --hh-fs-base: 1rem;
+  --hh-fs-md: 1.125rem;
+  --hh-fs-lg: 1.25rem;
+  --hh-fs-xl: 1.5rem;
+  --hh-fs-2xl: 1.875rem;
+  --hh-fs-3xl: 2.25rem;
+  --hh-fs-4xl: 3rem;
+  --hh-fs-hero: clamp(2.25rem, 4vw, 4rem);
+
+  /* Line-height scale (body → loose → tight headings) */
+  --hh-lh-base: 1.6;
+  --hh-lh-loose: 1.65;
+  --hh-lh-relaxed: 1.5;
+  --hh-lh-fixed: 1.25;
+  --hh-lh-tight: 1.1;
+  --hh-lh-none: 1;
+
+  /* Letter-spacing defaults: zero except tight headings */
+  --hh-ls-none: 0;
+  --hh-ls-tight: -0.02em;
+  --hh-ls-wide: 0.06em;
+
+  --hh-fw-regular: 400;
+  --hh-fw-medium: 500;
+  --hh-fw-semibold: 600;
+  --hh-fw-bold: 700;
+  --hh-fw-extrabold: 800;
+
+  --hh-space-1: 0.25rem;
+  --hh-space-2: 0.5rem;
+  --hh-space-3: 0.75rem;
+  --hh-space-4: 1rem;
+  --hh-space-5: 1.5rem;
+  --hh-space-6: 2rem;
+  --hh-space-7: 2.5rem;
+  --hh-space-8: 3rem;
+  --hh-space-9: 3.5rem;
+  --hh-space-10: 4rem;
+  --hh-space-12: 6rem;
+
+  --hh-radius-sm: 0.375rem;
+  --hh-radius: 0.625rem;
+  --hh-radius-md: 0.75rem;
+  --hh-radius-lg: 1rem;
+  --hh-radius-xl: 1.25rem;
+  --hh-radius-pill: 999px;
+
+  --hh-shadow-sm: 0 1px 2px rgba(15, 23, 42, 0.05);
+  --hh-shadow: 0 4px 16px rgba(15, 23, 42, 0.08);
+  --hh-shadow-md: 0 8px 24px rgba(15, 23, 42, 0.09);
+  --hh-shadow-lg: 0 16px 48px rgba(15, 23, 42, 0.12);
+  --hh-shadow-navy: 0 12px 32px rgba(11, 31, 58, 0.35);
+  --hh-shadow-primary: 0 8px 20px rgba(37, 99, 235, 0.3);
+
+  --hh-transition-fast: 150ms ease;
+  --hh-transition: 220ms ease;
+  --hh-pill-transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}

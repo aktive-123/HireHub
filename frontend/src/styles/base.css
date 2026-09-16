@@ -1,0 +1,231 @@
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  margin: 0;
+  font-family: var(--hh-font-sans);
+  font-size: var(--hh-fs-base);
+  font-weight: var(--hh-fw-regular);
+  line-height: 1.6;
+  color: var(--hh-text);
+  background-color: var(--hh-bg);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  color: var(--hh-secondary);
+  font-weight: var(--hh-fw-semibold);
+  line-height: 1.25;
+  margin-top: 0;
+}
+
+h1 {
+  font-weight: var(--hh-fw-extrabold);
+}
+
+p {
+  margin-top: 0;
+}
+
+a {
+  color: var(--hh-primary);
+  text-decoration: none;
+  transition: color var(--hh-transition-fast);
+}
+
+a:not(.hh-btn):hover {
+  color: var(--hh-primary-dark);
+  text-decoration: none;
+}
+
+img,
+svg {
+  max-width: 100%;
+  vertical-align: middle;
+}
+
+ul,
+ol {
+  margin-top: 0;
+}
+
+hr {
+  border: 0;
+  border-top: 1px solid var(--hh-border);
+  margin: var(--hh-space-6) 0;
+}
+
+::selection {
+  background-color: var(--hh-primary-soft);
+  color: var(--hh-secondary);
+}
+
+:focus {
+  outline: none;
+}
+
+:focus-visible {
+  outline: 3px solid var(--hh-primary-ring);
+  outline-offset: 2px;
+  border-radius: var(--hh-radius-sm);
+}
+
+:where(a, button, input, textarea, select, [tabindex]):not(:disabled):focus-visible {
+  box-shadow: 0 0 0 0.25rem var(--hh-primary-ring);
+}
+
+input,
+textarea,
+select {
+  font: inherit;
+  color: var(--hh-text);
+}
+
+input::placeholder,
+textarea::placeholder {
+  color: var(--hh-muted);
+}
+
+.form-label {
+  font-weight: var(--hh-fw-medium);
+  color: var(--hh-secondary);
+  margin-bottom: var(--hh-space-2);
+}
+
+.form-control,
+.form-select,
+.input-group-text {
+  border-color: var(--hh-border-strong);
+}
+
+.form-control:focus,
+.form-select:focus {
+  border-color: var(--hh-primary);
+  box-shadow: 0 0 0 0.25rem var(--hh-primary-ring);
+}
+
+.page-container {
+  width: 100%;
+  max-width: 1280px;
+  margin-inline: auto;
+  padding-inline: var(--hh-space-5);
+}
+
+@media (max-width: 767.98px) {
+  .page-container {
+    padding-inline: var(--hh-space-4);
+  }
+}
+
+.hh-text-primary {
+  color: var(--hh-primary);
+}
+
+.hh-text-accent {
+  color: var(--hh-accent);
+}
+
+.hh-text-muted {
+  color: var(--hh-muted);
+}
+
+.hh-text-white {
+  color: var(--hh-white);
+}
+
+.hh-bg-light-blue {
+  background-color: var(--hh-primary-light);
+}
+
+.hh-bg-navy {
+  background-color: var(--hh-secondary);
+}
+
+.hh-section-space {
+  padding-block: var(--hh-space-12);
+}
+
+@media (max-width: 767.98px) {
+  .hh-section-space {
+    padding-block: var(--hh-space-8);
+  }
+}
+
+/* Scroll-reveal helper (used via <Reveal />): hidden until is-visible */
+.hh-reveal {
+  opacity: 0;
+  transform: translateY(24px);
+  transition: opacity 400ms ease-out, transform 400ms ease-out;
+  height: 100%;
+}
+
+.hh-reveal.is-visible {
+  opacity: 1;
+  transform: none;
+}
+
+/* Zoom reveal variant: fade + subtle scale-up */
+.hh-reveal.hh-reveal-zoom {
+  transform: scale(0.95);
+}
+
+.hh-reveal.hh-reveal-zoom.is-visible {
+  transform: scale(1);
+}
+
+/* Respect users who prefer reduced motion: collapse animations/transitions */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    animation-delay: 0ms !important;
+    transition-duration: 0.001ms !important;
+    transition-delay: 0ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.skip-link {
+  position: absolute;
+  left: var(--hh-space-4);
+  top: -100%;
+  z-index: 1100;
+  padding: var(--hh-space-2) var(--hh-space-4);
+  background: var(--hh-primary);
+  color: var(--hh-white);
+  border-radius: var(--hh-radius-sm);
+  transition: top var(--hh-transition-fast);
+}
+
+.skip-link:focus-visible {
+  top: var(--hh-space-4);
+  color: var(--hh-white);
+}

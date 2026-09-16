@@ -1,0 +1,23 @@
+/* HireHub - Master Index Stylesheet */
+
+/* Bootstrap 5 Core CSS */
+@import 'bootstrap/dist/css/bootstrap.min.css';
+
+/* Bootstrap Icons */
+@import 'bootstrap-icons/font/bootstrap-icons.css';
+
+/* Design Tokens & Theme Variables */
+@import './styles/tokens.css';
+
+/* Base Global Styles & CSS Reset */
+@import './styles/base.css';
+
+/* Reusable UI Components */
+@import './styles/components.css';
+
+/* Layout Shells & Navigations */
+@import './styles/layout.css';
+
+/* Landing Page Specific Styles */
+@import './styles/landing.css';
+
