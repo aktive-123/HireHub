@@ -3,7 +3,6 @@ import { publicCompanies } from '../../data/companies'
 import CompanyCard from '../../components/ui/CompanyCard'
 import SectionHeading from '../../components/ui/SectionHeading'
 import Reveal from '../../components/ui/Reveal'
-import Badge from '../../components/ui/Badge'
 import EmptyState from '../../components/ui/EmptyState'
 
 const INDUSTRIES = [
