@@ -1,11 +1,138 @@
-import { PlaceholderPage } from '@/components/ui'
+import { useMemo, useState } from 'react'
+import { Link } from 'react-router-dom'
+import SectionHeading from '../../components/ui/SectionHeading'
+import Reveal from '../../components/ui/Reveal'
+import Badge from '../../components/ui/Badge'
+import EmptyState from '../../components/ui/EmptyState'
+import Pagination from '../../components/ui/Pagination'
+import Card from '../../components/ui/Card'
+import Button from '../../components/ui/Button'
+
+const PAGE_SIZE = 6
+
+const SAMPLE_INTERVIEWS = [
+  { id: 'i1', applicant: 'Ada Obi', role: 'Frontend Engineer', when: 'Wed, Sep 17 · 10:00', mode: 'Video', status: 'scheduled' },
+  { id: 'i2', applicant: 'Tunde Bakare', role: 'Full-Stack Developer', when: 'Thu, Sep 18 · 14:30', mode: 'On-site', status: 'scheduled' },
+  { id: 'i3', applicant: 'Chidinma Nwosu', role: 'Designer', when: 'Fri, Sep 19 · 11:00', mode: 'Video', status: 'confirmed' },
+  { id: 'i4', applicant: 'Ibrahim Musa', role: 'DevOps Engineer', when: 'Mon, Sep 22 · 09:30', mode: 'Video', status: 'pending' },
+  { id: 'i5', applicant: 'Fatima Sani', role: 'Data Analyst', when: 'Tue, Sep 23 · 13:00', mode: 'On-site', status: 'completed' },
+  { id: 'i6', applicant: 'Emeka Okafor', role: 'QA Engineer', when: 'Wed, Sep 24 · 15:00', mode: 'Video', status: 'scheduled' },
+  { id: 'i7', applicant: 'Ngozi Eze', role: 'Backend Engineer', when: 'Thu, Sep 25 · 10:30', mode: 'Video', status: 'cancelled' },
+  { id: 'i8', applicant: 'Yusuf Adeyemi', role: 'DevOps Engineer', when: 'Fri, Sep 26 · 12:00', mode: 'On-site', status: 'completed' },
+]
+
+const STATUS_VARIANT = {
+  scheduled: 'primary',
+  confirmed: 'success',
+  pending: 'warning',
+  completed: 'secondary',
+  cancelled: 'danger',
+}
 
 export default function EmployerInterviewsPage() {
+  const [filter, setFilter] = useState('all')
+  const [query, setQuery] = useState('')
+  const [page, setPage] = useState(1)
+
+  const filtered = useMemo(() => {
+    const q = query.trim().toLowerCase()
+    return SAMPLE_INTERVIEWS.filter((i) => {
+      const matchesStatus = filter === 'all' || i.status === filter
+      const matchesQuery = !q || i.applicant.toLowerCase().includes(q) || i.role.toLowerCase().includes(q)
+      return matchesStatus && matchesQuery
+    })
+  }, [filter, query])
+
+  const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE))
+  const visible = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE)
+
   return (
-    <PlaceholderPage
-      stage={6}
-      title="Interviews"
-      text="The interview scheduling and management interface will be implemented in Stage 6."
-    />
+    <>
+      <section className="hh-section-space bg-white">
+        <div className="page-container">
+          <Reveal>
+            <div className="hh-toolbar hh-toolbar-between hh-mb-4">
+              <SectionHeading
+                eyebrow="EMPLOYER DASHBOARD"
+                title="Interviews"
+                subtitle="Schedule, confirm and track your interview sessions."
+              />
+              <Link to="/employer/interviews/new">
+                <Button variant="primary" icon="bi-plus-lg">Schedule interview</Button>
+              </Link>
+            </div>
+          </Reveal>
+
+          <div className="hh-toolbar hh-toolbar-between hh-mb-4">
+            <div className="hh-search-field hh-search-field-lg">
+              <i className="bi bi-search" aria-hidden="true" />
+              <input
+                type="search"
+                className="hh-form-control"
+                placeholder="Search by applicant or role…"
+                value={query}
+                onChange={(e) => { setQuery(e.target.value); setPage(1) }}
+                aria-label="Search interviews"
+              />
+            </div>
+            <div className="hh-btn-group" role="group" aria-label="Filter interviews">
+              {['all', 'scheduled', 'confirmed', 'completed', 'cancelled'].map((s) => (
+                <button
+                  key={s}
+                  type="button"
+                  className={`hh-btn hh-btn-outline-primary hh-btn-sm ${filter === s ? 'is-active' : ''}`}
+                  onClick={() => { setFilter(s); setPage(1) }}
+                >
+                  {s === 'all' ? 'All' : s.charAt(0).toUpperCase() + s.slice(1)}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {visible.length > 0 ? (
+            <Card className="hh-card-body hh-p-0 hh-overflow-hidden">
+              <div className="table-responsive">
+                <table className="hh-table hh-table-hover hh-mb-0">
+                  <thead>
+                    <tr>
+                      <th>Applicant</th>
+                      <th>Role</th>
+                      <th>When</th>
+                      <th>Mode</th>
+                      <th>Status</th>
+                      <th>Action</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {visible.map((i) => (
+                      <tr key={i.id}>
+                        <td className="hh-fw-semibold">{i.applicant}</td>
+                        <td>{i.role}</td>
+                        <td>{i.when}</td>
+                        <td>{i.mode}</td>
+                        <td><Badge variant={STATUS_VARIANT[i.status] || 'secondary'}>{i.status}</Badge></td>
+                        <td>
+                          <Link to={`/employer/interviews/${i.id}`}>
+                            <Button variant="outline-primary" size="sm">Manage</Button>
+                          </Link>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </Card>
+          ) : (
+            <EmptyState icon="calendar3" title="No interviews found" text="Try a different search or filter." />
+          )}
+
+          {totalPages > 1 && (
+            <div className="hh-mt-4">
+              <Pagination currentPage={page} totalPages={totalPages} onPageChange={setPage} />
+            </div>
+          )}
+        </div>
+      </section>
+    </>
   )
 }
