@@ -61,7 +61,7 @@ export const publicCompanies = [
     website: 'https://flutterwave.com',
     rating: 4.5,
     reviews_count: 410,
-    open_jobs_count:  incl4,
+    open_jobs_count: 8,
     is_featured: true,
     is_verified: true,
     tagline: 'Build anything, get paid anywhere in Africa.',

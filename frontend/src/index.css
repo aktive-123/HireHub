@@ -21,3 +21,15 @@
 /* Landing Page Specific Styles */
 @import './styles/landing.css';
 
+/* Stage 3: Public Directory & Detail Pages */
+@import './styles/pages.css';
+
+/* Stage 4: Auth Pages */
+@import './styles/auth.css';
+
+/* Stage 5: Job Seeker Dashboard */
+@import './styles/dashboard.css';
+
+/* Stage 7: Admin Console */
+@import './styles/admin.css';
+

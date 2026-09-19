@@ -1,6 +1,6 @@
 import { useState, useMemo } from 'react'
 import { Link } from 'react-router-dom'
-import { publicJobs, publicJobCategories, getPublicJobsByCompany } from '../../data/jobs'
+import { publicJobs, getPublicJobsByCompany } from '../../data/jobs'
 import { publicCompanies } from '../../data/companies'
 import SectionHeading from '../../components/ui/SectionHeading'
 import Reveal from '../../components/ui/Reveal'
@@ -16,14 +16,13 @@ export default function EmployerDashboardPage() {
   const pageSize = 6
 
   const company = publicCompanies[0]
-  const companyJobs = useState(publicJobs).length
 
   const myJobs = useMemo(() => {
     if (!company) return []
     return getPublicJobsByCompany(company.id)
   }, [company])
 
-  const totalApplications = publicJobs.reduce((sum, job) => sum + (job.applications || 0), 0)
+  const totalApplications = publicJobs.reduce((sum, job) => sum + (job.applications_count || 0), 0)
 
   const recentJobs = useMemo(() => publicJobs.slice(0, pageSize), [])
   const recentJobsToday = recentJobs.filter((j) => j.is_published).length
@@ -53,7 +52,7 @@ export default function EmployerDashboardPage() {
               />
             </div>
             {myJobs.length > 0 && (
-              <Button to="/employer/post-job" variant="primary" icon="bi-plus-lg">
+              <Button to="/employer/jobs/create" variant="primary" icon="bi-plus-lg">
                 Post a job
               </Button>
             )}
@@ -121,10 +120,10 @@ export default function EmployerDashboardPage() {
                   <Card className="hh-card-body">
                     <div className="hh-card-title-md hh-mb-3">Quick links</div>
                     <nav className="hh-vert-list gap-2">
-                      <Link to="/employer/post-job"><i className="bi bi-plus-circle hh-me-2" />Post a job</Link>
+                      <Link to="/employer/jobs/create"><i className="bi bi-plus-circle hh-me-2" />Post a job</Link>
                       <Link to="/employer/jobs"><i className="bi bi-briefcase hh-me-2" />View all jobs</Link>
                       <Link to="/employer/applicants"><i className="bi bi-people hh-me-2" />Applications</Link>
-                      <Link to="/employer/profile"><i className="bi bi-building hh-me-2" />Company profile</Link>
+                      <Link to="/employer/company"><i className="bi bi-building hh-me-2" />Company profile</Link>
                       <Link to="/employer/settings"><i className="bi bi-gear hh-me-2" />Settings</Link>
                     </nav>
                   </Card>

@@ -90,7 +90,7 @@ export default function EmployerInterviewsPage() {
           </div>
 
           {visible.length > 0 ? (
-            <Card className="hh-card-body hh-p-0 hh-overflow-hidden">
+            <Card className="hh-card-body hh-p-0 hh-card--table">
               <div className="table-responsive">
                 <table className="hh-table hh-table-hover hh-mb-0">
                   <thead>

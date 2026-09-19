@@ -40,10 +40,14 @@
 }
 
 .hh-navbar-brand-logo {
-  height: 44px;
+  height: 34px;
   width: auto;
   object-fit: contain;
   display: block;
+}
+
+.hh-footer .hh-navbar-brand-logo {
+  height: 56px;
 }
 
 .hh-navbar-nav-collapse {
@@ -340,6 +344,8 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: var(--hh-space-3);
+  flex-wrap: wrap;
   position: sticky;
   top: 0;
   z-index: 100;

@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
+import { applicants, STATUS_OPTIONS, STATUS_VARIANT, STATUS_LABEL } from '../../data/applicants'
 import SectionHeading from '../../components/ui/SectionHeading'
 import Reveal from '../../components/ui/Reveal'
 import Badge from '../../components/ui/Badge'
@@ -10,35 +11,19 @@ import Button from '../../components/ui/Button'
 
 const PAGE_SIZE = 8
 
-const SAMPLE_APPLICANTS = [
-  { id: 'ap1', name: 'Ada Obi', role: 'Frontend Engineer', job: 'Senior Frontend Engineer', applied: '12 Sep', match: 92, status: 'shortlisted' },
-  { id: 'ap2', name: 'Tunde Bakare', role: 'Full-Stack Developer', job: 'Full-Stack Developer', applied: '11 Sep', match: 88, status: 'new' },
-  { id: 'ap3', name: 'Chidinma Nwosu', role: 'Backend Engineer', job: 'Backend Engineer (Node.js)', applied: '10 Sep', match: 85, status: 'interview' },
-  { id: 'ap4', name: 'Ibrahim Musa', role: 'DevOps Engineer', job: 'DevOps Engineer', applied: '09 Sep', match: 79, status: 'new' },
-  { id: 'ap5', name: 'Fatima Sani', role: 'Data Analyst', job: 'Data Analyst', applied: '08 Sep', match: 76, status: 'hired' },
-  { id: 'ap6', name: 'Emeka Okafor', role: 'Product Designer', job: 'Product Designer', applied: '07 Sep', match: 74, status: 'rejected' },
-  { id: 'ap7', name: 'Ngozi Eze', role: 'QA Engineer', job: 'QA Engineer', applied: '06 Sep', match: 69, status: 'new' },
-  { id: 'ap8', name: 'Yusuf Adeyemi', role: 'DevOps Engineer', job: 'Platform Engineer', applied: '05 Sep', match: 82, status: 'shortlisted' },
-  { id: 'ap9', name: 'Aisha Bello', role: 'Project Manager', job: 'Project Manager', applied: '04 Sep', match: 71, status: 'interview' },
-  { id: 'ap10', name: 'Tobi Alabi', role: 'Frontend Engineer', job: 'Senior Frontend Engineer', applied: '03 Sep', match: 90, status: 'hired' },
-]
+const matchesQuery = (applicant, query) =>
+  !query ||
+  applicant.name.toLowerCase().includes(query) ||
+  applicant.role.toLowerCase().includes(query) ||
+  applicant.job.toLowerCase().includes(query)
 
-const STATUS_OPTIONS = [
-  { value: 'all', label: 'All applicants' },
-  { value: 'new', label: 'New' },
-  { value: 'shortlisted', label: 'Shortlisted' },
-  { value: 'interview', label: 'Interview' },
-  { value: 'hired', label: 'Hired' },
-  { value: 'rejected', label: 'Rejected' },
-]
-
-const STATUS_VARIANT = {
-  new: 'secondary',
-  shortlisted: 'primary',
-  interview: 'warning',
-  hired: 'success',
-  rejected: 'danger',
-}
+const getInitials = (name) =>
+  name
+    .split(' ')
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((part) => part.charAt(0).toUpperCase())
+    .join('')
 
 export default function EmployerApplicantsPage() {
   const [status, setStatus] = useState('all')
@@ -47,33 +32,44 @@ export default function EmployerApplicantsPage() {
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase()
-    return SAMPLE_APPLICANTS.filter((a) => {
-      const matchesStatus = status === 'all' || a.status === status
-      const matchesQuery =
-        !q || a.name.toLowerCase().includes(q) || a.role.toLowerCase().includes(q) || a.job.toLowerCase().includes(q)
-      return matchesStatus && matchesQuery
-    })
+    return applicants.filter(
+      (applicant) =>
+        (status === 'all' || applicant.status === status) && matchesQuery(applicant, q)
+    )
   }, [status, query])
+
+  const statusCounts = useMemo(() => {
+    const q = query.trim().toLowerCase()
+    const base = applicants.filter((applicant) => matchesQuery(applicant, q))
+    return STATUS_OPTIONS.reduce((acc, opt) => {
+      acc[opt.value] =
+        opt.value === 'all'
+          ? base.length
+          : base.filter((applicant) => applicant.status === opt.value).length
+      return acc
+    }, {})
+  }, [query])
 
   const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE))
   const visible = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE)
 
   return (
     <>
-      <section classNameName="hh-section-space bg-white">
-        <div classNameName="page-container">
+      <section className="hh-section-space bg-white">
+        <div className="page-container">
           <Reveal>
-            <div classNameName="hh-toolbar hh-toolbar-between hh-mb-4">
+            <div className="hh-toolbar hh-toolbar-between hh-mb-4">
               <SectionHeading
                 eyebrow="EMPLOYER DASHBOARD"
-                title="Applicants"
+                title="All Applicants"
                 subtitle="Review and manage applications submitted to your jobs."
+                centered={false}
               />
-              <div classNameName="hh-search-field hh-search-field-lg">
-                <i classNameName="bi bi-search" aria-hidden="true" />
+              <div className="hh-search-field hh-search-field-lg">
+                <i className="bi bi-search" aria-hidden="true" />
                 <input
                   type="search"
-                  classNameName="hh-form-control"
+                  className="hh-form-control"
                   placeholder="Search applicants…"
                   value={query}
                   onChange={(e) => {
@@ -86,59 +82,82 @@ export default function EmployerApplicantsPage() {
             </div>
           </Reveal>
 
-          <div classNameName="hh-tabs hh-mb-4" role="tablist" aria-label="Filter by status">
+          <div className="hh-tabs hh-tabs--pills hh-mb-4" role="tablist" aria-label="Filter by status">
             {STATUS_OPTIONS.map((opt) => (
               <button
                 key={opt.value}
                 type="button"
                 role="tab"
                 aria-selected={status === opt.value}
-                classNameName={`hh-tab ${status === opt.value ? 'is-active' : ''}`}
+                className={`hh-tab ${status === opt.value ? 'is-active' : ''}`}
                 onClick={() => {
                   setStatus(opt.value)
                   setPage(1)
                 }}
               >
                 {opt.label}
+                <span className="hh-tab-count">{statusCounts[opt.value]}</span>
               </button>
             ))}
           </div>
 
           {visible.length > 0 ? (
             <Reveal>
-              <Card classNameName="hh-card-body hh-p-0 hh-overflow-hidden">
-                <div classNameName="table-responsive">
-                  <table classNameName="hh-table hh-table-hover hh-mb-0">
+              <Card elevated className="hh-card-body hh-p-0 hh-card--table">
+                <div className="table-responsive">
+                  <table className="hh-table hh-table--zebra hh-table-hover hh-mb-0">
                     <thead>
                       <tr>
                         <th>Applicant</th>
-                        <th>Role</th>
-                        <th>Job</th>
+                        <th>Current Role</th>
+                        <th>Applied For</th>
                         <th>Applied</th>
-                        <th>Match</th>
-                        <th>Status</th>
-                        <th>Action</th>
+                        <th className="hh-table-col-center">Match %</th>
+                        <th className="hh-table-col-center">Status</th>
+                        <th className="hh-table-col-right">Action</th>
                       </tr>
                     </thead>
                     <tbody>
                       {visible.map((a) => (
                         <tr key={a.id}>
-                          <td classNameName="hh-fw-semibold">{a.name}</td>
+                          <td>
+                            <div className="hh-applicant-cell">
+                              <span
+                                className="hh-avatar hh-avatar-xs hh-avatar-soft"
+                                aria-hidden="true"
+                              >
+                                {getInitials(a.name)}
+                              </span>
+                              <div className="hh-applicant-meta">
+                                <Link
+                                  to={`/employer/applicants/${a.id}`}
+                                  className="hh-applicant-name"
+                                >
+                                  {a.name}
+                                </Link>
+                                <span className="hh-applicant-email">{a.email}</span>
+                              </div>
+                            </div>
+                          </td>
                           <td>{a.role}</td>
                           <td>{a.job}</td>
                           <td>{a.applied}</td>
-                          <td>
+                          <td className="hh-table-col-center">
                             <Badge variant="primary">{a.match}%</Badge>
                           </td>
-                          <td>
-                            <Badge variant={STATUS_VARIANT[a.status] || 'secondary'}>{a.status}</Badge>
+                          <td className="hh-table-col-center">
+                            <Badge variant={STATUS_VARIANT[a.status] || 'secondary'} dot>
+                              {STATUS_LABEL[a.status] || a.status}
+                            </Badge>
                           </td>
-                          <td>
-                            <Link to={`/employer/applicants/${a.id}`}>
-                              <Button variant="outline-primary" size="sm">
-                                Review
-                              </Button>
-                            </Link>
+                          <td className="hh-table-col-right">
+                            <Button
+                              to={`/employer/applicants/${a.id}`}
+                              variant="outline-primary"
+                              size="sm"
+                            >
+                              Review
+                            </Button>
                           </td>
                         </tr>
                       ))}
@@ -148,11 +167,17 @@ export default function EmployerApplicantsPage() {
               </Card>
             </Reveal>
           ) : (
-            <EmptyState icon="inbox" title="No applicants found" text="Try a different search or status filter." />
+            <Card className="hh-card-body">
+              <EmptyState
+                icon="inbox"
+                title="No applicants found"
+                text="Try a different search or status filter."
+              />
+            </Card>
           )}
 
           {totalPages > 1 && (
-            <div classNameName="hh-mt-4">
+            <div className="hh-mt-4">
               <Pagination currentPage={page} totalPages={totalPages} onPageChange={setPage} />
             </div>
           )}

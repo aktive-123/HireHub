@@ -6,10 +6,15 @@ function prefersReducedMotion() {
   return typeof window !== 'undefined' && window.matchMedia(REDUCED_MOTION_QUERY).matches
 }
 
+const FALLBACK_TIMEOUT = 1200
+
+const supportsIntersectionObserver =
+  typeof IntersectionObserver !== 'undefined'
+
 export default function useInView({ threshold = 0.15, rootMargin = '0px 0px -40px 0px', once = false } = {}) {
   const ref = useRef(null)
   const [reducedMotion] = useState(() => prefersReducedMotion())
-  const [inView, setInView] = useState(() => reducedMotion)
+  const [inView, setInView] = useState(() => reducedMotion || !supportsIntersectionObserver)
 
   useEffect(() => {
     if (reducedMotion) return
@@ -31,7 +36,13 @@ export default function useInView({ threshold = 0.15, rootMargin = '0px 0px -40p
     )
 
     observer.observe(el)
-    return () => observer.disconnect()
+
+    const fallback = setTimeout(() => setInView(true), FALLBACK_TIMEOUT)
+
+    return () => {
+      observer.disconnect()
+      clearTimeout(fallback)
+    }
   }, [reducedMotion, threshold, rootMargin, once])
 
   return [ref, inView]

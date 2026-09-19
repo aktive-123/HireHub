@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import heroImg from '@/assets/chair.png'
 import heroBg1 from '@/assets/hero2.jpg'
@@ -6,6 +6,7 @@ import heroBg2 from '@/assets/hero3.jpg'
 import heroBg3 from '@/assets/hero4.jpg'
 import heroBg4 from '@/assets/hero5.jpg'
 import heroBg5 from '@/assets/hero6.jpg'
+import HeroSlideshow from '../ui/HeroSlideshow'
 import useInView from '../../hooks/useInView'
 
 const heroSlides = [heroBg1, heroBg2, heroBg3, heroBg4, heroBg5]
@@ -15,16 +16,7 @@ export default function HeroSection() {
   const [keyword, setKeyword] = useState('')
   const [location, setLocation] = useState('')
   const [jobType, setJobType] = useState('')
-  const [slideIndex, setSlideIndex] = useState(0)
   const [heroRef, heroInView] = useInView({ threshold: 0.1 })
-
-  useEffect(() => {
-    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return
-    const id = setInterval(() => {
-      setSlideIndex((i) => (i + 1) % heroSlides.length)
-    }, 5000)
-    return () => clearInterval(id)
-  }, [])
 
   const handleSearchSubmit = (e) => {
     e.preventDefault()
@@ -45,17 +37,7 @@ export default function HeroSection() {
 
   return (
     <section ref={heroRef} className={`hh-hero ${heroInView ? 'is-anim' : ''}`}>
-      <div className="hh-hero-slides" aria-hidden="true">
-        {heroSlides.map((src, i) => (
-          <div
-            key={src}
-            className={`hh-hero-slide ${i === slideIndex ? 'is-active' : ''}`}
-            style={{ backgroundImage: `url(${src})` }}
-          />
-        ))}
-      </div>
-      <div className="hh-hero-tint" aria-hidden="true" />
-      <div className="hh-hero-scrim" aria-hidden="true" />
+      <HeroSlideshow images={heroSlides} />
       <div className="page-container">
         <div className="row align-items-center g-5">
           {/* Left Hero Content */}

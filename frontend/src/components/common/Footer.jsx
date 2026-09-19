@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom'
-import logoImg from '../../assets/hirehub_logo.png'
+import logoImg from '../../assets/white logo.png'
 
 export default function Footer() {
   const handleSubmitNewsletter = (e) => {
@@ -46,7 +46,7 @@ export default function Footer() {
               <li><Link to="/jobs" className="hh-footer-link">Browse Jobs</Link></li>
               <li><Link to="/register/job-seeker" className="hh-footer-link">Create Profile</Link></li>
               <li><Link to="/seeker/saved-jobs" className="hh-footer-link">Saved Jobs</Link></li>
-              <li><Link to="/seeker/applications" className="hh-footer-link">Application Tracker</Link></li>
+              <li><Link to="/resources" className="hh-footer-link">Career Resources</Link></li>
             </ul>
           </div>
 
@@ -65,6 +65,7 @@ export default function Footer() {
             <ul className="hh-footer-links">
               <li><Link to="/about" className="hh-footer-link">About Us</Link></li>
               <li><Link to="/contact" className="hh-footer-link">Contact</Link></li>
+              <li><Link to="/faq" className="hh-footer-link">FAQ</Link></li>
               <li><Link to="/about" className="hh-footer-link">Privacy Policy</Link></li>
               <li><Link to="/about" className="hh-footer-link">Terms of Service</Link></li>
             </ul>

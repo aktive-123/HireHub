@@ -1,10 +1,19 @@
 :root {
-  --hh-primary: #2563eb;
-  --hh-primary-dark: #1d4ed8;
-  --hh-primary-darker: #1e40af;
-  --hh-primary-light: #eff6ff;
-  --hh-primary-soft: #dbeafe;
-  --hh-primary-ring: rgba(37, 99, 235, 0.28);
+  /* Single source of truth for the brand blue — extracted from the navbar
+     "HireHub" logo (H icon + text). hsl(219, 100%, 46.3%). Every other blue
+     on the site is a color-mix() tint/shade of THIS value, so nothing drifts. */
+  --hh-primary: #0054ec;
+  --hh-primary-dark: color-mix(in srgb, var(--hh-primary) 82%, #000);
+  --hh-primary-darker: color-mix(in srgb, var(--hh-primary) 65%, #000);
+  --hh-primary-light: color-mix(in srgb, var(--hh-primary) 8%, #fff);
+  --hh-primary-soft: color-mix(in srgb, var(--hh-primary) 14%, #fff);
+  --hh-primary-ring: color-mix(in srgb, var(--hh-primary) 28%, transparent);
+
+  /* Brand-blue tints derived from --hh-primary (same hue, lightened) —
+       blue-light  on-dark accent text/icons/eyebrows
+       blue-tint   hover borders / soft accents on light backgrounds */
+  --hh-blue-light: color-mix(in srgb, var(--hh-primary) 52%, #fff);
+  --hh-blue-tint: color-mix(in srgb, var(--hh-primary) 34%, #fff);
 
   --hh-secondary: #0b1f3a;
   --hh-secondary-dark: #071527;
@@ -18,15 +27,40 @@
 
   --hh-white: #ffffff;
   --hh-text: #0f172a;
-  --hh-muted: #64748b;
-  --hh-muted-light: #94a3b8;
+
+  /* -------------------------------------------------------------
+     Defined gray scale — single source of truth for neutral surfaces
+     and text. Semantic tokens below map to these steps.
+       gray-400  decorative only (placeholders, disabled, icons)
+       gray-600  "text-muted": passes WCAG AA (>=4.5:1) on white
+     ------------------------------------------------------------- */
+  --hh-gray-50: #f8fafc;
+  --hh-gray-100: #f1f5f9;
+  --hh-gray-200: #e2e8f0;
+  --hh-gray-300: #cbd5e1;
+  --hh-gray-400: #94a3b8;
+  --hh-gray-500: #64748b;
+  --hh-gray-600: #475569;
+  --hh-gray-700: #334155;
+  --hh-gray-900: #0f172a;
+
+  --hh-muted: var(--hh-gray-600);
+  --hh-muted-light: var(--hh-gray-400);
 
   --hh-bg: #ffffff;
-  --hh-bg-soft: #f8fafc;
+  --hh-bg-soft: var(--hh-gray-50);
   --hh-bg-dark: #0b1f3a;
 
-  --hh-border: #e2e8f0;
-  --hh-border-strong: #cbd5e1;
+  /* Logo-derived palette — the exact hues extracted from the navbar
+     "HireHub" logo mark. navy + blue are the dominant pigments; teal +
+     mint are the accent ribbon. Used for hero/banner gradients. */
+  --hh-logo-navy: #051d43;
+  --hh-logo-blue: #0256ed;
+  --hh-logo-teal: #04e8a4;
+  --hh-logo-mint: #1cfcb8;
+
+  --hh-border: var(--hh-gray-200);
+  --hh-border-strong: var(--hh-gray-300);
   --hh-border-dark: rgba(255, 255, 255, 0.12);
 
   --hh-success: #16a34a;
@@ -49,7 +83,20 @@
   --hh-fs-2xl: 1.875rem;
   --hh-fs-3xl: 2.25rem;
   --hh-fs-4xl: 3rem;
-  --hh-fs-hero: clamp(2.25rem, 4vw, 4rem);
+
+  /* Shared hero system tokens – one source of truth for every hero on the
+     site so the pages feel like a single system (padding rhythm, min-height,
+     type scale, and text-block widths all derive from these). */
+  --hh-fs-hero-eyebrow: clamp(0.75rem, 0.7rem + 0.5vw, 0.875rem);
+  --hh-fs-hero-title: clamp(2rem, 1.5rem + 1.8vw, 3.5rem);
+  --hh-fs-hero-subtitle: clamp(0.9375rem, 0.85rem + 0.4vw, 1.125rem);
+  --hh-hero-pad-block: clamp(3.5rem, 7vw, 6rem);
+  --hh-hero-min-height: clamp(340px, 44vh, 480px);
+  --hh-hero-title-max: 680px;
+  --hh-hero-text-max: 560px;
+  --hh-hero-blur: 6px;
+  --hh-hero-blur-scale: 1.05;
+  --hh-hero-accent: color-mix(in srgb, var(--hh-primary) 30%, #fff);
 
   /* Line-height scale (body → loose → tight headings) */
   --hh-lh-base: 1.6;
@@ -94,7 +141,7 @@
   --hh-shadow-md: 0 8px 24px rgba(15, 23, 42, 0.09);
   --hh-shadow-lg: 0 16px 48px rgba(15, 23, 42, 0.12);
   --hh-shadow-navy: 0 12px 32px rgba(11, 31, 58, 0.35);
-  --hh-shadow-primary: 0 8px 20px rgba(37, 99, 235, 0.3);
+  --hh-shadow-primary: 0 8px 20px color-mix(in srgb, var(--hh-primary) 30%, transparent);
 
   --hh-transition-fast: 150ms ease;
   --hh-transition: 220ms ease;

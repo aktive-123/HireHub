@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Link, NavLink } from 'react-router-dom'
-import logoImg from '../../assets/hirehub_logo.png'
+import logoImg from '../../assets/HIREHUBlogo.png'
 
 export default function Navbar() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
@@ -65,6 +65,16 @@ export default function Navbar() {
                   }
                 >
                   About
+                </NavLink>
+              </li>
+              <li>
+                <NavLink
+                  to="/resources"
+                  className={({ isActive }) =>
+                    `hh-navbar-link ${isActive ? 'hh-navbar-link--active' : ''}`
+                  }
+                >
+                  Career Resources
                 </NavLink>
               </li>
               <li>

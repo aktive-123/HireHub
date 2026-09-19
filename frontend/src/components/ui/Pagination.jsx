@@ -15,6 +15,7 @@ export default function Pagination({
           <button
             className="page-link rounded-2"
             type="button"
+            data-tooltip="Previous page"
             onClick={() => onPageChange && onPageChange(currentPage - 1)}
             disabled={currentPage === 1}
             aria-label="Previous"
@@ -38,6 +39,7 @@ export default function Pagination({
           <button
             className="page-link rounded-2"
             type="button"
+            data-tooltip="Next page"
             onClick={() => onPageChange && onPageChange(currentPage + 1)}
             disabled={currentPage === totalPages}
             aria-label="Next"

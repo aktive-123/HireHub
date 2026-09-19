@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import Reveal from '../ui/Reveal'
+import { formatSalaryAmount, formatSalaryPeriod } from '../../utils/jobs'
 
 const FEATURED_JOBS = [
   {
@@ -63,12 +64,15 @@ const FEATURED_JOBS = [
 
 export default function FeaturedJobsSection() {
   const [savedJobs, setSavedJobs] = useState({})
+  const [bouncingId, setBouncingId] = useState(null)
 
   const toggleSaveJob = (id) => {
     setSavedJobs((prev) => ({
       ...prev,
       [id]: !prev[id],
     }))
+    setBouncingId(id)
+    window.setTimeout(() => setBouncingId(null), 260)
   }
 
   return (
@@ -118,7 +122,11 @@ export default function FeaturedJobsSection() {
                       onClick={() => toggleSaveJob(job.id)}
                       aria-label={isSaved ? 'Remove saved job' : 'Save job'}
                     >
-                      <i className={`bi ${isSaved ? 'bi-bookmark-fill' : 'bi-bookmark'}`} />
+                      <i
+                        className={`bi ${isSaved ? 'bi-bookmark-fill' : 'bi-bookmark'} ${
+                          bouncingId === job.id ? 'is-bouncing' : ''
+                        }`}
+                      />
                     </button>
                   </div>
 
@@ -130,20 +138,24 @@ export default function FeaturedJobsSection() {
                   </div>
 
                   <div className="hh-job-badges">
+                    <span className="hh-badge hh-badge-accent">
+                      <i className="bi bi-star-fill" aria-hidden="true" />
+                      Featured
+                    </span>
                     <span className="hh-badge hh-badge-primary">
                       <span className="hh-badge-dot" aria-hidden="true" />
                       {job.employmentType}
                     </span>
-                    <span className="hh-badge hh-badge-secondary">
+                    <span className="hh-badge hh-badge-secondary hh-badge-outline">
                       {job.level}
                     </span>
                   </div>
 
                   <div className="hh-job-salary">
                     <span className="hh-job-salary-amount">
-                      ${job.salary.min.toLocaleString('en-US')} – ${job.salary.max.toLocaleString('en-US')}
+                      {formatSalaryAmount(job.salary)}
                     </span>
-                    <span className="hh-job-pay-basis">per {job.salary.period}</span>
+                    <span className="hh-job-pay-basis">{formatSalaryPeriod(job.salary)}</span>
                   </div>
 
                   <Link

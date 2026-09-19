@@ -1,0 +1,500 @@
+/* -------------------------------------------------------------
+   Stage 7: Admin Console
+   Extends the shared dashboard token/stat/tab/table system with
+   admin-specific patterns (stat links, charts, toggles, settings).
+   ------------------------------------------------------------- */
+
+/* Stat tiles as links */
+.hh-stat-link {
+  display: block;
+  color: inherit;
+  text-decoration: none;
+  border-radius: var(--hh-radius-lg);
+}
+
+.hh-stat-link:hover .hh-stat-card {
+  box-shadow: var(--hh-shadow-md);
+  transform: translateY(-2px);
+}
+
+.hh-stat-link:hover .hh-stat-label {
+  color: var(--hh-primary);
+  font-weight: var(--hh-fw-semibold);
+}
+
+.hh-stat-link:hover .hh-stat-icon {
+  transform: translateY(-1px);
+}
+
+/* Square avatars for company markers */
+.hh-avatar-square {
+  border-radius: var(--hh-radius);
+}
+
+/* Icon-only table actions */
+.hh-icon-btn {
+  width: 34px;
+  height: 34px;
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--hh-radius);
+  border: 1px solid var(--hh-border);
+  background: #fff;
+  color: var(--hh-secondary);
+  font-size: 0.9rem;
+  text-decoration: none;
+  transition: border-color 0.2s ease, color 0.2s ease, background 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
+}
+
+.hh-icon-btn:hover {
+  border-color: var(--hh-primary);
+  color: var(--hh-primary);
+  background: var(--hh-primary-light);
+  box-shadow: var(--hh-shadow-sm);
+  transform: translateY(-1px);
+}
+
+.hh-icon-btn-danger:hover {
+  border-color: var(--hh-danger);
+  color: var(--hh-danger);
+  background: var(--hh-danger-soft);
+  box-shadow: var(--hh-shadow-sm);
+}
+
+.hh-icon-btn:disabled {
+  opacity: 0.5;
+  pointer-events: none;
+}
+
+/* -------------------------------------------------------------
+   Charts (pure CSS bars — no chart library)
+------------------------------------------------------------- */
+.hh-chart {
+  display: flex;
+  align-items: flex-end;
+  gap: var(--hh-space-2);
+  height: 190px;
+  padding-top: var(--hh-space-2);
+}
+
+.hh-chart-bar {
+  flex: 1 1 0;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--hh-space-2);
+  min-width: 0;
+}
+
+.hh-chart-value {
+  font-size: var(--hh-fs-xs);
+  font-weight: var(--hh-fw-bold);
+  color: var(--hh-secondary);
+}
+
+.hh-chart-fill {
+  width: 100%;
+  max-width: 42px;
+  border-radius: var(--hh-radius) var(--hh-radius) 0 0;
+  background: linear-gradient(180deg, var(--hh-primary), var(--hh-primary-soft));
+  min-height: 4px;
+  transition: height 0.4s ease;
+}
+
+.hh-chart-fill--accent { background: linear-gradient(180deg, var(--hh-accent, #f7a600), #ffe8b8); }
+.hh-chart-label { font-size: var(--hh-fs-xs); color: var(--hh-muted); }
+
+/* Horizontal ranked bars (top companies / categories) */
+.hh-rank {
+  display: flex;
+  flex-direction: column;
+  gap: var(--hh-space-4);
+}
+
+.hh-rank-item {
+  display: grid;
+  grid-template-columns: 180px 1fr 56px;
+  align-items: center;
+  gap: var(--hh-space-3);
+}
+
+@media (max-width: 576px) {
+  .hh-rank-item {
+    grid-template-columns: 1fr;
+    gap: var(--hh-space-1);
+  }
+}
+
+.hh-rank-name {
+  display: flex;
+  align-items: center;
+  gap: var(--hh-space-2);
+  min-width: 0;
+}
+
+.hh-rank-name-text {
+  font-size: var(--hh-fs-sm);
+  font-weight: var(--hh-fw-semibold);
+  color: var(--hh-text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.hh-rank-track {
+  flex: 1 1 auto;
+  height: 8px;
+  border-radius: 999px;
+  background: var(--hh-border);
+  overflow: hidden;
+}
+
+.hh-rank-fill {
+  height: 100%;
+  border-radius: 999px;
+  background: linear-gradient(90deg, var(--hh-primary), var(--hh-primary-soft));
+}
+
+.hh-rank-value {
+  font-size: var(--hh-fs-sm);
+  font-weight: var(--hh-fw-bold);
+  color: var(--hh-secondary);
+  text-align: right;
+}
+
+/* -------------------------------------------------------------
+   Toggle switches (settings)
+------------------------------------------------------------- */
+.hh-switch {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+.hh-switch input {
+  position: absolute;
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.hh-switch-slider {
+  position: relative;
+  width: 44px;
+  height: 24px;
+  background: var(--hh-border);
+  border-radius: 999px;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.hh-switch-slider::after {
+  content: '';
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 1px 3px rgba(11, 31, 58, 0.25);
+  transition: transform 0.2s ease;
+}
+
+.hh-switch input:checked + .hh-switch-slider {
+  background: var(--hh-success);
+}
+
+.hh-switch input:checked + .hh-switch-slider::after {
+  transform: translateX(20px);
+}
+
+.hh-switch input:focus-visible + .hh-switch-slider {
+  outline: 2px solid var(--hh-primary);
+  outline-offset: 2px;
+}
+
+.hh-switch input:disabled + .hh-switch-slider {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* -------------------------------------------------------------
+   Settings rows
+------------------------------------------------------------- */
+.hh-setting-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--hh-space-4);
+  padding: var(--hh-space-4) 0;
+  border-bottom: 1px solid var(--hh-border);
+}
+
+.hh-setting-row:last-child {
+  border-bottom: none;
+}
+
+.hh-setting-title {
+  font-size: var(--hh-fs-sm);
+  font-weight: var(--hh-fw-semibold);
+  color: var(--hh-secondary);
+  margin-bottom: 2px;
+}
+
+.hh-setting-desc {
+  font-size: var(--hh-fs-xs);
+  color: var(--hh-muted);
+  margin: 0;
+}
+
+/* Quick-action links (admin overview) */
+.hh-quick-link {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: var(--hh-space-3);
+  padding: var(--hh-space-3) var(--hh-space-8) var(--hh-space-3) var(--hh-space-4);
+  border: 1px solid var(--hh-border);
+  border-radius: var(--hh-radius-lg);
+  color: var(--hh-secondary);
+  font-size: var(--hh-fs-sm);
+  font-weight: var(--hh-fw-semibold);
+  text-decoration: none;
+  transition: border-color 0.2s ease, background 0.2s ease, transform 0.2s ease;
+}
+
+.hh-quick-link i {
+  font-size: 1.1rem;
+  color: var(--hh-primary);
+  transition: transform var(--hh-transition-fast);
+}
+
+.hh-quick-link::after {
+  content: "→";
+  position: absolute;
+  right: var(--hh-space-3);
+  font-size: var(--hh-fs-md);
+  font-weight: var(--hh-fw-bold);
+  color: var(--hh-primary);
+  opacity: 0;
+  transform: translateX(-6px);
+  transition: opacity var(--hh-transition-fast), transform var(--hh-transition-fast);
+}
+
+.hh-quick-link:hover {
+  border-color: var(--hh-primary);
+  background: var(--hh-primary-light);
+  color: var(--hh-secondary);
+  transform: translateY(-1px);
+}
+
+.hh-quick-link:hover::after {
+  opacity: 1;
+  transform: translateX(0);
+}
+
+.hh-quick-link:hover i {
+  transform: scale(1.12);
+}
+
+/* Tight top padding — lets admin page heroes sit high under the topbar */
+.hh-dashboard-body--admin > .hh-section-space {
+  padding-block: var(--hh-space-4) var(--hh-space-8);
+}
+
+@media (max-width: 767.98px) {
+  .hh-dashboard-body--admin > .hh-section-space {
+    padding-block: var(--hh-space-3) var(--hh-space-8);
+  }
+}
+
+/* -------------------------------------------------------------
+   Admin page header band (shared by all management pages)
+------------------------------------------------------------- */
+.hh-admin-page-hero {
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--hh-space-5);
+  flex-wrap: wrap;
+  padding: var(--hh-space-6) var(--hh-space-7);
+  border-radius: var(--hh-radius-lg);
+  background: linear-gradient(115deg, var(--hh-secondary-deep) 0%, var(--hh-secondary) 45%, var(--hh-primary) 135%);
+  box-shadow: var(--hh-shadow);
+  color: var(--hh-white);
+  isolation: isolate;
+}
+
+.hh-admin-page-hero::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background: radial-gradient(420px 260px at 92% -20%, rgba(255, 255, 255, 0.10), transparent 60%);
+}
+
+.hh-admin-page-hero-text {
+  min-width: 0;
+}
+
+.hh-admin-page-title {
+  margin: 0 0 var(--hh-space-1);
+  font-size: clamp(1.5rem, 2.4vw, 2rem);
+  font-weight: var(--hh-fw-extrabold);
+  letter-spacing: -0.02em;
+  line-height: 1.2;
+  color: var(--hh-white);
+}
+
+.hh-admin-page-subtitle {
+  margin: 0;
+  max-width: 46rem;
+  font-size: var(--hh-fs-sm);
+  line-height: 1.6;
+  color: rgba(255, 255, 255, 0.78);
+}
+
+.hh-admin-page-hero-action {
+  flex-shrink: 0;
+}
+
+.hh-admin-page-hero-action .hh-btn {
+  background: var(--hh-white);
+  border-color: var(--hh-white);
+  color: var(--hh-primary);
+}
+
+.hh-admin-page-hero-action .hh-btn:hover {
+  background: var(--hh-blue-tint);
+  border-color: var(--hh-blue-tint);
+  color: var(--hh-primary);
+}
+
+/* -------------------------------------------------------------
+   Admin topbar: notifications bell, user chip, logout
+------------------------------------------------------------- */
+.hh-topbar-icon {
+  position: relative;
+  width: 40px;
+  height: 40px;
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--hh-radius);
+  border: 1px solid var(--hh-border);
+  background: var(--hh-white);
+  color: var(--hh-secondary);
+  font-size: 1.15rem;
+  text-decoration: none;
+  transition: border-color 0.2s ease, color 0.2s ease, background 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
+}
+
+.hh-topbar-icon:hover {
+  color: var(--hh-primary);
+  border-color: var(--hh-primary);
+  background: var(--hh-primary-light);
+  box-shadow: var(--hh-shadow-sm);
+  transform: translateY(-1px);
+}
+
+.hh-topbar-user {
+  line-height: 1.2;
+}
+
+.hh-topbar-user-name {
+  font-size: var(--hh-fs-sm);
+  font-weight: var(--hh-fw-bold);
+  color: var(--hh-secondary);
+}
+
+.hh-topbar-user-role {
+  font-size: var(--hh-fs-xs);
+  color: var(--hh-muted);
+}
+
+.hh-notif {
+  position: relative;
+}
+
+.hh-notif-count {
+  position: absolute;
+  top: -4px;
+  right: -4px;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 4px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  background: var(--hh-danger);
+  color: #fff;
+  font-size: 0.66rem;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.hh-notif-panel {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  width: 360px;
+  max-width: calc(100vw - 24px);
+  background: #fff;
+  border: 1px solid var(--hh-border);
+  border-radius: var(--hh-radius-lg);
+  box-shadow: var(--hh-shadow-md);
+  padding: var(--hh-space-2) var(--hh-space-3) var(--hh-space-3);
+  z-index: 1200;
+}
+
+.hh-notif-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--hh-space-2) 0;
+  border-bottom: 1px solid var(--hh-border);
+}
+
+.hh-notif-clear {
+  border: none;
+  background: none;
+  color: var(--hh-primary);
+  font-size: var(--hh-fs-xs);
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.hh-notif-clear:hover {
+  text-decoration: underline;
+}
+
+.hh-notif-list {
+  max-height: 320px;
+  overflow-y: auto;
+}
+
+.hh-notif-link {
+  display: block;
+  margin-top: var(--hh-space-2);
+  padding-top: var(--hh-space-2);
+  border-top: 1px solid var(--hh-border);
+  text-align: center;
+  font-size: var(--hh-fs-sm);
+  font-weight: 600;
+  color: var(--hh-primary);
+  text-decoration: none;
+}
+
+.hh-notif-link:hover {
+  text-decoration: underline;
+}

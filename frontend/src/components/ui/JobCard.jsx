@@ -2,34 +2,27 @@ import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import Badge from './Badge'
 import Reveal from './Reveal'
+import { formatSalaryAmount, formatSalaryPeriod, getEmploymentBadge } from '../../utils/jobs'
 
-function formatSalary(salary) {
-  if (!salary) return ''
-  const fmt = (n) =>
-    new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: salary.currency || 'USD',
-      maximumFractionDigits: 0,
-    }).format(n)
-  return `${fmt(salary.min)} - ${fmt(salary.max)} ${salary.period ? ` / ${salary.period}` : ''}`
-}
-
-function employmentBadge(job) {
-  const map = {
-    'Full-time': { variant: 'success', icon: 'clock' },
-    'Part-time': { variant: 'info', icon: 'clock-history' },
-    Contract: { variant: 'warning', icon: 'file-earmark-text' },
-    Internship: { variant: 'secondary', icon: 'mortarboard' },
-    Remote: { variant: 'primary', icon: 'laptop' },
-  }
-  const key = job.employment_type || job.workplace || 'Full-time'
-  const cfg = map[key] || map['Full-time']
-  return { label: key, ...cfg }
-}
+/*
+ * Badge colour system (formal) — keep consistent across every card:
+ *   - Amber/accent  = Featured / highlighted status   [job.is_featured]
+ *   - primary blue  = Employment type (via getEmploymentBadge)
+ *   - gray outline  = Experience level (secondary + outline)
+ *   - neutral soft  = tags/skills (hh-badge-soft)
+ * Green is not used for badges (see utils/jobs.js).
+ */
 
 export default function JobCard({ job, index = 0, featured = false }) {
   const [saved, setSaved] = useState(false)
-  const badge = employmentBadge(job)
+  const [bouncing, setBouncing] = useState(false)
+  const badge = getEmploymentBadge(job)
+
+  const toggleSaved = () => {
+    setSaved((p) => !p)
+    setBouncing(true)
+    window.setTimeout(() => setBouncing(false), 260)
+  }
 
   return (
     <Reveal delay={index * 80}>
@@ -49,7 +42,9 @@ export default function JobCard({ job, index = 0, featured = false }) {
               <div className="hh-job-company-name">
                 {job.company?.name}
                 {job.company?.verified && (
-                  <Badge variant="primary" sm icon="patch-check-fill" label="Verified" />
+                  <Badge variant="primary" sm icon="patch-check-fill">
+                    Verified
+                  </Badge>
                 )}
               </div>
             </div>
@@ -58,11 +53,16 @@ export default function JobCard({ job, index = 0, featured = false }) {
           <button
             type="button"
             className={`hh-job-bookmark-btn ${saved ? 'is-active' : ''}`}
-            onClick={() => setSaved((p) => !p)}
+            onClick={toggleSaved}
             aria-pressed={saved}
             aria-label={saved ? 'Remove from saved jobs' : 'Save job'}
           >
-            <i className={`bi ${saved ? 'bi-bookmark-fill' : 'bi-bookmark'}`} aria-hidden="true" />
+            <i
+              className={`bi ${saved ? 'bi-bookmark-fill' : 'bi-bookmark'} ${
+                bouncing ? 'is-bouncing' : ''
+              }`}
+              aria-hidden="true"
+            />
           </button>
         </div>
 
@@ -78,6 +78,11 @@ export default function JobCard({ job, index = 0, featured = false }) {
         </p>
 
         <div className="hh-job-badges">
+          {job.is_featured && (
+            <Badge variant="accent" icon="star-fill">
+              Featured
+            </Badge>
+          )}
           <Badge variant={badge.variant} icon={badge.icon}>
             {badge.label}
           </Badge>
@@ -88,7 +93,10 @@ export default function JobCard({ job, index = 0, featured = false }) {
           )}
         </div>
 
-        <p className="hh-job-salary">{formatSalary(job.salary)}</p>
+        <p className="hh-job-salary">
+          <span className="hh-job-salary-amount">{formatSalaryAmount(job.salary)}</span>
+          <span className="hh-job-pay-basis">{formatSalaryPeriod(job.salary)}</span>
+        </p>
 
         <div className="hh-job-tags">
           {(job.tags || []).slice(0, 3).map((tag) => (

@@ -1,5 +1,5 @@
 import { Link, Outlet } from 'react-router-dom'
-import logoImg from '../assets/hirehub_logo.png'
+import logoImg from '../assets/HIREHUBlogo.png'
 
 export default function AuthLayout() {
   return (

@@ -1,79 +1,21 @@
 /* HireHub - Landing Page Stylesheet */
 
-/* Hero Section */
+/* Hero Section — shares the SAME hero system as every inner page:
+   photo slideshow + single brand overlay, identical padding rhythm,
+   min-height, and type scale (all driven by --hh-hero-* tokens). */
 .hh-hero {
-  background-color: var(--hh-secondary);
+  background-color: var(--hh-secondary-deep);
   color: var(--hh-white);
-  padding-top: clamp(3rem, 5vw, 4.5rem);
-  padding-bottom: clamp(3.5rem, 6vw, 5.5rem);
+  padding-block: var(--hh-hero-pad-block);
+  min-height: var(--hh-hero-min-height);
   position: relative;
   overflow: hidden;
-}
-
-/* Crossfading background slideshow */
-.hh-hero-slides {
-  position: absolute;
-  inset: 0;
-  z-index: 0;
-  overflow: hidden;
-  filter: blur(6px);
-}
-
-.hh-hero-slide {
-  position: absolute;
-  inset: 0;
-  background-size: cover;
-  background-position: center;
-  opacity: 0;
-  transform: scale(1.06);
-  transition: opacity 1200ms ease;
-  will-change: opacity;
-}
-
-.hh-hero-slide.is-active {
-  opacity: 1;
-}
-
-/* Navy-blue color wash reusing the original hero gradient, laid
-   over the blurred slides for the familiar HireHub tint */
-.hh-hero-tint {
-  position: absolute;
-  inset: 0;
-  z-index: 0;
-  pointer-events: none;
-  background: linear-gradient(
-    165deg,
-    rgba(11, 31, 58, 0.9) 0%,
-    rgba(37, 99, 235, 0.68) 100%
-  );
-}
-
-/* Scrim layered above the slides and below the content so the
-   text block stays legible without dimming the whole hero */
-.hh-hero-scrim {
-  position: absolute;
-  inset: 0;
-  z-index: 0;
-  pointer-events: none;
-  background:
-    linear-gradient(
-      to right,
-      rgba(5, 14, 28, 0.84) 0%,
-      rgba(5, 14, 28, 0.58) 38%,
-      rgba(5, 14, 28, 0.18) 60%,
-      rgba(5, 14, 28, 0) 78%
-    ),
-    linear-gradient(
-      to bottom,
-      rgba(5, 14, 28, 0.3) 0%,
-      rgba(5, 14, 28, 0) 45%,
-      rgba(5, 14, 28, 0.55) 100%
-    );
 }
 
 .hh-hero > .page-container {
   position: relative;
   z-index: 1;
+  text-align: left;
 }
 
 .hh-hero-badge {
@@ -84,21 +26,23 @@
   border: 1px solid rgba(255, 255, 255, 0.15);
   border-radius: var(--hh-radius-pill);
   padding: 0.35rem 0.9rem;
-  font-size: var(--hh-fs-xs);
-  font-weight: var(--hh-fw-semibold);
+  font-size: var(--hh-fs-hero-eyebrow);
+  font-weight: var(--hh-fw-bold);
+  line-height: 1.4;
   letter-spacing: 0.06em;
   text-transform: uppercase;
-  color: #93c5fd;
+  color: var(--hh-hero-accent);
   margin-bottom: var(--hh-space-4);
 }
 
 .hh-hero-title {
-  font-size: clamp(2.25rem, 4vw, 4rem);
+  font-size: var(--hh-fs-hero-title);
   font-weight: var(--hh-fw-extrabold);
-  line-height: 1.1;
+  line-height: 1.15;
+  letter-spacing: var(--hh-ls-tight);
   color: var(--hh-white);
   margin-bottom: var(--hh-space-4);
-  letter-spacing: -0.02em;
+  max-width: var(--hh-hero-title-max);
 }
 
 .hh-hero-title-line {
@@ -107,9 +51,10 @@
 }
 
 .hh-hero-title-highlight {
-  color: #60a5fa;
+  color: var(--hh-logo-blue);
   display: block;
   opacity: 0;
+  text-shadow: 0 2px 12px rgba(3, 10, 24, 0.35);
 }
 
 .hh-hero.is-anim .hh-hero-title-line {
@@ -132,11 +77,11 @@
 }
 
 .hh-hero-subtitle {
-  font-size: clamp(1.05rem, 1.5vw, 1.25rem);
-  color: #eef4ff;
+  font-size: var(--hh-fs-hero-subtitle);
+  color: var(--hh-white);
   line-height: 1.6;
   margin-bottom: var(--hh-space-6);
-  max-width: 560px;
+  max-width: var(--hh-hero-text-max);
 }
 
 .hh-hero-cta-group {
@@ -393,8 +338,8 @@
 }
 
 .hh-job-card:hover {
-  border-color: #bfdbfe;
-  box-shadow: 0 16px 36px rgba(37, 99, 235, 0.14);
+  border-color: var(--hh-blue-tint);
+  box-shadow: var(--hh-shadow-md);
   transform: translateY(-4px);
 }
 
@@ -450,6 +395,26 @@
   color: var(--hh-primary);
 }
 
+/* Re-triggered on every save/unsave toggle (260ms in React); `inline-block`
+   allows the transform to apply to the icon glyph. */
+.hh-job-bookmark-btn .is-bouncing {
+  display: inline-block;
+  animation: hh-bookmark-bounce 0.26s ease;
+}
+
+@keyframes hh-bookmark-bounce {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  40% {
+    transform: scale(1.35) rotate(-8deg);
+  }
+  70% {
+    transform: scale(0.9);
+  }
+}
+
 .hh-job-title {
   font-size: 1.15rem;
   font-weight: var(--hh-fw-bold);
@@ -478,7 +443,7 @@
   font-size: var(--hh-fs-sm);
   font-weight: var(--hh-fw-bold);
   color: var(--hh-secondary);
-  margin-top: auto;
+  margin-top: 0;
   margin-bottom: var(--hh-space-4);
   display: flex;
   align-items: center;
@@ -572,7 +537,7 @@
   width: 72px;
   height: 72px;
   border-radius: 50%;
-  background: #dbeafe;
+  background: var(--hh-primary-soft);
   color: var(--hh-primary);
   display: inline-flex;
   align-items: center;
@@ -580,7 +545,7 @@
   font-size: 1.8rem;
   margin-bottom: var(--hh-space-4);
   position: relative;
-  box-shadow: 0 8px 20px rgba(37, 99, 235, 0.15);
+  box-shadow: 0 8px 20px color-mix(in srgb, var(--hh-primary) 15%, transparent);
 }
 
 .hh-step-number {
@@ -629,8 +594,8 @@
 }
 
 .hh-category-card:hover {
-  border-color: #93c5fd;
-  box-shadow: 0 10px 25px rgba(37, 99, 235, 0.08);
+  border-color: var(--hh-blue-light);
+  box-shadow: 0 10px 25px color-mix(in srgb, var(--hh-primary) 8%, transparent);
   transform: translateY(-2px);
   text-decoration: none;
 }
@@ -699,8 +664,8 @@
   width: 48px;
   height: 48px;
   border-radius: var(--hh-radius-md);
-  background: rgba(37, 99, 235, 0.2);
-  color: #60a5fa;
+  background: color-mix(in srgb, var(--hh-primary) 20%, transparent);
+  color: var(--hh-blue-light);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -847,12 +812,14 @@
 }
 
 .hh-final-cta-banner {
-  background: linear-gradient(135deg, #1d4ed8, #2563eb 55%, #3b82f6);
+  background:
+    linear-gradient(135deg, var(--hh-primary-dark), var(--hh-primary) 55%, var(--hh-blue-light)),
+    radial-gradient(700px 400px at 88% -20%, color-mix(in srgb, var(--hh-logo-teal) 28%, transparent), transparent 65%);
   background-size: 200% 200%;
   border-radius: var(--hh-radius-xl);
   padding: clamp(2.5rem, 5vw, 4rem) clamp(1.5rem, 4vw, 3.5rem);
   color: var(--hh-white);
-  box-shadow: 0 16px 40px rgba(37, 99, 235, 0.3);
+  box-shadow: 0 16px 40px color-mix(in srgb, var(--hh-primary) 30%, transparent);
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -867,8 +834,8 @@
 }
 
 @keyframes hh-cta-glow {
-  0%, 100% { box-shadow: 0 16px 40px rgba(37, 99, 235, 0.3); }
-  50% { box-shadow: 0 22px 60px rgba(59, 130, 246, 0.55); }
+  0%, 100% { box-shadow: 0 16px 40px color-mix(in srgb, var(--hh-primary) 30%, transparent); }
+  50% { box-shadow: 0 22px 60px color-mix(in srgb, var(--hh-primary) 55%, transparent); }
 }
 
 .hh-final-cta-section.is-inview .hh-final-cta-banner {

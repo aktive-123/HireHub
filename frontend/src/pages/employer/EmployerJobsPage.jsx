@@ -39,7 +39,7 @@ export default function EmployerJobsPage() {
           <Reveal>
             <div className="hh-toolbar hh-toolbar-between hh-mb-4">
               <SectionHeading eyebrow="EMPLOYER" title="My Job Posts" subtitle="Create, manage and track all of your job postings." />
-              <Link to="/employer/post-job" className="hh-btn hh-btn-primary hh-btn-pill">
+              <Link to="/employer/jobs/create" className="hh-btn hh-btn-primary hh-btn-pill">
                 <i className="bi bi-plus-lg hh-me-1" aria-hidden="true" />
                 Post a new job
               </Link>
@@ -59,7 +59,7 @@ export default function EmployerJobsPage() {
             <input type="search" className="hh-form-control" placeholder="Search your jobs…" value={query} onChange={(e) => { setQuery(e.target.value); setPage(1) }} aria-label="Search jobs" />
           </div>
 
-          <Card className="hh-card-body hh-p-0 hh-overflow-hidden">
+          <Card className="hh-card-body hh-p-0 hh-card--table">
             {visible.length > 0 ? (
               <div className="table-responsive">
                 <table className="hh-table hh-table-hover hh-mb-0">
@@ -76,7 +76,7 @@ export default function EmployerJobsPage() {
                     {visible.map((job) => (
                       <tr key={job.id}>
                         <td className="hh-fw-semibold">{job.title}</td>
-                        <td>{job.applications || 0}</td>
+                        <td>{job.applications_count || 0}</td>
                         <td>{job.views || 0}</td>
                         <td>
                           <Badge variant={job.status === 'open' ? 'success' : 'secondary'}>{job.status}</Badge>

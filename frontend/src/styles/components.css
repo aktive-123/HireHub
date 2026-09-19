@@ -279,7 +279,7 @@
 }
 
 .hh-section-subtitle--white {
-  color: rgba(255, 255, 255, 0.75);
+  color: rgba(255, 255, 255, 0.92);
 }
 
 .hh-card {
@@ -448,4 +448,292 @@
 .hh-footer-link:hover {
   color: var(--hh-white);
   text-decoration: none;
+}
+
+/* -------------------------------------------------------------
+   Sort dropdown (job list / company directory toolbars)
+------------------------------------------------------------- */
+.hh-sort-dropdown {
+  position: relative;
+  flex-shrink: 0;
+}
+
+.hh-sort-trigger {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-height: 36px;
+  padding: 0 0.9rem;
+  background: var(--hh-white);
+  border: 1px solid var(--hh-border);
+  border-radius: var(--hh-radius-pill);
+  color: var(--hh-secondary);
+  font-size: var(--hh-fs-sm);
+  font-weight: var(--hh-fw-semibold);
+  cursor: pointer;
+  transition: border-color var(--hh-transition-fast), color var(--hh-transition-fast), box-shadow var(--hh-transition-fast);
+}
+
+.hh-sort-trigger:hover {
+  border-color: var(--hh-primary);
+  color: var(--hh-primary);
+}
+
+.hh-sort-trigger:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px var(--hh-primary-ring);
+}
+
+.hh-sort-trigger-label {
+  white-space: nowrap;
+}
+
+.hh-sort-chevron {
+  font-size: 0.6875rem;
+  color: var(--hh-muted);
+  transition: transform var(--hh-transition-fast);
+}
+
+.hh-sort-chevron.is-open {
+  transform: rotate(180deg);
+}
+
+.hh-sort-menu {
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  z-index: 30;
+  min-width: 230px;
+  margin: 0;
+  padding: 0.35rem;
+  list-style: none;
+  background: var(--hh-white);
+  border: 1px solid var(--hh-border);
+  border-radius: var(--hh-radius-lg);
+  box-shadow: var(--hh-shadow-md);
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(-6px);
+  pointer-events: none;
+  transition: opacity var(--hh-transition-fast), transform var(--hh-transition-fast), visibility var(--hh-transition-fast);
+}
+
+.hh-sort-menu.is-open {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0);
+  pointer-events: auto;
+}
+
+.hh-sort-option {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  width: 100%;
+  text-align: left;
+  padding: 0.55rem 0.8rem;
+  background: transparent;
+  border: none;
+  border-radius: var(--hh-radius-md);
+  color: var(--hh-secondary);
+  font-size: var(--hh-fs-sm);
+  cursor: pointer;
+  transition: background-color var(--hh-transition-fast), color var(--hh-transition-fast);
+}
+
+.hh-sort-option:hover {
+  background: var(--hh-bg-soft);
+  color: var(--hh-primary);
+}
+
+.hh-sort-option.is-selected {
+  background: var(--hh-primary-soft);
+  color: var(--hh-primary);
+  font-weight: var(--hh-fw-semibold);
+}
+
+/* -------------------------------------------------------------
+   Pagination (Bootstrapped overrides) - shared across result pages
+------------------------------------------------------------- */
+.pagination {
+  margin-bottom: 0;
+}
+
+.page-link {
+  min-width: 38px;
+  text-align: center;
+  border: 1px solid var(--hh-border);
+  background: var(--hh-white);
+  color: var(--hh-primary);
+  transition: background-color var(--hh-transition-fast), color var(--hh-transition-fast), border-color var(--hh-transition-fast), transform var(--hh-transition-fast);
+}
+
+.page-link:hover {
+  background: var(--hh-primary-soft);
+  border-color: var(--hh-primary-ring);
+  color: var(--hh-primary-dark);
+}
+
+.page-item.disabled .page-link {
+  background: var(--hh-bg-soft);
+  border-color: var(--hh-border);
+  color: var(--hh-muted-light);
+}
+
+.page-item.active .page-link {
+  background-color: var(--hh-primary);
+  border-color: var(--hh-primary);
+  color: var(--hh-white);
+  font-weight: var(--hh-fw-semibold);
+  animation: hh-page-pop var(--hh-transition) both;
+}
+
+@keyframes hh-page-pop {
+  from {
+    transform: scale(0.9);
+  }
+  60% {
+    transform: scale(1.08);
+  }
+  to {
+    transform: scale(1);
+  }
+}
+
+/* -------------------------------------------------------------
+   Hover tooltips (pure CSS)
+   Add data-tooltip="Label" to an element to get a styled tooltip
+   on hover / keyboard focus. Optional placement modifiers:
+     .hh-tip-bottom  -> show below the target (topbar icons)
+     .hh-tip-start   -> left-aligned to the target edge
+     .hh-tip-end     -> right-aligned to the target edge
+   Disabled targets never show a tooltip.
+------------------------------------------------------------- */
+[data-tooltip] {
+  position: relative;
+}
+
+[data-tooltip]::after,
+[data-tooltip]::before {
+  position: absolute;
+  z-index: 1200;
+  left: 50%;
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transition:
+    opacity var(--hh-transition-fast) 90ms,
+    transform var(--hh-transition-fast) 90ms,
+    visibility var(--hh-transition-fast) 90ms;
+}
+
+[data-tooltip]::after {
+  content: attr(data-tooltip);
+  bottom: calc(100% + 9px);
+  transform: translateX(-50%) translateY(4px);
+  width: max-content;
+  max-width: 240px;
+  padding: 6px 11px;
+  border-radius: var(--hh-radius-sm);
+  background: var(--hh-secondary-deep);
+  color: var(--hh-white);
+  font-family: var(--hh-font-sans);
+  font-size: 0.72rem;
+  font-weight: var(--hh-fw-semibold);
+  line-height: 1.35;
+  letter-spacing: 0.015em;
+  text-align: center;
+  white-space: normal;
+  box-shadow: var(--hh-shadow-md);
+}
+
+[data-tooltip]::before {
+  content: "";
+  bottom: calc(100% + 4px);
+  transform: translateX(-50%);
+  border: 5px solid transparent;
+  border-top-color: var(--hh-secondary-deep);
+}
+
+[data-tooltip]:hover::after,
+[data-tooltip]:focus-visible::after,
+[data-tooltip]:hover::before,
+[data-tooltip]:focus-visible::before {
+  opacity: 1;
+  visibility: visible;
+  transform: translateX(-50%) translateY(0);
+}
+
+/* Tooltip below the target (element sits near the top of the screen) */
+[data-tooltip].hh-tip-bottom::after {
+  bottom: auto;
+  top: calc(100% + 9px);
+  transform: translateX(-50%) translateY(-4px);
+}
+
+[data-tooltip].hh-tip-bottom::before {
+  bottom: auto;
+  top: calc(100% + 4px);
+  transform: translateX(-50%);
+  border: 5px solid transparent;
+  border-bottom-color: var(--hh-secondary-deep);
+}
+
+[data-tooltip].hh-tip-bottom:hover::after,
+[data-tooltip].hh-tip-bottom:focus-visible::after,
+[data-tooltip].hh-tip-bottom:hover::before,
+[data-tooltip].hh-tip-bottom:focus-visible::before {
+  transform: translateX(-50%) translateY(0);
+}
+
+/* Right-aligned tooltip (keeps edge controls inside the viewport) */
+[data-tooltip].hh-tip-end::after {
+  left: auto;
+  right: 0;
+  transform: translateY(4px);
+}
+
+[data-tooltip].hh-tip-end::before {
+  left: auto;
+  right: 10px;
+  transform: none;
+}
+
+[data-tooltip].hh-tip-end:hover::after,
+[data-tooltip].hh-tip-end:focus-visible::after,
+[data-tooltip].hh-tip-end:hover::before,
+[data-tooltip].hh-tip-end:focus-visible::before {
+  transform: translateY(0);
+}
+
+/* Left-aligned tooltip */
+[data-tooltip].hh-tip-start::after {
+  left: 0;
+  transform: translateY(4px);
+}
+
+[data-tooltip].hh-tip-start::before {
+  left: 10px;
+  transform: none;
+}
+
+[data-tooltip].hh-tip-start:hover::after,
+[data-tooltip].hh-tip-start:focus-visible::after,
+[data-tooltip].hh-tip-start:hover::before,
+[data-tooltip].hh-tip-start:focus-visible::before {
+  transform: translateY(0);
+}
+
+/* Disabled targets never show tooltips */
+[data-tooltip]:disabled::after,
+[data-tooltip]:disabled::before {
+  display: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  [data-tooltip]::after,
+  [data-tooltip]::before {
+    transition: none;
+  }
 }

@@ -20,7 +20,9 @@ export default function CompanyCard({ company, index = 0 }) {
             <h3 className="hh-company-name">
               {company.name}
               {company.is_verified && (
-                <Badge variant="primary" sm icon="patch-check-fill" label="Verified" />
+                <Badge variant="primary" sm icon="patch-check-fill">
+                  Verified
+                </Badge>
               )}
             </h3>
             <p className="hh-company-meta">
@@ -59,7 +61,9 @@ export default function CompanyCard({ company, index = 0 }) {
             View Profile
           </Link>
           {company.is_featured && (
-            <Badge variant="warning" sm icon="lightning-fill" label="Featured" />
+            <Badge variant="accent" sm icon="lightning-fill">
+              Featured
+            </Badge>
           )}
         </div>
       </article>

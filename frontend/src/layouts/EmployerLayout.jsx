@@ -1,17 +1,15 @@
 import { Link, NavLink, Outlet } from 'react-router-dom'
-import logoImg from '../assets/hirehub_logo.png'
+import whiteLogo from '../assets/white logo.png'
 
 export default function EmployerLayout() {
   return (
     <div className="hh-dashboard-layout">
       <aside className="hh-dashboard-sidebar">
         <div className="hh-dashboard-sidebar-header">
-          <Link to="/">
-            <img src={logoImg} alt="HireHub" className="hh-navbar-brand-logo" />
+          <Link to="/" className="hh-dashboard-brand" aria-label="HireHub home">
+            <img src={whiteLogo} alt="HireHub" className="hh-dashboard-brand-logo" />
           </Link>
-          <div className="mt-2 text-xs text-white-50 small">
-            Employer Portal
-          </div>
+          <span className="hh-dashboard-brand-sub">Employer Portal</span>
         </div>
 
         <nav className="hh-dashboard-nav" aria-label="Employer Navigation">

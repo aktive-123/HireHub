@@ -1,17 +1,16 @@
 import { Link, NavLink, Outlet } from 'react-router-dom'
-import logoImg from '../assets/hirehub_logo.png'
+import whiteLogo from '../assets/white logo.png'
+import AdminNotificationBell from '../components/admin/AdminNotificationBell'
 
 export default function AdminLayout() {
   return (
     <div className="hh-dashboard-layout">
       <aside className="hh-dashboard-sidebar">
         <div className="hh-dashboard-sidebar-header">
-          <Link to="/">
-            <img src={logoImg} alt="HireHub" className="hh-navbar-brand-logo" />
+          <Link to="/" className="hh-dashboard-brand" aria-label="HireHub home">
+            <img src={whiteLogo} alt="HireHub" className="hh-dashboard-brand-logo" />
           </Link>
-          <div className="mt-2 text-xs text-white-50 small">
-            System Administration
-          </div>
+          <span className="hh-dashboard-brand-sub">System Administration</span>
         </div>
 
         <nav className="hh-dashboard-nav" aria-label="Admin Navigation">
@@ -125,6 +124,19 @@ export default function AdminLayout() {
         <header className="hh-dashboard-topbar">
           <div className="fw-semibold text-danger">Superadmin Control Center</div>
           <div className="d-flex align-items-center gap-3">
+            <AdminNotificationBell />
+            <div className="d-flex align-items-center gap-2 hh-topbar-user">
+              <span className="hh-avatar hh-avatar-sm hh-avatar-soft" aria-hidden="true">
+                SB
+              </span>
+              <div className="hh-topbar-user-meta d-none d-xxl-block">
+                <div className="hh-topbar-user-name">Sarah Bello</div>
+                <div className="hh-topbar-user-role">Super Admin</div>
+              </div>
+            </div>
+            <Link to="/login" className="hh-topbar-icon hh-tip-bottom hh-tip-end" data-tooltip="Log out" aria-label="Log out">
+              <i className="bi bi-box-arrow-right" aria-hidden="true" />
+            </Link>
             <span className="hh-badge hh-badge-danger">Admin Mode</span>
           </div>
         </header>

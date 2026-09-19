@@ -15,6 +15,9 @@ import CompaniesPage from './pages/public/CompaniesPage'
 import CompanyDetailsPage from './pages/public/CompanyDetailsPage'
 import AboutPage from './pages/public/AboutPage'
 import ContactPage from './pages/public/ContactPage'
+import CareerResourcesPage from './pages/public/CareerResourcesPage'
+import CareerArticlePage from './pages/public/CareerArticlePage'
+import FaqPage from './pages/public/FaqPage'
 import NotFoundPage from './pages/public/NotFoundPage'
 
 // Auth Pages
@@ -79,6 +82,9 @@ export default function App() {
           <Route path="/companies/:id" element={<CompanyDetailsPage />} />
           <Route path="/about" element={<AboutPage />} />
           <Route path="/contact" element={<ContactPage />} />
+          <Route path="/resources" element={<CareerResourcesPage />} />
+          <Route path="/resources/:slug" element={<CareerArticlePage />} />
+          <Route path="/faq" element={<FaqPage />} />
           <Route path="*" element={<NotFoundPage />} />
         </Route>
 
