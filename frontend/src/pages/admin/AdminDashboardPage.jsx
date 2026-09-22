@@ -42,6 +42,7 @@ export default function AdminDashboardPage() {
     <section className="hh-section-space bg-white">
       <div className="page-container">
         <DashboardHero
+          className="hh-welcome-hero--admin"
           eyebrow="WELCOME BACK,"
           title="Sarah 👋"
           subtitle="Here's what's happening across HireHub today — review pending jobs, recent applications and platform growth."

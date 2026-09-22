@@ -1932,11 +1932,6 @@
   flex-wrap: wrap;
 }
 
-/* White eyebrow on the gradient admin hero band (shared PageHeader variant) */
-.hh-admin-page-hero .hh-section-eyebrow {
-  color: var(--hh-logo-teal);
-}
-
 /* -------------------------------------------------------------
    Table footer — item count indicator + pagination
 ------------------------------------------------------------- */

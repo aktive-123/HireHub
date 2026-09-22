@@ -7,9 +7,10 @@ export default function DashboardHero({
   cta,
   image,
   tagline,
+  className = '',
 }) {
   return (
-    <section className="hh-welcome-hero">
+    <section className={`hh-welcome-hero ${className}`.trim()}>
       {tagline && (
         <p className="hh-welcome-tagline" aria-hidden="true">
           {tagline}

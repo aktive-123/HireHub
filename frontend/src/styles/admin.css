@@ -305,6 +305,10 @@
 
 /* -------------------------------------------------------------
    Admin page header band (shared by all management pages)
+   Standardised banner typography:
+     - Eyebrow  : 0.75rem / 600, +0.05em, uppercase, green accent
+     - Title    : 1.875rem / 800, line-height 1.2, white
+     - Subtitle : 0.9375rem / 400, line-height 1.4, slate blue-gray
 ------------------------------------------------------------- */
 .hh-admin-page-hero {
   position: relative;
@@ -335,21 +339,55 @@
   min-width: 0;
 }
 
+.hh-admin-page-hero .hh-section-eyebrow {
+  font-size: 0.75rem;
+  font-weight: var(--hh-fw-semibold);
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--hh-logo-teal);
+}
+
 .hh-admin-page-title {
-  margin: 0 0 var(--hh-space-1);
-  font-size: clamp(1.5rem, 2.4vw, 2rem);
+  margin: 0;
+  font-size: 1.875rem;
   font-weight: var(--hh-fw-extrabold);
-  letter-spacing: -0.02em;
   line-height: 1.2;
   color: var(--hh-white);
 }
 
 .hh-admin-page-subtitle {
-  margin: 0;
+  margin: 0.375rem 0 0;
   max-width: 46rem;
-  font-size: var(--hh-fs-sm);
-  line-height: 1.6;
-  color: rgba(255, 255, 255, 0.78);
+  font-size: 0.9375rem;
+  font-weight: var(--hh-fw-regular);
+  line-height: 1.4;
+  color: #94a3b8;
+}
+
+/* Admin overview (DashboardHero) banner — same typography, scoped so the
+   shared welcome-hero styles keep serving the employer dashboard. */
+.hh-welcome-hero--admin .hh-welcome-eyebrow {
+  font-size: 0.75rem;
+  font-weight: var(--hh-fw-semibold);
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--hh-logo-teal);
+}
+
+.hh-welcome-hero--admin .hh-welcome-title {
+  margin: 0;
+  font-size: 1.875rem;
+  font-weight: var(--hh-fw-extrabold);
+  line-height: 1.2;
+  color: var(--hh-white);
+}
+
+.hh-welcome-hero--admin .hh-welcome-subtitle {
+  margin: 0.375rem 0 var(--hh-space-4);
+  font-size: 0.9375rem;
+  font-weight: var(--hh-fw-regular);
+  line-height: 1.4;
+  color: #94a3b8;
 }
 
 .hh-admin-page-hero-action {
