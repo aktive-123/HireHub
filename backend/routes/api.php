@@ -37,6 +37,7 @@ Route::middleware(['auth:sanctum'])->prefix('v1')->group(function (): void {
     // --- Job Seeker ---
     Route::get('seeker/dashboard', [SeekerController::class, 'dashboard']);
     Route::get('seeker/applications', [SeekerController::class, 'applications']);
+    Route::post('seeker/applications', [SeekerController::class, 'apply']);
     Route::get('seeker/applications/{id}', [SeekerController::class, 'application']);
     Route::get('seeker/saved-jobs', [SeekerController::class, 'savedJobs']);
     Route::post('seeker/saved-jobs', [SeekerController::class, 'saveJob']);

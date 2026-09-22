@@ -75,6 +75,10 @@ export const seekerApi = {
     const res = await apiClient.get(`/v1/seeker/applications/${num(id)}`)
     return numericAppId(res.data)
   },
+  async apply(payload) {
+    const res = await apiClient.post('/v1/seeker/applications', payload)
+    return numericAppId(res.data)
+  },
   async savedJobs() {
     const res = await apiClient.get('/v1/seeker/saved-jobs')
     return (res.data ?? []).map((item) => ({ ...(item.job ?? {}), saved_at: item.saved_at, saved_id: item.id }))

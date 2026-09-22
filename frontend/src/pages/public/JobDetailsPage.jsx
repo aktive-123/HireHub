@@ -1,7 +1,9 @@
-import { useState } from 'react'
-import { Link, useParams } from 'react-router-dom'
-import { jobsApi } from '../../services/api'
+import { useState, useEffect } from 'react'
+import { Link, useNavigate, useParams } from 'react-router-dom'
+import { jobsApi, seekerApi } from '../../services/api'
 import { useApiData } from '../../hooks/useApiData'
+import { useAuth } from '../../context/AuthContext'
+import { useSavedJobs } from '../../context/SavedJobsContext'
 import JobCard from '../../components/ui/JobCard'
 import Reveal from '../../components/ui/Reveal'
 import EmptyState from '../../components/ui/EmptyState'
@@ -23,6 +25,9 @@ const heroSlides = [heroSlide1, heroSlide2, heroSlide3, heroSlide4]
 
 export default function JobDetailsPage() {
   const { id } = useParams()
+  const navigate = useNavigate()
+  const { user, role } = useAuth()
+  const { isSaved, toggleSave } = useSavedJobs()
   const { data, loading, error } = useApiData(
     () =>
       jobsApi.list().then((r) => {
@@ -41,7 +46,63 @@ export default function JobDetailsPage() {
   const job = data?.job
   const related = data?.related ?? []
   const [applied, setApplied] = useState(false)
-  const [saved, setSaved] = useState(false)
+  const [applying, setApplying] = useState(false)
+  const [appError, setAppError] = useState(null)
+
+  useEffect(() => {
+    if (!job || role !== 'seeker') return
+    let active = true
+    seekerApi
+      .applications()
+      .then((items) => {
+        if (active) setApplied(items.some((a) => Number(a.job_id) === Number(job.id)))
+      })
+      .catch(() => {})
+    return () => {
+      active = false
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [id, role])
+
+  const saved = job ? isSaved(job.id) : false
+
+  const handleApply = async () => {
+    if (!job) return
+    if (!user) {
+      navigate('/login', { state: { from: job.slug } })
+      return
+    }
+    if (role !== 'seeker') {
+      setAppError('Only job seeker accounts can apply for jobs. Sign in with a job seeker account.')
+      return
+    }
+    setAppError(null)
+    setApplying(true)
+    try {
+      await seekerApi.apply({ job_id: job.id })
+      setApplied(true)
+    } catch (err) {
+      const message =
+        err?.payload?.message ?? err?.payload?.errors?.job_id?.[0] ?? 'Could not submit your application. Please try again.'
+      setAppError(message)
+    } finally {
+      setApplying(false)
+    }
+  }
+
+  const handleToggleSave = async () => {
+    if (!job) return
+    if (!user) {
+      navigate('/login', { state: { from: job.slug } })
+      return
+    }
+    if (role !== 'seeker') return
+    try {
+      await toggleSave(job.id, !saved)
+    } catch {
+      // Ignore — keep current UI state.
+    }
+  }
 
   if (loading) {
     return (
@@ -131,6 +192,16 @@ export default function JobDetailsPage() {
           <div className="hh-detail-grid">
             {/* Main content */}
             <div>
+              {appError && (
+                <Alert
+                  variant="danger"
+                  className="hh-mb-5"
+                  dismissible
+                  onDismiss={() => setAppError(null)}
+                >
+                  {appError}
+                </Alert>
+              )}
               {applied && (
                 <Alert
                   variant="success"
@@ -247,12 +318,18 @@ export default function JobDetailsPage() {
                   size="lg"
                   pill
                   className="hh-mb-3"
-                  onClick={() => setApplied(true)}
+                  onClick={handleApply}
+                  disabled={applying || applied}
                 >
                   {applied ? (
                     <>
                       <i className="bi bi-check-lg" aria-hidden="true" />
                       Applied
+                    </>
+                  ) : applying ? (
+                    <>
+                      <span className="spinner-border spinner-border-sm me-2" aria-hidden="true" />
+                      Submitting…
                     </>
                   ) : (
                     'Apply Now'
@@ -262,7 +339,7 @@ export default function JobDetailsPage() {
                   block
                   variant={saved ? 'primary' : 'outline'}
                   pill
-                  onClick={() => setSaved((s) => !s)}
+                  onClick={handleToggleSave}
                   icon={saved ? 'bookmark-check-fill' : 'bookmark'}
                 >
                   {saved ? 'Saved' : 'Save Job'}

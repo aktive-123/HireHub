@@ -1,9 +1,10 @@
-import { Link, NavLink, Outlet } from 'react-router-dom'
+import { Link, NavLink, Navigate, Outlet } from 'react-router-dom'
 import whiteLogo from '../assets/white logo.png'
 import { useAuth } from '../context/AuthContext'
 
 export default function EmployerLayout() {
-  const { user } = useAuth()
+  const { user, bootstrapped } = useAuth()
+  if (bootstrapped && !user) return <Navigate to="/login" replace state={{ from: '/employer' }} />
   const userName = user?.name || 'Employer'
   const userInitials =
     userName

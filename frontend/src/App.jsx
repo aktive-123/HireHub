@@ -1,5 +1,6 @@
 import { BrowserRouter, Routes, Route } from 'react-router-dom'
 import { AuthProvider } from './context/AuthContext'
+import { SavedJobsProvider } from './context/SavedJobsContext'
 
 // Layouts
 import PublicLayout from './layouts/PublicLayout'
@@ -73,7 +74,8 @@ import AdminSettingsPage from './pages/admin/AdminSettingsPage'
 export default function App() {
   return (
     <AuthProvider>
-      <BrowserRouter>
+      <SavedJobsProvider>
+        <BrowserRouter>
         <Routes>
           {/* Public Routes */}
           <Route element={<PublicLayout />}>
@@ -148,6 +150,7 @@ export default function App() {
         </Route>
       </Routes>
       </BrowserRouter>
+      </SavedJobsProvider>
     </AuthProvider>
   )
 }

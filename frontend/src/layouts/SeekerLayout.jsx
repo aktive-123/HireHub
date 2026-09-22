@@ -1,4 +1,4 @@
-import { Link, NavLink, Outlet, useLocation } from 'react-router-dom'
+import { Link, NavLink, Navigate, Outlet, useLocation } from 'react-router-dom'
 import whiteLogo from '../assets/white logo.png'
 import { useAuth } from '../context/AuthContext'
 import { initials } from '../utils/format'
@@ -18,7 +18,8 @@ const PAGE_META = [
 
 export default function SeekerLayout() {
   const { pathname } = useLocation()
-  const { user } = useAuth()
+  const { user, bootstrapped } = useAuth()
+  if (bootstrapped && !user) return <Navigate to="/login" replace state={{ from: '/seeker' }} />
   const meta = PAGE_META.find((m) => m.pattern.test(pathname))
   const title = meta?.title ?? 'Job Seeker Portal'
   const userName = user?.name || 'Job Seeker'

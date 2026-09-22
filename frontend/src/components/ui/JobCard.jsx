@@ -1,8 +1,10 @@
 import { useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import Badge from './Badge'
 import Reveal from './Reveal'
 import { formatSalaryAmount, formatSalaryPeriod, getEmploymentBadge } from '../../utils/jobs'
+import { useAuth } from '../../context/AuthContext'
+import { useSavedJobs } from '../../context/SavedJobsContext'
 
 /*
  * Badge colour system (formal) — keep consistent across every card:
@@ -14,14 +16,27 @@ import { formatSalaryAmount, formatSalaryPeriod, getEmploymentBadge } from '../.
  */
 
 export default function JobCard({ job, index = 0, featured = false }) {
-  const [saved, setSaved] = useState(false)
   const [bouncing, setBouncing] = useState(false)
+  const { user, role } = useAuth()
+  const { isSaved, toggleSave } = useSavedJobs()
+  const navigate = useNavigate()
   const badge = getEmploymentBadge(job)
+  const saved = isSaved(job.id)
 
-  const toggleSaved = () => {
-    setSaved((p) => !p)
+  const toggleSaved = async () => {
+    if (!user) {
+      navigate('/login', { state: { from: `/jobs/${job.slug ?? job.id}` } })
+      return
+    }
+    if (role !== 'seeker') return
     setBouncing(true)
-    window.setTimeout(() => setBouncing(false), 260)
+    try {
+      await toggleSave(job.id, !saved)
+    } catch {
+      // Keep UI state unchanged on failure.
+    } finally {
+      window.setTimeout(() => setBouncing(false), 260)
+    }
   }
 
   return (

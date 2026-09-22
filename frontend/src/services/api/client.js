@@ -38,6 +38,10 @@ export const apiClient = {
   async request(path, options = {}) {
     const res = await apiClient.xhr(path, options)
     if (!res.ok) {
+      if (res.status === 401 && getAuthToken()) {
+        clearSession()
+        if (typeof window !== 'undefined') window.dispatchEvent(new Event('hh:session-expired'))
+      }
       const error = new Error(`Request failed with status ${res.status}`)
       error.status = res.status
       try {

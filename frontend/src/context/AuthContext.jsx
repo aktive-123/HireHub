@@ -89,6 +89,14 @@ export function AuthProvider({ children }) {
     return next
   }, [])
 
+  useEffect(() => {
+    const onSessionExpired = () => {
+      setUser(null)
+    }
+    window.addEventListener('hh:session-expired', onSessionExpired)
+    return () => window.removeEventListener('hh:session-expired', onSessionExpired)
+  }, [])
+
   const value = useMemo(
     () => ({
       user,
