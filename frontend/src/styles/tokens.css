@@ -129,6 +129,16 @@
   --hh-space-10: 4rem;
   --hh-space-12: 6rem;
 
+  /* Semantic layout rhythm for dashboard surfaces. Every page + shared
+     component consumes these tokens instead of raw space values, so one
+     edit here re-rhythms the whole product. All values align to the 8px
+     scale (12/16/24/32/48). */
+  --hh-gap-section: var(--hh-space-6);  /* 32px — between major page blocks */
+  --hh-gap-block: var(--hh-space-5);    /* 24px — section header ↔ first card */
+  --hh-gap-item: var(--hh-space-4);     /* 16px — between cards/controls in a grid */
+  --hh-gap-tight: var(--hh-space-3);    /* 12px — inside form rows, avatar clusters */
+  --hh-gap-cell: var(--hh-space-3) var(--hh-space-4); /* 12×16 — table cell padding */
+
   --hh-radius-sm: 0.375rem;
   --hh-radius: 0.625rem;
   --hh-radius-md: 0.75rem;

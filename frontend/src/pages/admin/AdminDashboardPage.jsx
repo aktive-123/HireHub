@@ -3,6 +3,9 @@ import AdminStatGrid from '../../components/admin/AdminStatGrid'
 import UserCell from '../../components/admin/UserCell'
 import Card from '../../components/ui/Card'
 import Badge from '../../components/ui/Badge'
+import StatusBadge from '../../components/ui/StatusBadge'
+import DataTable from '../../components/ui/DataTable'
+import TablePagination from '../../components/ui/TablePagination'
 import Button from '../../components/ui/Button'
 import Reveal from '../../components/ui/Reveal'
 import DashboardHero from '../../components/ui/DashboardHero'
@@ -13,9 +16,7 @@ import {
   adminJobs,
   activityLogs,
   MODERATION_LABELS,
-  MODERATION_VARIANT,
 } from '../../data/admin'
-import { STATUS_LABEL, STATUS_VARIANT } from '../../data/applicants'
 
 const TYPE_ICONS = {
   success: 'check2-circle',
@@ -38,7 +39,7 @@ export default function AdminDashboardPage() {
   const recentActivity = activityLogs.slice(0, 5)
 
   return (
-    <section className="hh-section-space hh-section-space--close bg-white">
+    <section className="hh-section-space bg-white">
       <div className="page-container">
         <DashboardHero
           eyebrow="WELCOME BACK,"
@@ -61,39 +62,32 @@ export default function AdminDashboardPage() {
                     View all
                   </Button>
                 </div>
-                <div className="table-responsive">
-                  <table className="hh-table hh-table-hover hh-mb-0">
-                    <thead>
-                      <tr>
-                        <th>Applicant</th>
-                        <th>Applied for</th>
-                        <th className="hh-table-col-center">Match</th>
-                        <th>Status</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {recentApps.map((app) => (
-                        <tr key={app.id}>
-                          <td>
-                            <UserCell name={app.applicant} meta={app.email} />
-                          </td>
-                          <td>
-                            <span className="hh-fw-medium">{app.job}</span>
-                            <span className="text-muted d-block small">{app.company}</span>
-                          </td>
-                          <td className="hh-table-col-center">
-                            <Badge variant="info" sm>{app.match}%</Badge>
-                          </td>
-                          <td>
-                            <Badge variant={STATUS_VARIANT[app.status] || 'secondary'} dot sm>
-                              {STATUS_LABEL[app.status]}
-                            </Badge>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
+                <DataTable
+                  columns={[
+                    { key: 'applicant', label: 'Applicant' },
+                    { key: 'job', label: 'Applied for' },
+                    { key: 'match', label: 'Match', align: 'center' },
+                    { key: 'status', label: 'Status' },
+                  ]}
+                  rows={recentApps.map((app) => ({
+                    id: app.id,
+                    applicant: <UserCell name={app.applicant} meta={app.email} />,
+                    job: (
+                      <>
+                        <span className="hh-fw-medium">{app.job}</span>
+                        <span className="text-muted d-block small">{app.company}</span>
+                      </>
+                    ),
+                    match: <Badge variant="info" sm>{app.match}%</Badge>,
+                    status: <StatusBadge status={app.status} />,
+                  }))}
+                  rowKey={(row) => row.id}
+                />
+                <TablePagination
+                  pageSize={recentApps.length}
+                  total={recentApps.length}
+                  onPageChange={() => {}}
+                />
               </Card>
             </Reveal>
           </div>
@@ -119,9 +113,7 @@ export default function AdminDashboardPage() {
                           </p>
                           <span className="hh-note-time">{job.posted}</span>
                         </div>
-                        <Badge variant={MODERATION_VARIANT[job.status]} sm>
-                          {MODERATION_LABELS[job.status]}
-                        </Badge>
+                        <StatusBadge status={job.status} label={MODERATION_LABELS[job.status]} sm />
                       </div>
                     ))}
                     <Link to="/admin/jobs" className="hh-btn hh-btn-outline-primary hh-btn-sm hh-btn-block hh-mt-3">

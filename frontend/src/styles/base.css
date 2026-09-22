@@ -155,6 +155,23 @@ textarea::placeholder {
   background-color: var(--hh-secondary);
 }
 
+.page-container.hh-page-container-narrow {
+  max-width: 900px;
+}
+
+/* Muted/accent text helpers for dark hero bands */
+.hh-on-dark-muted {
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.hh-company-meta.hh-on-dark-muted {
+  color: rgba(255, 255, 255, 0.65);
+}
+
+.hh-on-dark-accent {
+  color: var(--hh-blue-light);
+}
+
 .hh-section-space {
   padding-block: var(--hh-space-12);
 }
@@ -170,12 +187,20 @@ textarea::placeholder {
   opacity: 0;
   transform: translateY(24px);
   transition: opacity 400ms ease-out, transform 400ms ease-out;
-  height: 100%;
 }
 
 .hh-reveal.is-visible {
   opacity: 1;
   transform: none;
+}
+
+/* Equal-height card grids: only when a Reveal is the single child of a
+   Bootstrap column (one card per cell — job cards, category cards, step
+   cards, feature cards) does it stretch to fill the cell height. Columns
+   that stack several cards (profile / detail pages) keep natural height so
+   cards sit close together instead of blowing up to the column height. */
+.row > [class*='col-'] > .hh-reveal:only-child {
+  height: 100%;
 }
 
 /* Zoom reveal variant: fade + subtle scale-up */

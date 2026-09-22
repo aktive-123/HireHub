@@ -1,10 +1,10 @@
 import { useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
-import SectionHeading from '../../components/ui/SectionHeading'
-import Reveal from '../../components/ui/Reveal'
-import Badge from '../../components/ui/Badge'
+import PageHeader from '../../components/ui/PageHeader'
+import StatusBadge from '../../components/ui/StatusBadge'
+import DataTable from '../../components/ui/DataTable'
+import TablePagination from '../../components/ui/TablePagination'
 import EmptyState from '../../components/ui/EmptyState'
-import Pagination from '../../components/ui/Pagination'
 import Card from '../../components/ui/Card'
 import Button from '../../components/ui/Button'
 
@@ -21,12 +21,14 @@ const SAMPLE_INTERVIEWS = [
   { id: 'i8', applicant: 'Yusuf Adeyemi', role: 'DevOps Engineer', when: 'Fri, Sep 26 · 12:00', mode: 'On-site', status: 'completed' },
 ]
 
-const STATUS_VARIANT = {
-  scheduled: 'primary',
-  confirmed: 'success',
-  pending: 'warning',
-  completed: 'secondary',
-  cancelled: 'danger',
+// The row action adapts to the interview's stage so users aren't offered one
+// generic action regardless of status.
+const ACTION_LABEL = {
+  pending: 'Confirm',
+  scheduled: 'Reschedule',
+  confirmed: 'Manage',
+  completed: 'Review',
+  cancelled: 'Rebook',
 }
 
 export default function EmployerInterviewsPage() {
@@ -43,96 +45,96 @@ export default function EmployerInterviewsPage() {
     })
   }, [filter, query])
 
-  const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE))
   const visible = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE)
 
   return (
-    <>
-      <section className="hh-section-space bg-white">
-        <div className="page-container">
-          <Reveal>
-            <div className="hh-toolbar hh-toolbar-between hh-mb-4">
-              <SectionHeading
-                eyebrow="EMPLOYER DASHBOARD"
-                title="Interviews"
-                subtitle="Schedule, confirm and track your interview sessions."
-              />
-              <Link to="/employer/interviews/new">
-                <Button variant="primary" icon="bi-plus-lg">Schedule interview</Button>
-              </Link>
-            </div>
-          </Reveal>
+    <section className="hh-section-space bg-white">
+      <div className="page-container">
+        <PageHeader
+          eyebrow="EMPLOYER DASHBOARD"
+          title="Interviews"
+          subtitle="Schedule, confirm and track your interview sessions."
+          action={
+            <Link to="/employer/interviews/new">
+              <Button variant="primary" icon="bi-plus-lg">Schedule interview</Button>
+            </Link>
+          }
+        />
 
-          <div className="hh-toolbar hh-toolbar-between hh-mb-4">
-            <div className="hh-search-field hh-search-field-lg">
-              <i className="bi bi-search" aria-hidden="true" />
-              <input
-                type="search"
-                className="hh-form-control"
-                placeholder="Search by applicant or role…"
-                value={query}
-                onChange={(e) => { setQuery(e.target.value); setPage(1) }}
-                aria-label="Search interviews"
-              />
-            </div>
-            <div className="hh-btn-group" role="group" aria-label="Filter interviews">
-              {['all', 'scheduled', 'confirmed', 'completed', 'cancelled'].map((s) => (
-                <button
-                  key={s}
-                  type="button"
-                  className={`hh-btn hh-btn-outline-primary hh-btn-sm ${filter === s ? 'is-active' : ''}`}
-                  onClick={() => { setFilter(s); setPage(1) }}
-                >
-                  {s === 'all' ? 'All' : s.charAt(0).toUpperCase() + s.slice(1)}
-                </button>
-              ))}
-            </div>
+        <div className="hh-toolbar hh-toolbar-between hh-mb-4">
+          <div className="hh-search-field hh-search-field-lg">
+            <i className="bi bi-search" aria-hidden="true" />
+            <input
+              type="search"
+              className="hh-form-control"
+              placeholder="Search by applicant or role…"
+              value={query}
+              onChange={(e) => {
+                setQuery(e.target.value)
+                setPage(1)
+              }}
+              aria-label="Search interviews"
+            />
           </div>
-
-          {visible.length > 0 ? (
-            <Card className="hh-card-body hh-p-0 hh-card--table">
-              <div className="table-responsive">
-                <table className="hh-table hh-table-hover hh-mb-0">
-                  <thead>
-                    <tr>
-                      <th>Applicant</th>
-                      <th>Role</th>
-                      <th>When</th>
-                      <th>Mode</th>
-                      <th>Status</th>
-                      <th>Action</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {visible.map((i) => (
-                      <tr key={i.id}>
-                        <td className="hh-fw-semibold">{i.applicant}</td>
-                        <td>{i.role}</td>
-                        <td>{i.when}</td>
-                        <td>{i.mode}</td>
-                        <td><Badge variant={STATUS_VARIANT[i.status] || 'secondary'}>{i.status}</Badge></td>
-                        <td>
-                          <Link to={`/employer/interviews/${i.id}`}>
-                            <Button variant="outline-primary" size="sm">Manage</Button>
-                          </Link>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </Card>
-          ) : (
-            <EmptyState icon="calendar3" title="No interviews found" text="Try a different search or filter." />
-          )}
-
-          {totalPages > 1 && (
-            <div className="hh-mt-4">
-              <Pagination currentPage={page} totalPages={totalPages} onPageChange={setPage} />
-            </div>
-          )}
+          <div className="hh-btn-group" role="group" aria-label="Filter interviews">
+            {['all', 'scheduled', 'confirmed', 'completed', 'cancelled'].map((s) => (
+              <button
+                key={s}
+                type="button"
+                className={`hh-btn hh-btn-outline-primary hh-btn-sm ${filter === s ? 'is-active' : ''}`}
+                onClick={() => {
+                  setFilter(s)
+                  setPage(1)
+                }}
+              >
+                {s === 'all' ? 'All' : s.charAt(0).toUpperCase() + s.slice(1)}
+              </button>
+            ))}
+          </div>
         </div>
-      </section>
-    </>
+
+        {visible.length > 0 ? (
+          <Card className="hh-card-body hh-p-0 hh-card--table">
+            <DataTable
+              columns={[
+                { key: 'applicant', label: 'Applicant' },
+                { key: 'role', label: 'Role' },
+                { key: 'when', label: 'When' },
+                { key: 'mode', label: 'Mode' },
+                { key: 'status', label: 'Status' },
+                { key: 'action', label: 'Action', align: 'right' },
+              ]}
+              rows={visible.map((i) => ({
+                id: i.id,
+                applicant: <span className="hh-fw-semibold">{i.applicant}</span>,
+                role: i.role,
+                when: i.when,
+                mode: i.mode,
+                status: <StatusBadge status={i.status} />,
+                action: (
+                  <Link to={`/employer/interviews/${i.id}`}>
+                    <Button variant="outline-primary" size="sm">
+                      {ACTION_LABEL[i.status] || 'Manage'}
+                    </Button>
+                  </Link>
+                ),
+              }))}
+              rowKey={(row) => row.id}
+            />
+          </Card>
+        ) : (
+          <Card className="hh-card-body">
+            <EmptyState icon="calendar3" title="No interviews found" text="Try a different search or filter." />
+          </Card>
+        )}
+
+        <TablePagination
+          page={page}
+          pageSize={PAGE_SIZE}
+          total={filtered.length}
+          onPageChange={setPage}
+        />
+      </div>
+    </section>
   )
 }

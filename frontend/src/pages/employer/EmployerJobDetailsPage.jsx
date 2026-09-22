@@ -1,29 +1,109 @@
 import { useMemo, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
-import { getPublicJobById } from '../../data/jobs'
-import { applicants, STATUS_VARIANT } from '../../data/applicants'
+import { employerApi } from '../../services/api'
+import { useApiData } from '../../hooks/useApiData'
 import { formatSalaryAmount, formatSalaryPeriod, getEmploymentBadge } from '../../utils/jobs'
-import SectionHeading from '../../components/ui/SectionHeading'
+import PageHeader from '../../components/ui/PageHeader'
 import Reveal from '../../components/ui/Reveal'
 import Badge from '../../components/ui/Badge'
+import StatusBadge from '../../components/ui/StatusBadge'
 import EmptyState from '../../components/ui/EmptyState'
-import Pagination from '../../components/ui/Pagination'
+import TablePagination from '../../components/ui/TablePagination'
 import Card from '../../components/ui/Card'
 import Button from '../../components/ui/Button'
+import LoadingState from '../../components/ui/LoadingState'
 
 const PAGE_SIZE = 6
 
+const EMPLOYMENT_LABELS = {
+  'full-time': 'Full-time',
+  'part-time': 'Part-time',
+  contract: 'Contract',
+  internship: 'Internship',
+  remote: 'Remote',
+}
+
+function daysFromPosted(postedAt) {
+  if (!postedAt) return 0
+  const date = new Date(postedAt)
+  if (Number.isNaN(date.getTime())) return 0
+  return Math.max(0, Math.floor((Date.now() - date.getTime()) / 86400000))
+}
+
+function normalizeJob(job) {
+  const employmentKey = String(job.employment_type ?? job.type ?? '').toLowerCase()
+  return {
+    ...job,
+    company: typeof job.company === 'string' ? { name: job.company } : (job.company ?? {}),
+    applications_count: job.applications ?? job.applications_count,
+    employment_type: EMPLOYMENT_LABELS[employmentKey] || job.employment_type || job.type || undefined,
+    salary: job.salary ?? {
+      min: job.salary_min,
+      max: job.salary_max,
+      currency: job.salary_currency,
+      period: job.salary_period,
+    },
+    posted_days_ago: job.posted_days_ago ?? daysFromPosted(job.posted_at),
+  }
+}
+
 export default function EmployerJobDetailsPage() {
   const { id } = useParams()
-  const job = getPublicJobById(id)
 
   const [tab, setTab] = useState('all')
   const [page, setPage] = useState(1)
 
-  const jobApplicants = useMemo(
-    () => applicants.filter((a) => a.job === (job ? job.title : '')).map((a) => ({ ...a })),
-    [job]
+  const jobsFetch = useApiData(() => employerApi.jobs(), [])
+  const applicantsFetch = useApiData(() => employerApi.applicants(), [])
+
+  const job = useMemo(
+    () => {
+      const found = (jobsFetch.data?.items ?? []).find((item) => item.slug === id || item.id === id)
+      return found ? normalizeJob(found) : null
+    },
+    [jobsFetch.data, id]
   )
+
+  const jobApplicants = useMemo(
+    () =>
+      (applicantsFetch.data ?? [])
+        .filter((a) => a.job_slug === (job?.slug ?? id) || a.job === (job?.title ?? ''))
+        .map((a) => ({ ...a })),
+    [applicantsFetch.data, job, id]
+  )
+
+  if (jobsFetch.loading || applicantsFetch.loading) {
+    return (
+      <section className="hh-section-space bg-white">
+        <div className="page-container">
+          <Reveal>
+            <LoadingState text="Loading job details…" />
+          </Reveal>
+        </div>
+      </section>
+    )
+  }
+
+  if (jobsFetch.error || applicantsFetch.error) {
+    return (
+      <section className="hh-section-space bg-white">
+        <div className="page-container">
+          <Reveal>
+            <EmptyState
+              icon="exclamation-triangle"
+              title="Couldn't load this job"
+              text="Something went wrong while fetching this posting. Please try again."
+              action={
+                <button type="button" className="hh-btn hh-btn-outline-primary hh-btn-pill" onClick={() => jobsFetch.reload()}>
+                  Try again
+                </button>
+              }
+            />
+          </Reveal>
+        </div>
+      </section>
+    )
+  }
 
   if (!job) {
     return (
@@ -47,7 +127,6 @@ export default function EmployerJobDetailsPage() {
   ]
 
   const filtered = tab === 'all' ? jobApplicants : jobApplicants.filter((a) => a.status === tab)
-  const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE))
   const visible = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE)
 
   const stats = [
@@ -63,27 +142,25 @@ export default function EmployerJobDetailsPage() {
     <>
       <section className="hh-section-space bg-white">
         <div className="page-container">
-          <Reveal>
-            <div className="hh-toolbar hh-toolbar-between hh-mb-4">
-              <SectionHeading
-                eyebrow="EMPLOYER"
-                title={job.title}
-                subtitle="Manage this posting and review its applicants."
-              />
-              <div className="d-flex flex-wrap gap-2">
-                <Link to={`/employer/jobs/${job.id}/edit`}>
-                  <Button variant="outline-primary" icon="bi-pencil">Edit job</Button>
-                </Link>
-                <Link to={`/jobs/${job.id}`}>
-                  <Button variant="primary" icon="bi-box-arrow-up-right">View on site</Button>
-                </Link>
-              </div>
+<PageHeader
+          eyebrow="EMPLOYER"
+          title={job.title}
+          subtitle="Manage this posting and review its applicants."
+          action={
+            <div className="d-flex flex-wrap gap-2">
+              <Link to={`/employer/jobs/${job.slug || job.id}/edit`}>
+                <Button variant="outline-primary" icon="bi-pencil">Edit job</Button>
+              </Link>
+              <Link to={`/jobs/${job.slug || job.id}`}>
+                <Button variant="primary" icon="bi-box-arrow-up-right">View on site</Button>
+              </Link>
             </div>
-          </Reveal>
+          }
+        />
 
-          <Reveal>
-            <div className="d-flex align-items-center gap-2 flex-wrap hh-mb-4">
-              <Badge variant="success" dot>{job.status || 'open'}</Badge>
+        <Reveal>
+          <div className="d-flex align-items-center gap-2 flex-wrap hh-mb-4">
+            <StatusBadge status={job.status || 'open'} />
               <Badge variant={employment.variant} icon={employment.icon}>{employment.label}</Badge>
               <Badge variant="secondary">{job.level}</Badge>
               <span className="hh-small text-muted">
@@ -130,18 +207,19 @@ export default function EmployerJobDetailsPage() {
                           <span className="hh-activity-meta">{a.role} · Applied {a.applied} · {a.match}% match</span>
                         </div>
                         <div className="hh-app-action">
-                          <Badge variant={STATUS_VARIANT[a.status] || 'secondary'}>{a.status}</Badge>
+                          <StatusBadge status={a.status} />
                           <Link to={`/employer/applicants/${a.id}`}>
                             <Button variant="outline-primary" size="sm">Review</Button>
                           </Link>
                         </div>
                       </div>
                     ))}
-                    {totalPages > 1 && (
-                      <div className="hh-mt-4">
-                        <Pagination currentPage={page} totalPages={totalPages} onPageChange={setPage} />
-                      </div>
-                    )}
+                    <TablePagination
+                      page={page}
+                      pageSize={PAGE_SIZE}
+                      total={filtered.length}
+                      onPageChange={setPage}
+                    />
                   </>
                 ) : (
                   <EmptyState
@@ -171,7 +249,7 @@ export default function EmployerJobDetailsPage() {
                   <Link to="/employer/applicants"><i className="bi bi-people hh-me-2" />All applicants</Link>
                   <Link to="/employer/tracking"><i className="bi bi-kanban hh-me-2" />ATS pipeline</Link>
                   <Link to="/employer/jobs"><i className="bi bi-briefcase hh-me-2" />My job posts</Link>
-                  <Link to={`/employer/jobs/${job.id}/edit`}><i className="bi bi-pencil hh-me-2" />Edit posting</Link>
+                  <Link to={`/employer/jobs/${job.slug || job.id}/edit`}><i className="bi bi-pencil hh-me-2" />Edit posting</Link>
                 </nav>
               </Card>
             </div>

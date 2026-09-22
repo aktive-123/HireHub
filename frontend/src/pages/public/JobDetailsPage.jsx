@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
-import { publicJobs, getPublicJobById } from '../../data/jobs'
+import { jobsApi } from '../../services/api'
+import { useApiData } from '../../hooks/useApiData'
 import JobCard from '../../components/ui/JobCard'
 import Reveal from '../../components/ui/Reveal'
 import EmptyState from '../../components/ui/EmptyState'
@@ -12,7 +13,7 @@ import {
   formatSalaryPeriod,
   getEmploymentBadge,
 } from '../../utils/jobs'
-import HeroSection from '../../components/ui/HeroSection'
+import PageHero from '../../components/ui/PageHero'
 import heroSlide1 from '../../assets/findjob.webp'
 import heroSlide2 from '../../assets/findjob2.jpg'
 import heroSlide3 from '../../assets/findjob3.jpg'
@@ -22,29 +23,49 @@ const heroSlides = [heroSlide1, heroSlide2, heroSlide3, heroSlide4]
 
 export default function JobDetailsPage() {
   const { id } = useParams()
-  const job = getPublicJobById(id)
+  const { data, loading, error } = useApiData(
+    () =>
+      jobsApi.list().then((r) => {
+        const items = r.items
+        const job = items.find((j) => j.slug === id)
+        if (!job) return { job: null, related: [] }
+        const related = items
+          .filter((j) => j.id !== job.id && (j.category === job.category || j.company?.id === job.company?.id))
+          .slice(0, 3)
+        const fallbackRelated =
+          related.length === 0 ? items.filter((j) => j.id !== job.id).slice(0, 3) : related
+        return { job, related: fallbackRelated }
+      }),
+    [id]
+  )
+  const job = data?.job
+  const related = data?.related ?? []
   const [applied, setApplied] = useState(false)
   const [saved, setSaved] = useState(false)
+
+  if (loading) {
+    return (
+      <section className="page-container hh-py-6">
+        <div className="hh-loading-block">
+          <span className="spinner-border spinner-border-sm me-2" aria-hidden="true" />
+          Loading job…
+        </div>
+      </section>
+    )
+  }
 
   if (!job) {
     return (
       <section className="page-container">
         <EmptyState
-          icon="search"
-          title="Job not found"
-          text="This job listing may have expired or been removed."
+          icon={error ? 'wifi-off' : 'search'}
+          title={error ? 'Could not load job' : 'Job not found'}
+          text={error ? 'There was a problem connecting to the job board.' : 'This job listing may have expired or been removed.'}
           action={<Button to="/jobs" variant="primary">Browse all jobs</Button>}
         />
       </section>
     )
   }
-
-  const related = publicJobs
-    .filter((j) => j.id !== job.id && (j.category === job.category || j.company.id === job.company.id))
-    .slice(0, 3)
-
-  const fallbackRelated =
-    related.length === 0 ? publicJobs.filter((j) => j.id !== job.id).slice(0, 3) : related
 
   const badge = getEmploymentBadge(job)
   const company = job.company
@@ -57,7 +78,7 @@ export default function JobDetailsPage() {
 
   return (
     <>
-      <HeroSection images={heroSlides}>
+      <PageHero images={heroSlides}>
         <div className="hh-mb-4">
           <Link to="/jobs" className="hh-btn hh-btn-outline-white hh-btn-sm hh-btn-pill">
             <i className="bi bi-arrow-left" aria-hidden="true" />
@@ -78,12 +99,11 @@ export default function JobDetailsPage() {
               {company.logoText || company.name.charAt(0)}
             </div>
             <div>
-              <div className="hh-company-meta" style={{ color: 'rgba(255,255,255,0.65)' }}>
+              <div className="hh-company-meta hh-on-dark-muted">
                 {company.name}
                 {company.verified && (
                   <i
-                    className="bi bi-patch-check-fill"
-                    style={{ color: 'var(--hh-blue-light)', marginLeft: 6 }}
+                    className="bi bi-patch-check-fill ms-2 hh-on-dark-accent"
                     aria-label="Verified company"
                   />
                 )}
@@ -95,7 +115,7 @@ export default function JobDetailsPage() {
                 </Badge>
                 {job.level && <Badge variant="secondary">{job.level}</Badge>}
                 {job.workplace && (
-                  <span className="hh-small" style={{ color: 'rgba(255,255,255,0.7)' }}>
+                  <span className="hh-small hh-on-dark-muted">
                     <i className="bi bi-geo-alt me-1" aria-hidden="true" />
                     {job.location} · {job.workplace}
                   </span>
@@ -104,7 +124,7 @@ export default function JobDetailsPage() {
             </div>
           </div>
         </Reveal>
-      </HeroSection>
+      </PageHero>
 
       <section className="hh-section-space bg-white">
         <div className="page-container">
@@ -256,7 +276,7 @@ export default function JobDetailsPage() {
                   </span>
                   About the company
                 </h3>
-                <div className="hh-detail-title-row hh-mb-3" style={{ marginBottom: 0 }}>
+                <div className="hh-detail-title-row">
                   <div
                     className="hh-company-logo"
                     style={{
@@ -282,7 +302,7 @@ export default function JobDetailsPage() {
                   {company.verified ? 'Verified employer on HireHub.' : 'Employer on HireHub.'}
                 </p>
                 <Link
-                  to={`/companies/${company.id}`}
+                  to={`/companies/${company.slug}`}
                   className="hh-btn hh-btn-outline-primary hh-btn-sm hh-btn-pill hh-btn-block"
                 >
                   View company profile
@@ -292,7 +312,7 @@ export default function JobDetailsPage() {
           </div>
 
           {/* Related jobs */}
-          {fallbackRelated.length > 0 && (
+          {related.length > 0 && (
             <div className="hh-mt-5">
               <Reveal>
                 <div className="hh-toolbar hh-toolbar-between hh-mb-4">
@@ -304,7 +324,7 @@ export default function JobDetailsPage() {
                 </div>
               </Reveal>
               <div className="row g-4">
-                {fallbackRelated.map((r, index) => (
+                {related.map((r, index) => (
                   <div className="col-12 col-md-6 col-lg-4" key={r.id}>
                     <JobCard job={r} index={index} />
                   </div>

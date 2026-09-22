@@ -1,8 +1,10 @@
 import { useMemo, useState } from 'react'
-import { publicJobs } from '../../data/jobs'
+import { jobsApi } from '../../services/api'
+import { useApiData } from '../../hooks/useApiData'
 import SectionHeading from '../../components/ui/SectionHeading'
 import Reveal from '../../components/ui/Reveal'
 import EmptyState from '../../components/ui/EmptyState'
+import LoadingState from '../../components/ui/LoadingState'
 import Pagination from '../../components/ui/Pagination'
 import JobCard from '../../components/ui/JobCard'
 import SortDropdown from '../../components/ui/SortDropdown'
@@ -24,9 +26,13 @@ export default function SeekerBrowseJobsPage() {
   const [sort, setSort] = useState('relevant')
   const [page, setPage] = useState(1)
 
+  const { data, loading, error, reload } = useApiData(() => jobsApi.list({ per_page: 50 }), [])
+
+  const jobs = data?.items ?? []
+
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase()
-    let list = publicJobs.filter((job) => {
+    let list = jobs.filter((job) => {
       const matchesQuery =
         !q ||
         job.title.toLowerCase().includes(q) ||
@@ -45,7 +51,7 @@ export default function SeekerBrowseJobsPage() {
     })
 
     return list
-  }, [query, type, sort])
+  }, [jobs, query, type, sort])
 
   const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE))
   const visible = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE)
@@ -55,6 +61,39 @@ export default function SeekerBrowseJobsPage() {
     setType('all')
     setSort('relevant')
     setPage(1)
+  }
+
+  if (loading) {
+    return (
+      <section className="hh-section-space bg-white">
+        <div className="page-container">
+          <Reveal>
+            <LoadingState text="Loading jobs…" />
+          </Reveal>
+        </div>
+      </section>
+    )
+  }
+
+  if (error) {
+    return (
+      <section className="hh-section-space bg-white">
+        <div className="page-container">
+          <Reveal>
+            <EmptyState
+              icon="exclamation-triangle"
+              title="Couldn't load jobs"
+              text="Something went wrong while fetching jobs. Please try again."
+              action={
+                <button type="button" className="hh-btn hh-btn-outline-primary hh-btn-pill" onClick={() => reload()}>
+                  Try again
+                </button>
+              }
+            />
+          </Reveal>
+        </div>
+      </section>
+    )
   }
 
   return (

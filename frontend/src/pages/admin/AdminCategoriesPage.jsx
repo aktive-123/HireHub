@@ -1,11 +1,9 @@
 import AdminPageHeader from '../../components/admin/AdminPageHeader'
-import Badge from '../../components/ui/Badge'
+import StatusBadge from '../../components/ui/StatusBadge'
 import Card from '../../components/ui/Card'
 import Button from '../../components/ui/Button'
 import Reveal from '../../components/ui/Reveal'
-import { adminCategories, CATEGORY_STATUS_LABELS } from '../../data/admin'
-
-const TONES = ['primary', 'info', 'success', 'warning']
+import { adminCategories } from '../../data/admin'
 
 export default function AdminCategoriesPage() {
   return (
@@ -27,15 +25,13 @@ export default function AdminCategoriesPage() {
             <div className="col-12 col-sm-6 col-lg-3" key={category.id}>
               <Reveal delay={index * 50}>
                 <Card className="hh-card-body hh-card-hover h-100 d-flex flex-column">
-                  <div className={`hh-stat-icon hh-stat-icon-${TONES[index % TONES.length]} hh-mb-2`}>
+                  <div className="hh-stat-icon hh-stat-icon-primary hh-mb-2">
                     <i className={`bi bi-${category.icon}`} aria-hidden="true" />
                   </div>
                   <h3 className="hh-fw-semibold text-secondary hh-mb-0">{category.name}</h3>
                   <span className="text-muted small hh-mb-3">{category.jobs} open roles</span>
                   <div className="mt-auto d-flex align-items-center justify-content-between gap-2">
-                    <Badge variant={category.status === 'active' ? 'success' : 'secondary'} sm>
-                      {CATEGORY_STATUS_LABELS[category.status]}
-                    </Badge>
+                    <StatusBadge status={category.status} />
                     <div className="d-flex gap-2">
                       <button type="button" className="hh-icon-btn" data-tooltip="Edit category" aria-label={`Edit ${category.name}`}>
                         <i className="bi bi-pencil" aria-hidden="true" />

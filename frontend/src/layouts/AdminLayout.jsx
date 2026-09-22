@@ -21,7 +21,7 @@ export default function AdminLayout() {
               `hh-dashboard-nav-link ${isActive ? 'hh-dashboard-nav-link--active' : ''}`
             }
           >
-            <i className="bi bi-shield-check" /> Admin Overview
+            <i className="bi bi-shield-fill" /> Admin Overview
           </NavLink>
           <NavLink
             to="/admin/users"
@@ -29,7 +29,7 @@ export default function AdminLayout() {
               `hh-dashboard-nav-link ${isActive ? 'hh-dashboard-nav-link--active' : ''}`
             }
           >
-            <i className="bi bi-people" /> All Users
+            <i className="bi bi-people-fill" /> All Users
           </NavLink>
           <NavLink
             to="/admin/job-seekers"
@@ -37,7 +37,7 @@ export default function AdminLayout() {
               `hh-dashboard-nav-link ${isActive ? 'hh-dashboard-nav-link--active' : ''}`
             }
           >
-            <i className="bi bi-person-badge" /> Job Seekers
+            <i className="bi bi-person-badge-fill" /> Job Seekers
           </NavLink>
           <NavLink
             to="/admin/employers"
@@ -45,7 +45,7 @@ export default function AdminLayout() {
               `hh-dashboard-nav-link ${isActive ? 'hh-dashboard-nav-link--active' : ''}`
             }
           >
-            <i className="bi bi-briefcase" /> Employers
+            <i className="bi bi-briefcase-fill" /> Employers
           </NavLink>
           <NavLink
             to="/admin/companies"
@@ -53,7 +53,7 @@ export default function AdminLayout() {
               `hh-dashboard-nav-link ${isActive ? 'hh-dashboard-nav-link--active' : ''}`
             }
           >
-            <i className="bi bi-buildings" /> Companies
+            <i className="bi bi-buildings-fill" /> Companies
           </NavLink>
           <NavLink
             to="/admin/jobs"
@@ -61,7 +61,7 @@ export default function AdminLayout() {
               `hh-dashboard-nav-link ${isActive ? 'hh-dashboard-nav-link--active' : ''}`
             }
           >
-            <i className="bi bi-file-earmark-text" /> Moderated Jobs
+            <i className="bi bi-file-earmark-text-fill" /> Moderated Jobs
           </NavLink>
           <NavLink
             to="/admin/applications"
@@ -69,7 +69,7 @@ export default function AdminLayout() {
               `hh-dashboard-nav-link ${isActive ? 'hh-dashboard-nav-link--active' : ''}`
             }
           >
-            <i className="bi bi-inbox" /> Applications
+            <i className="bi bi-inbox-fill" /> Applications
           </NavLink>
           <NavLink
             to="/admin/categories"
@@ -77,7 +77,7 @@ export default function AdminLayout() {
               `hh-dashboard-nav-link ${isActive ? 'hh-dashboard-nav-link--active' : ''}`
             }
           >
-            <i className="bi bi-tags" /> Categories
+            <i className="bi bi-tags-fill" /> Categories
           </NavLink>
           <NavLink
             to="/admin/skills"
@@ -85,7 +85,7 @@ export default function AdminLayout() {
               `hh-dashboard-nav-link ${isActive ? 'hh-dashboard-nav-link--active' : ''}`
             }
           >
-            <i className="bi bi-cpu" /> Skills
+            <i className="bi bi-cpu-fill" /> Skills
           </NavLink>
           <NavLink
             to="/admin/reports"
@@ -122,7 +122,7 @@ export default function AdminLayout() {
 
       <div className="hh-dashboard-content">
         <header className="hh-dashboard-topbar">
-          <div className="fw-semibold text-danger">Superadmin Control Center</div>
+          <div className="fw-semibold text-secondary">Superadmin Control Center</div>
           <div className="d-flex align-items-center gap-3">
             <AdminNotificationBell />
             <div className="d-flex align-items-center gap-2 hh-topbar-user">
@@ -137,7 +137,7 @@ export default function AdminLayout() {
             <Link to="/login" className="hh-topbar-icon hh-tip-bottom hh-tip-end" data-tooltip="Log out" aria-label="Log out">
               <i className="bi bi-box-arrow-right" aria-hidden="true" />
             </Link>
-            <span className="hh-badge hh-badge-danger">Admin Mode</span>
+            <span className="hh-badge hh-badge-accent">Admin Mode</span>
           </div>
         </header>
 

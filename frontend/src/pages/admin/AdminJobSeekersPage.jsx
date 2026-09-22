@@ -2,11 +2,12 @@ import { useState, useMemo } from 'react'
 import AdminPageHeader from '../../components/admin/AdminPageHeader'
 import AdminStatGrid from '../../components/admin/AdminStatGrid'
 import UserCell from '../../components/admin/UserCell'
-import Badge from '../../components/ui/Badge'
+import StatusBadge from '../../components/ui/StatusBadge'
+import DataTable from '../../components/ui/DataTable'
+import TablePagination from '../../components/ui/TablePagination'
 import Card from '../../components/ui/Card'
 import EmptyState from '../../components/ui/EmptyState'
-import Pagination from '../../components/ui/Pagination'
-import { adminJobSeekers, ACCOUNT_LABELS, ACCOUNT_VARIANT } from '../../data/admin'
+import { adminJobSeekers, ACCOUNT_LABELS } from '../../data/admin'
 
 const PAGE_SIZE = 8
 
@@ -40,7 +41,6 @@ export default function AdminJobSeekersPage() {
     })
   }, [tab, query])
 
-  const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE))
   const visible = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE)
 
   return (
@@ -72,7 +72,7 @@ export default function AdminJobSeekersPage() {
           ))}
         </div>
 
-        <div className="hh-search-field hh-mb-4">
+        <div className="hh-search-field-lg hh-mb-4">
           <i className="bi bi-search" aria-hidden="true" />
           <input
             type="search"
@@ -89,54 +89,43 @@ export default function AdminJobSeekersPage() {
 
         <Card className="hh-card-body hh-p-0 hh-card--table">
           {visible.length > 0 ? (
-            <div className="table-responsive">
-              <table className="hh-table hh-table-hover hh-mb-0">
-                <thead>
-                  <tr>
-                    <th>Seeker</th>
-                    <th>Location</th>
-                    <th>Experience</th>
-                    <th>Applications</th>
-                    <th>Saved jobs</th>
-                    <th>Status</th>
-                    <th className="hh-table-col-right">Actions</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {visible.map((user) => (
-                    <tr key={user.id}>
-                      <td>
-                        <UserCell name={user.name} meta={user.email} />
-                      </td>
-                      <td>{user.location}</td>
-                      <td>{user.years} yrs</td>
-                      <td>{user.applications}</td>
-                      <td>{user.saved_jobs}</td>
-                      <td>
-                        <Badge variant={ACCOUNT_VARIANT[user.status]} dot sm>
-                          {ACCOUNT_LABELS[user.status]}
-                        </Badge>
-                      </td>
-                      <td className="hh-table-col-right">
-                        <div className="d-flex justify-content-end gap-2">
-                          <button type="button" className="hh-icon-btn" data-tooltip="View job seeker" aria-label={`View ${user.name}`}>
-                            <i className="bi bi-eye" aria-hidden="true" />
-                          </button>
-                          <button
-                            type="button"
-                            className="hh-icon-btn hh-icon-btn-danger hh-tip-start"
-                            data-tooltip="Suspend user"
-                            aria-label={`Suspend ${user.name}`}
-                          >
-                            <i className="bi bi-person-x" aria-hidden="true" />
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+            <DataTable
+              zebra
+              columns={[
+                { key: 'seeker', label: 'Seeker' },
+                { key: 'location', label: 'Location' },
+                { key: 'years', label: 'Experience' },
+                { key: 'applications', label: 'Applications' },
+                { key: 'saved_jobs', label: 'Saved jobs' },
+                { key: 'status', label: 'Status' },
+                { key: 'actions', label: 'Actions', align: 'right' },
+              ]}
+              rows={visible.map((user) => ({
+                id: user.id,
+                seeker: <UserCell name={user.name} meta={user.email} />,
+                location: user.location,
+                years: `${user.years} yrs`,
+                applications: user.applications,
+                saved_jobs: user.saved_jobs,
+                status: <StatusBadge status={user.status} label={ACCOUNT_LABELS[user.status]} />,
+                actions: (
+                  <div className="d-flex justify-content-end gap-2">
+                    <button type="button" className="hh-icon-btn" data-tooltip="View job seeker" aria-label={`View ${user.name}`}>
+                      <i className="bi bi-eye" aria-hidden="true" />
+                    </button>
+                    <button
+                      type="button"
+                      className="hh-icon-btn hh-icon-btn-danger hh-tip-start"
+                      data-tooltip="Suspend user"
+                      aria-label={`Suspend ${user.name}`}
+                    >
+                      <i className="bi bi-person-x" aria-hidden="true" />
+                    </button>
+                  </div>
+                ),
+              }))}
+              rowKey={(row) => row.id}
+            />
           ) : (
             <div className="hh-p-5">
               <EmptyState icon="person-badge" title="No job seekers match" text="Try a different search term or status filter." />
@@ -144,11 +133,12 @@ export default function AdminJobSeekersPage() {
           )}
         </Card>
 
-        {totalPages > 1 && (
-          <div className="hh-mt-4">
-            <Pagination currentPage={page} totalPages={totalPages} onPageChange={setPage} />
-          </div>
-        )}
+        <TablePagination
+          page={page}
+          pageSize={PAGE_SIZE}
+          total={filtered.length}
+          onPageChange={setPage}
+        />
       </div>
     </section>
   )

@@ -1,9 +1,10 @@
 import { useState, useMemo } from 'react'
 import AdminPageHeader from '../../components/admin/AdminPageHeader'
 import Badge from '../../components/ui/Badge'
+import DataTable from '../../components/ui/DataTable'
+import TablePagination from '../../components/ui/TablePagination'
 import Card from '../../components/ui/Card'
 import EmptyState from '../../components/ui/EmptyState'
-import Pagination from '../../components/ui/Pagination'
 import { adminSkills } from '../../data/admin'
 
 const PAGE_SIZE = 8
@@ -38,7 +39,6 @@ export default function AdminSkillsPage() {
     })
   }, [tab, query])
 
-  const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE))
   const visible = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE)
 
   return (
@@ -68,7 +68,7 @@ export default function AdminSkillsPage() {
           ))}
         </div>
 
-        <div className="hh-search-field hh-mb-4">
+        <div className="hh-search-field-lg hh-mb-4">
           <i className="bi bi-search" aria-hidden="true" />
           <input
             type="search"
@@ -85,71 +85,68 @@ export default function AdminSkillsPage() {
 
         <Card className="hh-card-body hh-p-0 hh-card--table">
           {visible.length > 0 ? (
-            <div className="table-responsive">
-              <table className="hh-table hh-table-hover hh-mb-0">
-                <thead>
-                  <tr>
-                    <th>Skill</th>
-                    <th>Category</th>
-                    <th style={{ minWidth: 200 }}>Usage</th>
-                    <th>Trend</th>
-                    <th>Status</th>
-                    <th className="hh-table-col-right">Actions</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {visible.map((skill) => {
-                    const maxUsage = 400
-                    const pct = Math.round((Math.min(skill.usage, maxUsage) / maxUsage) * 100)
-                    const trend = TREND_META[skill.trend]
-                    return (
-                      <tr key={skill.id}>
-                        <td className="hh-fw-semibold">{skill.name}</td>
-                        <td>
-                          <Badge variant={CATEGORY_VARIANT[skill.category]} sm>
-                            {skill.category}
-                          </Badge>
-                        </td>
-                        <td>
-                          <div className="hh-progress hh-mb-1">
-                            <div
-                              className={`hh-progress-bar ${skill.trend === 'up' ? 'hh-progress-bar--success' : skill.trend === 'down' ? 'hh-progress-bar--accent' : ''}`}
-                              style={{ width: `${pct}%` }}
-                            />
-                          </div>
-                          <span className="text-muted small">{skill.usage} mentions</span>
-                        </td>
-                        <td>
-                          <Badge variant={trend.variant} sm icon={trend.icon}>
-                            {trend.label}
-                          </Badge>
-                        </td>
-                        <td>
-                          <Badge variant={skill.status === 'active' ? 'success' : 'secondary'} dot sm>
-                            {skill.status === 'active' ? 'Active' : 'Hidden'}
-                          </Badge>
-                        </td>
-                        <td className="hh-table-col-right">
-                          <div className="d-flex justify-content-end gap-2">
-                            <button type="button" className="hh-icon-btn" data-tooltip="Edit skill" aria-label={`Edit ${skill.name}`}>
-                              <i className="bi bi-pencil" aria-hidden="true" />
-                            </button>
-                            <button
-                              type="button"
-                              className={`hh-icon-btn ${skill.status === 'active' ? 'hh-icon-btn-danger' : ''} hh-tip-start`}
-                              data-tooltip={skill.status === 'active' ? 'Hide skill' : 'Show skill'}
-                              aria-label={skill.status === 'active' ? `Hide ${skill.name}` : `Show ${skill.name}`}
-                            >
-                              <i className={`bi ${skill.status === 'active' ? 'bi-eye-slash' : 'bi-eye'}`} aria-hidden="true" />
-                            </button>
-                          </div>
-                        </td>
-                      </tr>
-                    )
-                  })}
-                </tbody>
-              </table>
-            </div>
+            <DataTable
+              zebra
+              columns={[
+                { key: 'skill', label: 'Skill' },
+                { key: 'category', label: 'Category' },
+                { key: 'usage', label: 'Usage', minWidth: 200 },
+                { key: 'trend', label: 'Trend' },
+                { key: 'status', label: 'Status' },
+                { key: 'actions', label: 'Actions', align: 'right' },
+              ]}
+              rows={visible.map((skill) => {
+                const maxUsage = 400
+                const pct = Math.round((Math.min(skill.usage, maxUsage) / maxUsage) * 100)
+                const trend = TREND_META[skill.trend]
+                return {
+                  id: skill.id,
+                  skill: <span className="hh-fw-semibold">{skill.name}</span>,
+                  category: (
+                    <Badge variant={CATEGORY_VARIANT[skill.category]} sm>
+                      {skill.category}
+                    </Badge>
+                  ),
+usage: (
+                    <>
+                      <div className="hh-progress hh-mb-1">
+                        <div
+                          className={`hh-progress-bar ${skill.trend === 'up' ? 'hh-progress-bar--success' : skill.trend === 'down' ? 'hh-progress-bar--accent' : ''}`}
+                          style={{ width: `${pct}%` }}
+                        />
+                      </div>
+                      <span className="text-muted small">{skill.usage} mentions</span>
+                    </>
+                  ),
+                  trend: (
+                    <Badge variant={trend.variant} sm icon={trend.icon}>
+                      {trend.label}
+                    </Badge>
+                  ),
+                  status: (
+                    <Badge variant={skill.status === 'active' ? 'success' : 'secondary'} dot sm>
+                      {skill.status === 'active' ? 'Active' : 'Hidden'}
+                    </Badge>
+                  ),
+                  actions: (
+                    <div className="d-flex justify-content-end gap-2">
+                      <button type="button" className="hh-icon-btn" data-tooltip="Edit skill" aria-label={`Edit ${skill.name}`}>
+                        <i className="bi bi-pencil" aria-hidden="true" />
+                      </button>
+                      <button
+                        type="button"
+                        className={`hh-icon-btn ${skill.status === 'active' ? 'hh-icon-btn-danger' : ''} hh-tip-start`}
+                        data-tooltip={skill.status === 'active' ? 'Hide skill' : 'Show skill'}
+                        aria-label={skill.status === 'active' ? `Hide ${skill.name}` : `Show ${skill.name}`}
+                      >
+                        <i className={`bi ${skill.status === 'active' ? 'bi-eye-slash' : 'bi-eye'}`} aria-hidden="true" />
+                      </button>
+                    </div>
+                  ),
+                }
+              })}
+              rowKey={(row) => row.id}
+            />
           ) : (
             <div className="hh-p-5">
               <EmptyState icon="cpu" title="No skills match" text="Try a different search term or category filter." />
@@ -157,11 +154,12 @@ export default function AdminSkillsPage() {
           )}
         </Card>
 
-        {totalPages > 1 && (
-          <div className="hh-mt-4">
-            <Pagination currentPage={page} totalPages={totalPages} onPageChange={setPage} />
-          </div>
-        )}
+        <TablePagination
+          page={page}
+          pageSize={PAGE_SIZE}
+          total={filtered.length}
+          onPageChange={setPage}
+        />
       </div>
     </section>
   )

@@ -1,9 +1,11 @@
 import { useMemo, useState } from 'react'
-import { publicJobs } from '../../data/jobs'
+import { seekerApi } from '../../services/api'
+import { useApiData } from '../../hooks/useApiData'
 import SectionHeading from '../../components/ui/SectionHeading'
 import Reveal from '../../components/ui/Reveal'
 import Badge from '../../components/ui/Badge'
 import EmptyState from '../../components/ui/EmptyState'
+import LoadingState from '../../components/ui/LoadingState'
 import Pagination from '../../components/ui/Pagination'
 import Card from '../../components/ui/Card'
 import Button from '../../components/ui/Button'
@@ -12,8 +14,8 @@ const PAGE_SIZE = 6
 
 const FILTERS = [
   { value: 'all', label: 'All' },
-  { value: 'applied', label: 'Applied' },
-  { value: 'under-review', label: 'Under Review' },
+  { value: 'new', label: 'New' },
+  { value: 'reviewing', label: 'Under Review' },
   { value: 'shortlisted', label: 'Shortlisted' },
   { value: 'interview', label: 'Interview' },
   { value: 'offer', label: 'Offer' },
@@ -22,39 +24,43 @@ const FILTERS = [
 ]
 
 const STATUS_VARIANT = {
-  applied: 'secondary',
+  new: 'secondary',
+  reviewing: 'info',
   'under-review': 'info',
   shortlisted: 'primary',
   interview: 'warning',
   offer: 'accent',
   hired: 'success',
   rejected: 'danger',
+  withdrawn: 'secondary',
 }
 
-const SAMPLE_APPLICATIONS = [
-  { id: 'ap-1', jobId: 'job-1', applied: 'Sep 12', status: 'under-review' },
-  { id: 'ap-2', jobId: 'job-5', applied: 'Sep 10', status: 'shortlisted' },
-  { id: 'ap-3', jobId: 'job-3', applied: 'Sep 4', status: 'interview' },
-  { id: 'ap-4', jobId: 'job-6', applied: 'Aug 28', status: 'applied' },
-  { id: 'ap-5', jobId: 'job-4', applied: 'Aug 22', status: 'rejected' },
-  { id: 'ap-6', jobId: 'job-2', applied: 'Aug 15', status: 'offer' },
-  { id: 'ap-7', jobId: 'job-7', applied: 'Aug 8', status: 'hired' },
-  { id: 'ap-8', jobId: 'job-8', applied: 'Jul 30', status: 'shortlisted' },
-  { id: 'ap-9', jobId: 'job-3', applied: 'Jul 19', status: 'applied' },
-]
+function normalizeApp(app) {
+  return {
+    id: String(app.id).replace(/^app-/, ''),
+    applied: app.applied,
+    status: app.status,
+    job: {
+      id: app.job_id,
+      slug: app.job_slug,
+      title: app.job,
+      location: app.location,
+      company:
+        typeof app.company === 'string' ? { name: app.company } : (app.company ?? {}),
+    },
+  }
+}
 
 export default function SeekerApplicationsPage() {
   const [filter, setFilter] = useState('all')
   const [page, setPage] = useState(1)
 
-  const applications = useMemo(
-    () =>
-      SAMPLE_APPLICATIONS.map((app) => {
-        const job = publicJobs.find((j) => j.id === app.jobId)
-        return job ? { ...app, job } : null
-      }).filter(Boolean),
-    []
+  const { data, loading, error, reload } = useApiData(
+    () => seekerApi.applications(filter === 'all' ? {} : { status: filter }),
+    [filter]
   )
+
+  const applications = useMemo(() => (data ?? []).map(normalizeApp), [data])
 
   const filtered = useMemo(
     () => (filter === 'all' ? applications : applications.filter((a) => a.status === filter)),
@@ -63,6 +69,39 @@ export default function SeekerApplicationsPage() {
 
   const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE))
   const visible = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE)
+
+  if (loading) {
+    return (
+      <section className="hh-section-space bg-white">
+        <div className="page-container">
+          <Reveal>
+            <LoadingState text="Loading your applications…" />
+          </Reveal>
+        </div>
+      </section>
+    )
+  }
+
+  if (error) {
+    return (
+      <section className="hh-section-space bg-white">
+        <div className="page-container">
+          <Reveal>
+            <EmptyState
+              icon="exclamation-triangle"
+              title="Couldn't load your applications"
+              text="Something went wrong while fetching your applications. Please try again."
+              action={
+                <button type="button" className="hh-btn hh-btn-outline-primary hh-btn-pill" onClick={() => reload()}>
+                  Try again
+                </button>
+              }
+            />
+          </Reveal>
+        </div>
+      </section>
+    )
+  }
 
   return (
     <>
@@ -122,7 +161,7 @@ export default function SeekerApplicationsPage() {
                       <Badge variant={STATUS_VARIANT[status] || 'secondary'}>
                         {status.replace('-', ' ')}
                       </Badge>
-                      <Button to={`/seeker/applications/${job.id}`} variant="outline-primary" size="sm">
+                      <Button to={`/seeker/applications/${id}`} variant="outline-primary" size="sm">
                         View application
                       </Button>
                     </div>

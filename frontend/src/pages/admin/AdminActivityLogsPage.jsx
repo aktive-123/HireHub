@@ -2,7 +2,7 @@ import { useState, useMemo } from 'react'
 import AdminPageHeader from '../../components/admin/AdminPageHeader'
 import Card from '../../components/ui/Card'
 import EmptyState from '../../components/ui/EmptyState'
-import Pagination from '../../components/ui/Pagination'
+import TablePagination from '../../components/ui/TablePagination'
 import { activityLogs } from '../../data/admin'
 
 const PAGE_SIZE = 8
@@ -40,7 +40,6 @@ export default function AdminActivityLogsPage() {
     })
   }, [tab, query])
 
-  const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE))
   const visible = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE)
 
   return (
@@ -70,7 +69,7 @@ export default function AdminActivityLogsPage() {
           ))}
         </div>
 
-        <div className="hh-search-field hh-mb-4">
+        <div className="hh-search-field-lg hh-mb-4">
           <i className="bi bi-search" aria-hidden="true" />
           <input
             type="search"
@@ -113,11 +112,12 @@ export default function AdminActivityLogsPage() {
           )}
         </Card>
 
-        {totalPages > 1 && (
-          <div className="hh-mt-4">
-            <Pagination currentPage={page} totalPages={totalPages} onPageChange={setPage} />
-          </div>
-        )}
+        <TablePagination
+          page={page}
+          pageSize={PAGE_SIZE}
+          total={filtered.length}
+          onPageChange={setPage}
+        />
       </div>
     </section>
   )

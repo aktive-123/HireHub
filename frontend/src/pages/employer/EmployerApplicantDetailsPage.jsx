@@ -1,15 +1,17 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
-import { getApplicantById } from '../../data/applicants'
-import SectionHeading from '../../components/ui/SectionHeading'
+import { employerApi } from '../../services/api'
+import { useApiData } from '../../hooks/useApiData'
+import PageHeader from '../../components/ui/PageHeader'
 import Reveal from '../../components/ui/Reveal'
 import Badge from '../../components/ui/Badge'
+import StatusBadge from '../../components/ui/StatusBadge'
 import EmptyState from '../../components/ui/EmptyState'
 import Card from '../../components/ui/Card'
 import Button from '../../components/ui/Button'
 import FormSelect from '../../components/ui/FormSelect'
 import Alert from '../../components/ui/Alert'
-import { STATUS_VARIANT } from '../../data/applicants'
+import LoadingState from '../../components/ui/LoadingState'
 
 const MOVE_OPTIONS = [
   { value: 'new', label: 'Applied' },
@@ -21,9 +23,47 @@ const MOVE_OPTIONS = [
 
 export default function EmployerApplicantDetailsPage() {
   const { id } = useParams()
-  const candidate = getApplicantById(id)
-  const [nextStatus, setNextStatus] = useState(candidate?.status || 'new')
+  const { data: candidate, loading, error, reload } = useApiData(() => employerApi.applicant(id), [id])
+  const [nextStatus, setNextStatus] = useState('new')
   const [updated, setUpdated] = useState(false)
+  const [updateError, setUpdateError] = useState(false)
+
+  useEffect(() => {
+    if (candidate?.status) setNextStatus(candidate.status)
+  }, [candidate?.status])
+
+  if (loading) {
+    return (
+      <section className="hh-section-space bg-white">
+        <div className="page-container">
+          <Reveal>
+            <LoadingState text="Loading candidate profile…" />
+          </Reveal>
+        </div>
+      </section>
+    )
+  }
+
+  if (error) {
+    return (
+      <section className="hh-section-space bg-white">
+        <div className="page-container">
+          <Reveal>
+            <EmptyState
+              icon="exclamation-triangle"
+              title="Couldn't load this candidate"
+              text="Something went wrong while fetching this application. Please try again."
+              action={
+                <button type="button" className="hh-btn hh-btn-outline-primary hh-btn-pill" onClick={() => reload()}>
+                  Try again
+                </button>
+              }
+            />
+          </Reveal>
+        </div>
+      </section>
+    )
+  }
 
   if (!candidate) {
     return (
@@ -38,30 +78,44 @@ export default function EmployerApplicantDetailsPage() {
     )
   }
 
-  const handleMove = (e) => {
+  const handleMove = async (e) => {
     e.preventDefault()
-    setUpdated(true)
-    window.scrollTo({ top: 0, behavior: 'smooth' })
+    setUpdateError(false)
+    try {
+      await employerApi.updateApplicationStatus(candidate.id, nextStatus)
+      setUpdated(true)
+      window.scrollTo({ top: 0, behavior: 'smooth' })
+      await reload()
+    } catch {
+      setUpdateError(true)
+    }
   }
 
   return (
     <>
       <section className="hh-section-space bg-white">
         <div className="page-container">
-          <Reveal>
-            <div className="hh-toolbar hh-toolbar-between hh-mb-4">
-              <SectionHeading eyebrow="EMPLOYER" title="Candidate profile" subtitle={`Application review for ${candidate.name}.`} />
-              <Link to="/employer/applicants" className="hh-btn hh-btn-outline-primary hh-btn-pill">
-                <i className="bi bi-arrow-left hh-me-1" aria-hidden="true" />
-                Back to applicants
-              </Link>
-            </div>
-          </Reveal>
+          <PageHeader
+              eyebrow="EMPLOYER"
+              title="Candidate profile"
+              subtitle={`Application review for ${candidate.name}.`}
+              action={
+                <Link to="/employer/applicants" className="hh-btn hh-btn-outline-primary hh-btn-pill">
+                  <i className="bi bi-arrow-left hh-me-1" aria-hidden="true" />
+                  Back to applicants
+                </Link>
+              }
+            />
 
           <Reveal>
             {updated && (
               <Alert variant="success" dismissible onDismiss={() => setUpdated(false)} className="hh-mb-4">
                 Candidate moved to <strong>{MOVE_OPTIONS.find((o) => o.value === nextStatus)?.label}</strong>.
+              </Alert>
+            )}
+            {updateError && (
+              <Alert variant="danger" dismissible onDismiss={() => setUpdateError(false)} className="hh-mb-4">
+                Couldn't move the candidate. Please try again.
               </Alert>
             )}
           </Reveal>
@@ -78,7 +132,7 @@ export default function EmployerApplicantDetailsPage() {
                     <span>{candidate.role}</span>
                     <span className="hh-text-muted">·</span>
                     <span>{candidate.location} · {candidate.years}</span>
-                    <Badge variant={STATUS_VARIANT[candidate.status] || 'secondary'}>{candidate.status}</Badge>
+                    <StatusBadge status={candidate.status} />
                     <Badge variant="primary">{candidate.match}% match</Badge>
                   </div>
                   <p className="hh-settings-desc hh-mt-2">Applied to <strong>{candidate.job}</strong> on {candidate.applied}. Notice: {candidate.notice}.</p>

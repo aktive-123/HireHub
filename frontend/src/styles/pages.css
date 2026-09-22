@@ -120,6 +120,23 @@
     );
 }
 
+/* Career Resources hero: the scrim is pulled back well below the shared
+   navy band so the blurred photo texture stays clearly visible instead of
+   reading as a flat dark rectangle. The top ~40% keeps a strong dark
+   gradient for white-copy contrast; opacity tapers off so the pattern
+   dominates the lower area. Extra specificity guarantees it wins over the
+   `deep` modifier regardless of class order. */
+.hh-page-hero--resources.hh-page-hero--deep .hh-hero-slideshow-overlay {
+  background:
+    radial-gradient(130% 120% at 50% 0%, transparent 52%, color-mix(in srgb, var(--hh-logo-navy) 18%, transparent) 100%),
+    linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--hh-logo-navy) 72%, transparent) 0%,
+      color-mix(in srgb, var(--hh-logo-navy) 56%, transparent) 38%,
+      color-mix(in srgb, var(--hh-logo-navy) 32%, transparent) 100%
+    );
+}
+
 /* -------------------------------------------------------------
    Toolbar & form controls (directory headers / filters)
 ------------------------------------------------------------- */
@@ -663,6 +680,10 @@
   gap: var(--hh-space-4);
   flex-wrap: wrap;
   margin-bottom: var(--hh-space-4);
+}
+
+.hh-sidebar-card .hh-detail-title-row {
+  margin-bottom: 0;
 }
 
 /* -------------------------------------------------------------
@@ -1608,7 +1629,18 @@
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
   gap: var(--hh-space-5);
+  align-items: stretch;
   animation: hh-resource-fade 260ms ease both;
+}
+
+/* The grid item is Reveal's wrapper div; make it a flex cell so every card in
+   a row stretches to exactly the same height. */
+.hh-resource-grid > .hh-reveal {
+  display: flex;
+}
+
+.hh-resource-grid > .hh-reveal > * {
+  width: 100%;
 }
 
 @keyframes hh-resource-fade {
@@ -1633,7 +1665,7 @@
 
 .hh-resource-card.hh-resource-card--featured {
   display: grid;
-  grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr);
+  grid-template-columns: minmax(0, 1.18fr) minmax(0, 1fr);
   align-items: stretch;
   overflow: hidden;
 }
@@ -1650,7 +1682,6 @@
 
 .hh-resource-card--featured .hh-resource-card-body {
   min-width: 0;
-  justify-content: center;
   padding: var(--hh-space-6);
 }
 
@@ -1676,10 +1707,11 @@
 @media (max-width: 767.98px) {
   .hh-resource-card.hh-resource-card--featured {
     grid-template-columns: 1fr;
+    min-height: 0;
   }
 
   .hh-resource-card--featured .hh-resource-cover-wrap {
-    aspect-ratio: 16 / 9;
+    aspect-ratio: 4 / 3;
     min-height: auto;
   }
 }
@@ -1714,7 +1746,7 @@
 .hh-resource-cover-wrap {
   display: block;
   position: relative;
-  aspect-ratio: 16 / 9;
+  aspect-ratio: 4 / 3;
   overflow: hidden;
   background: var(--hh-secondary-deep);
 }
@@ -1731,8 +1763,12 @@
   transition: transform var(--hh-transition);
 }
 
-.hh-resource-card:hover .hh-resource-cover {
+.hh-resource-card:hover .hh-resource-cover:not(.hh-resource-cover--image) {
   transform: scale(1.04);
+}
+
+.hh-resource-card:hover .hh-resource-cover-img {
+  transform: scale(1.07);
 }
 
 .hh-resource-cover--tone-1 {
@@ -1786,6 +1822,41 @@
   box-shadow: 0 10px 30px rgba(3, 10, 24, 0.35);
 }
 
+/* Photo cover variant — replaces the branded gradient + icon with the
+   article's matched image. The image fills the fixed 4/3 crop box, the
+   shade keeps the label pill and any future overlay text legible, and the
+   label stays pinned bottom-left exactly as in the icon treatment. */
+.hh-resource-cover--image {
+  background: var(--hh-secondary-deep);
+}
+
+.hh-resource-cover-img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  /* Slight upper bias by default so subjects have headroom instead of being
+     frame-tight at the crop edges; per-category overrides come inline. */
+  object-position: 50% 30%;
+  display: block;
+  will-change: transform;
+  transition: transform var(--hh-transition);
+}
+
+.hh-resource-cover-shade {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  background: linear-gradient(
+    180deg,
+    rgba(5, 13, 29, 0.1) 0%,
+    rgba(5, 13, 29, 0.3) 48%,
+    rgba(5, 13, 29, 0.72) 100%
+  );
+}
+
 .hh-resource-cover-label {
   position: absolute;
   z-index: 1;
@@ -1830,6 +1901,8 @@
   color: var(--hh-secondary);
   line-height: 1.35;
   margin: 0;
+  /* Reserve two lines so every card body starts at the same row. */
+  min-height: calc(2 * 1.35em);
 }
 
 .hh-resource-title a {
@@ -1842,11 +1915,33 @@
   color: var(--hh-primary);
 }
 
-.hh-resource-excerpt {
+.hh-resource-card:not(.hh-resource-card--featured) .hh-resource-excerpt {
   font-size: var(--hh-fs-sm);
   color: var(--hh-muted);
   line-height: 1.6;
   margin: 0;
+  /* Clamp to exactly two lines so excerpts never make one card taller than
+     its row siblings; min-height keeps the zone constant even for short text. */
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  min-height: calc(2 * 1.6em);
+}
+
+/* Featured banner intro — same two-line clamp as the standard cards so
+   every description truncates identically across the grid. */
+.hh-resource-card.hh-resource-card--featured .hh-resource-excerpt {
+  font-size: var(--hh-fs-md);
+  color: var(--hh-muted);
+  line-height: 1.7;
+  margin: 0;
+  max-width: 52ch;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  min-height: calc(2 * 1.7em);
 }
 
 .hh-resource-author {

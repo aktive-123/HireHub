@@ -1,15 +1,15 @@
+import { useMemo } from 'react'
+import { seekerApi } from '../../services/api'
+import { useApiData } from '../../hooks/useApiData'
 import SectionHeading from '../../components/ui/SectionHeading'
 import Reveal from '../../components/ui/Reveal'
 import Card from '../../components/ui/Card'
 import Button from '../../components/ui/Button'
 import Badge from '../../components/ui/Badge'
+import EmptyState from '../../components/ui/EmptyState'
+import LoadingState from '../../components/ui/LoadingState'
+import { initials } from '../../utils/format'
 
-const SKILLS = ['React', 'JavaScript', 'TypeScript', 'CSS', 'HTML', 'Git', 'Figma', 'SQL']
-const CERTIFICATIONS = [
-  'Meta Front-End Developer Professional Certificate',
-  'Responsive Web Design – freeCodeCamp',
-]
-const PORTFOLIO = ['github.com/sarah-obi', 'sarahobi.dev', 'dribbble.com/sarahobi']
 const SOCIALS = [
   { platform: 'LinkedIn', value: 'linkedin.com/in/sarahobi', icon: 'linkedin' },
   { platform: 'Twitter', value: '@sarahobi', icon: 'twitter-x' },
@@ -26,6 +26,54 @@ const EDUCATION = [
 ]
 
 export default function SeekerProfilePage() {
+  const { data: profile, loading, error, reload } = useApiData(() => seekerApi.profile(), [])
+
+  const profileData = useMemo(() => profile ?? {}, [profile])
+
+  const name = profileData.name || 'Sarah Obi'
+  const headline = profileData.headline || 'Frontend Developer'
+  const location = profileData.location || 'Lagos, Nigeria'
+  const years = profileData.years_experience
+  const skills = profileData.skills ?? []
+  const certifications = profileData.certifications ?? []
+  const portfolio = profileData.portfolio ?? []
+  const summary =
+    profileData.summary ||
+    'Frontend developer with 5 years of experience building fast, accessible web applications. I love turning complex problems into simple, delightful interfaces and collaborating with designers and engineers to ship great products.'
+
+  if (loading) {
+    return (
+      <section className="hh-section-space bg-white">
+        <div className="page-container">
+          <Reveal>
+            <LoadingState text="Loading your profile…" />
+          </Reveal>
+        </div>
+      </section>
+    )
+  }
+
+  if (error) {
+    return (
+      <section className="hh-section-space bg-white">
+        <div className="page-container">
+          <Reveal>
+            <EmptyState
+              icon="exclamation-triangle"
+              title="Couldn't load your profile"
+              text="Something went wrong while fetching your profile. Please try again."
+              action={
+                <button type="button" className="hh-btn hh-btn-outline-primary hh-btn-pill" onClick={() => reload()}>
+                  Try again
+                </button>
+              }
+            />
+          </Reveal>
+        </div>
+      </section>
+    )
+  }
+
   return (
     <>
       <section className="hh-section-space bg-white">
@@ -49,16 +97,16 @@ export default function SeekerProfilePage() {
           <Reveal>
             <Card className="hh-card-body hh-mb-4">
               <div className="hh-profile-head">
-                <span className="hh-avatar hh-avatar-lg hh-avatar-soft" aria-hidden="true">SO</span>
+                <span className="hh-avatar hh-avatar-lg hh-avatar-soft" aria-hidden="true">{initials(name)}</span>
                 <div className="hh-profile-head-main">
-                  <h2 className="hh-profile-name">Sarah Obi</h2>
+                  <h2 className="hh-profile-name">{name}</h2>
                   <div className="hh-profile-title-line">
-                    <span>Frontend Developer</span>
+                    <span>{headline}</span>
                     <Badge variant="success" sm dot>Open to work</Badge>
                   </div>
                   <div className="hh-app-meta">
-                    <span><i className="bi bi-geo-alt hh-me-1" aria-hidden="true" />Lagos, Nigeria</span>
-                    <span><i className="bi bi-clock hh-me-1" aria-hidden="true" />5 years experience</span>
+                    <span><i className="bi bi-geo-alt hh-me-1" aria-hidden="true" />{location}</span>
+                    <span><i className="bi bi-clock hh-me-1" aria-hidden="true" />{years ? `${years} years experience` : 'Experience'}</span>
                     <span><i className="bi bi-briefcase hh-me-1" aria-hidden="true" />12 applications</span>
                   </div>
                 </div>
@@ -77,9 +125,7 @@ export default function SeekerProfilePage() {
                     <i className="bi bi-person" aria-hidden="true" /> About me
                   </div>
                   <p className="hh-profile-row-value">
-                    Frontend developer with 5 years of experience building fast, accessible web
-                    applications. I love turning complex problems into simple, delightful
-                    interfaces and collaborating with designers and engineers to ship great products.
+                    {summary}
                   </p>
                 </Card>
               </Reveal>
@@ -118,7 +164,7 @@ export default function SeekerProfilePage() {
                     <i className="bi bi-award" aria-hidden="true" /> Certifications
                   </div>
                   <ul className="hh-benefit-list">
-                    {CERTIFICATIONS.map((item) => (
+                    {certifications.map((item) => (
                       <li key={item}><i className="bi bi-patch-check" aria-hidden="true" />{item}</li>
                     ))}
                   </ul>
@@ -133,7 +179,7 @@ export default function SeekerProfilePage() {
                     <i className="bi bi-tools" aria-hidden="true" /> Skills
                   </div>
                   <div className="hh-chip-row">
-                    {SKILLS.map((skill) => (
+                    {skills.map((skill) => (
                       <span className="hh-chip" key={skill}>{skill}</span>
                     ))}
                   </div>
@@ -146,7 +192,7 @@ export default function SeekerProfilePage() {
                     <i className="bi bi-folder2-open" aria-hidden="true" /> Portfolio
                   </div>
                   <ul className="hh-vert-list">
-                    {PORTFOLIO.map((url) => (
+                    {portfolio.map((url) => (
                       <li key={url}><a href="#"><i className="bi bi-box-arrow-up-right hh-me-2" aria-hidden="true" />{url}</a></li>
                     ))}
                   </ul>

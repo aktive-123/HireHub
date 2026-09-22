@@ -1,7 +1,7 @@
 import Reveal from '../../components/ui/Reveal'
 import SectionHeading from '../../components/ui/SectionHeading'
 import Button from '../../components/ui/Button'
-import HeroSection from '../../components/ui/HeroSection'
+import PageHero from '../../components/ui/PageHero'
 import FinalCtaSection from '../../components/landing/FinalCtaSection'
 import heroSlide1 from '../../assets/about.jpg'
 import heroSlide2 from '../../assets/about2.jpg'
@@ -42,7 +42,7 @@ const BELIEFS = [
 export default function AboutPage() {
   return (
     <>
-      <HeroSection
+      <PageHero
         deep
         images={heroSlides}
         eyebrow="ABOUT HIREHUB"

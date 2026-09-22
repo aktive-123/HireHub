@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import HeroSection from '@/components/ui/HeroSection'
+import PageHero from '@/components/ui/PageHero'
 import Reveal from '@/components/ui/Reveal'
 import { FAQ } from '@/data/resources'
 import heroSlide1 from '@/assets/contact4.jpg'
@@ -31,7 +31,7 @@ function FaqItem({ item }) {
 export default function FaqPage() {
   return (
     <>
-      <HeroSection
+      <PageHero
         deep
         images={heroSlides}
         eyebrow="HELP & SUPPORT"

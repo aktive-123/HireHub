@@ -1,13 +1,31 @@
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? '/api'
 
+const TOKEN_KEY = 'hh_token'
+
+export function getAuthToken() {
+  return localStorage.getItem(TOKEN_KEY)
+}
+
+export function setAuthToken(token) {
+  if (token) localStorage.setItem(TOKEN_KEY, token)
+  else localStorage.removeItem(TOKEN_KEY)
+}
+
+export function clearSession() {
+  localStorage.removeItem(TOKEN_KEY)
+  localStorage.removeItem('hh_user')
+}
+
 export const apiClient = {
   baseUrl: API_BASE_URL,
 
   xhr(path, options = {}) {
     const { headers = {}, body, ...rest } = options
+    const token = getAuthToken()
     return fetch(`${API_BASE_URL}${path}`, {
       headers: {
         Accept: 'application/json',
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
         ...(body ? { 'Content-Type': 'application/json' } : {}),
         ...headers,
       },

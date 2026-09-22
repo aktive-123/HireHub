@@ -21,23 +21,91 @@ const FIELD_GROUPS = {
   title: 'Job Title',
 }
 
-function buildJobValues(job) {
+const WORKPLACE_LABELS = { 'on-site': 'On-site', hybrid: 'Hybrid', remote: 'Remote' }
+const EMPLOYMENT_LABELS = {
+  'full-time': 'Full-time',
+  'part-time': 'Part-time',
+  contract: 'Contract',
+  internship: 'Internship',
+}
+
+const splitLines = (value) =>
+  (value || '')
+    .split('\n')
+    .map((item) => item.trim())
+    .filter(Boolean)
+
+const splitTags = (value) =>
+  (value || '')
+    .split(',')
+    .map((item) => item.trim())
+    .filter(Boolean)
+
+const toNumber = (value) =>
+  value === '' || value == null ? null : Number(value)
+
+export function buildJobPayload(values) {
   return {
-    title: job?.title || '',
-    category: job?.category || '',
-    location: job?.location || 'Lagos, Nigeria',
-    workplace: job?.workplace || 'On-site',
-    employment_type: job?.employment_type || 'Full-time',
-    level: job?.level || 'Mid Level',
-    salary_min: job?.salary?.min ?? '',
-    salary_max: job?.salary?.max ?? '',
-    salary_period: job?.salary?.period || 'year',
-    description: job?.description || '',
-    responsibilities: job?.responsibilities?.join('\n') || '',
-    requirements: job?.requirements?.join('\n') || '',
-    skills: job?.tags?.join(', ') || '',
-    benefits: job?.benefits?.join('\n') || '',
-    deadline: '',
+    title: values.title?.trim(),
+    category: values.category || null,
+    location: values.location,
+    workplace: (values.workplace || '').toLowerCase(),
+    employment_type: (values.employment_type || '')
+      .toLowerCase()
+      .replace(' ', '-'),
+    level: values.level || null,
+    salary_min: toNumber(values.salary_min),
+    salary_max: toNumber(values.salary_max),
+    salary_currency: values.salary_currency || 'USD',
+    salary_period: values.salary_period || 'year',
+    description: values.description,
+    responsibilities: splitLines(values.responsibilities),
+    requirements: splitLines(values.requirements),
+    benefits: splitLines(values.benefits),
+    tags: splitTags(values.skills),
+    deadline: values.deadline || null,
+  }
+}
+
+function buildJobValues(job) {
+  if (!job) {
+    return {
+      title: '',
+      category: '',
+      location: 'Lagos, Nigeria',
+      workplace: 'On-site',
+      employment_type: 'Full-time',
+      level: 'Mid Level',
+      salary_min: '',
+      salary_max: '',
+      salary_currency: '',
+      salary_period: 'year',
+      description: '',
+      responsibilities: '',
+      requirements: '',
+      skills: '',
+      benefits: '',
+      deadline: '',
+    }
+  }
+  const employmentKey = String(job.employment_type ?? job.type ?? '').toLowerCase()
+  return {
+    title: job.title || '',
+    category: job.category || '',
+    location: job.location || 'Lagos, Nigeria',
+    workplace: WORKPLACE_LABELS[String(job.workplace || '').toLowerCase()] || job.workplace || 'On-site',
+    employment_type: EMPLOYMENT_LABELS[employmentKey] || job.employment_type || job.type || 'Full-time',
+    level: job.level || 'Mid Level',
+    salary_min: job.salary?.min ?? '',
+    salary_max: job.salary?.max ?? '',
+    salary_currency: job.salary?.currency || '',
+    salary_period: job.salary?.period || 'year',
+    description: job.description || '',
+    responsibilities: Array.isArray(job.responsibilities) ? job.responsibilities.join('\n') : '',
+    requirements: Array.isArray(job.requirements) ? job.requirements.join('\n') : '',
+    skills: Array.isArray(job.tags) ? job.tags.join(', ') : '',
+    benefits: Array.isArray(job.benefits) ? job.benefits.join('\n') : '',
+    deadline: job.deadline ? String(job.deadline).slice(0, 10) : '',
   }
 }
 

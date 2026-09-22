@@ -1,9 +1,12 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { applicants } from '../../data/applicants'
-import SectionHeading from '../../components/ui/SectionHeading'
-import Reveal from '../../components/ui/Reveal'
+import { employerApi } from '../../services/api'
+import { useApiData } from '../../hooks/useApiData'
+import PageHeader from '../../components/ui/PageHeader'
 import Button from '../../components/ui/Button'
+import LoadingState from '../../components/ui/LoadingState'
+import EmptyState from '../../components/ui/EmptyState'
+import Reveal from '../../components/ui/Reveal'
 
 const STAGES = [
   { key: 'applied', label: 'Applied', icon: 'bi-inbox', tone: 'secondary' },
@@ -14,19 +17,34 @@ const STAGES = [
   { key: 'hired', label: 'Hired', icon: 'bi-award', tone: 'info' },
 ]
 
-const INITIAL_BOARD = {
-  applied: ['ap2', 'ap4', 'ap7'],
-  review: ['ap1'],
-  shortlisted: ['ap8'],
-  interview: ['ap3', 'ap9'],
-  offer: ['ap6'],
-  hired: ['ap5', 'ap10'],
+const STATUS_TO_STAGE = {
+  new: 'applied',
+  applied: 'applied',
+  reviewing: 'review',
+  review: 'review',
+  'under-review': 'review',
+  shortlisted: 'shortlisted',
+  interview: 'interview',
+  offer: 'offer',
+  hired: 'hired',
 }
 
-const applicantById = (id) => applicants.find((a) => a.id === id)
+function buildBoard(applicants) {
+  const groups = Object.fromEntries(STAGES.map((s) => [s.key, []]))
+  for (const applicant of applicants) {
+    const stage = STATUS_TO_STAGE[applicant.status] || 'applied'
+    if (groups[stage]) groups[stage].push(applicant.id)
+  }
+  return groups
+}
 
 export default function EmployerTrackingPage() {
-  const [board, setBoard] = useState(INITIAL_BOARD)
+  const { data: applicants, loading, error, reload } = useApiData(() => employerApi.applicants(), [])
+  const [board, setBoard] = useState({})
+
+  useEffect(() => {
+    if (!loading) setBoard(buildBoard(applicants ?? []))
+  }, [applicants, loading])
 
   const move = (id, from, to) => {
     if (!to || !board[to]) return
@@ -35,29 +53,69 @@ export default function EmployerTrackingPage() {
       [from]: prev[from].filter((c) => c !== id),
       [to]: [...prev[to], id],
     }))
+    employerApi.updateApplicationStatus(id, to).catch(() => reload())
   }
 
   const stageIndex = (key) => STAGES.findIndex((s) => s.key === key)
+
+  const applicantById = (id) => applicants?.find((a) => a.id === id)
+
+  if (loading) {
+    return (
+      <section className="hh-section-space bg-white">
+        <div className="page-container">
+          <Reveal>
+            <LoadingState text="Loading your pipeline…" />
+          </Reveal>
+        </div>
+      </section>
+    )
+  }
+
+  if (error) {
+    return (
+      <section className="hh-section-space bg-white">
+        <div className="page-container">
+          <Reveal>
+            <EmptyState
+              icon="exclamation-triangle"
+              title="Couldn't load your pipeline"
+              text="Something went wrong while fetching applicants. Please try again."
+              action={
+                <button type="button" className="hh-btn hh-btn-outline-primary hh-btn-pill" onClick={() => reload()}>
+                  Try again
+                </button>
+              }
+            />
+          </Reveal>
+        </div>
+      </section>
+    )
+  }
 
   return (
     <>
       <section className="hh-section-space bg-white">
         <div className="page-container">
-          <Reveal>
-            <div className="hh-toolbar hh-toolbar-between hh-mb-4">
-              <SectionHeading
-                eyebrow="EMPLOYER"
-                title="Applicant Tracking"
-                subtitle="Move candidates through your hiring pipeline."
-              />
-              <Link to="/employer/applicants">
-                <Button variant="outline-primary" icon="bi-people">All applicants</Button>
-              </Link>
-            </div>
-          </Reveal>
+<PageHeader
+          eyebrow="EMPLOYER"
+          title="Applicant Tracking"
+          subtitle="Move candidates through your hiring pipeline."
+          action={
+            <Link to="/employer/applicants">
+              <Button variant="outline-primary" icon="bi-people">All applicants</Button>
+            </Link>
+          }
+        />
 
-          <Reveal>
-            <div className="hh-kanban" role="list" aria-label="Recruitment pipeline">
+        <div className="hh-toolbar hh-toolbar-between hh-mb-4">
+          <span className="hh-results-meta">
+            Showing <strong>{(applicants ?? []).length}</strong> candidates across{' '}
+            <strong>{STAGES.length}</strong> pipeline stages
+          </span>
+        </div>
+
+        <div className="hh-kanban" role="list" aria-label="Recruitment pipeline">
               {STAGES.map((stage) => {
                 const ids = board[stage.key] || []
                 const candidates = ids.map(applicantById).filter(Boolean)
@@ -126,7 +184,6 @@ export default function EmployerTrackingPage() {
                 )
               })}
             </div>
-          </Reveal>
         </div>
       </section>
     </>

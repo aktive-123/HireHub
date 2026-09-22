@@ -1,5 +1,7 @@
 import { Link, NavLink, Outlet, useLocation } from 'react-router-dom'
 import whiteLogo from '../assets/white logo.png'
+import { useAuth } from '../context/AuthContext'
+import { initials } from '../utils/format'
 
 const PAGE_META = [
   { pattern: /^\/seeker\/applications\/.+/, title: 'Application Details' },
@@ -16,8 +18,10 @@ const PAGE_META = [
 
 export default function SeekerLayout() {
   const { pathname } = useLocation()
+  const { user } = useAuth()
   const meta = PAGE_META.find((m) => m.pattern.test(pathname))
   const title = meta?.title ?? 'Job Seeker Portal'
+  const userName = user?.name || 'Job Seeker'
 
   return (
     <div className="hh-dashboard-layout">
@@ -127,10 +131,10 @@ export default function SeekerLayout() {
             </Link>
             <div className="hh-user-chip">
               <span className="hh-avatar hh-avatar-sm hh-avatar-soft" aria-hidden="true">
-                S
+                {initials(userName)}
               </span>
               <div className="hh-user-chip-meta">
-                <span className="hh-user-name">Sarah Obi</span>
+                <span className="hh-user-name">{userName}</span>
                 <span className="hh-badge hh-badge-primary hh-badge-sm">Job Seeker</span>
               </div>
             </div>

@@ -1,56 +1,107 @@
-import { useMemo, useState } from 'react'
+import { useMemo } from 'react'
 import { Link } from 'react-router-dom'
-import { publicJobs } from '../../data/jobs'
+import { jobsApi, seekerApi } from '../../services/api'
+import { useApiData } from '../../hooks/useApiData'
 import SectionHeading from '../../components/ui/SectionHeading'
 import Reveal from '../../components/ui/Reveal'
 import Badge from '../../components/ui/Badge'
 import Card from '../../components/ui/Card'
 import Button from '../../components/ui/Button'
 import EmptyState from '../../components/ui/EmptyState'
+import LoadingState from '../../components/ui/LoadingState'
 import JobCard from '../../components/ui/JobCard'
 
 const PROFILE_COMPLETION = 75
 
-const RECENT_APPLICATIONS = [
-  { id: 'ap-1', jobId: 'job-1', applied: 'Sep 12', status: 'under-review' },
-  { id: 'ap-2', jobId: 'job-5', applied: 'Sep 10', status: 'shortlisted' },
-  { id: 'ap-3', jobId: 'job-3', applied: 'Sep 4', status: 'interview' },
-  { id: 'ap-4', jobId: 'job-6', applied: 'Aug 28', status: 'applied' },
-]
-
 const STATUS_VARIANT = {
-  applied: 'secondary',
+  new: 'secondary',
+  reviewing: 'info',
   'under-review': 'info',
   shortlisted: 'primary',
   interview: 'warning',
   offer: 'accent',
   hired: 'success',
   rejected: 'danger',
+  withdrawn: 'secondary',
+}
+
+const STAT_ICONS = {
+  applications: 'bi-file-earmark-text',
+  saved_jobs: 'bi-bookmark-heart',
+  interview: 'bi-camera-video',
+  hired: 'bi-check2-circle',
+  active: 'bi-briefcase',
 }
 
 export default function SeekerDashboardPage() {
-  const [savedCount] = useState(9)
+  const { data: dashboard, loading, error, reload } = useApiData(() => seekerApi.dashboard(), [])
+
+  const jobs = useApiData(() => jobsApi.list({ per_page: 50 }), [])
 
   const recent = useMemo(
     () =>
-      RECENT_APPLICATIONS.map((app) => {
-        const job = publicJobs.find((j) => j.id === app.jobId)
-        return { ...app, job }
-      }).filter((app) => app.job),
-    []
+      (dashboard?.recent_applications ?? []).map((app) => ({
+        id: String(app.id).replace(/^app-/, ''),
+        job: {
+          id: app.job_id,
+          slug: app.job_slug,
+          title: app.job,
+          location: app.location,
+          company:
+            typeof app.company === 'string' ? { name: app.company } : (app.company ?? {}),
+        },
+        applied: app.applied,
+        status: app.status,
+      })),
+    [dashboard]
   )
 
   const recommended = useMemo(
-    () => publicJobs.filter((j) => j.is_featured).slice(0, 3),
-    []
+    () => (jobs.data?.items ?? []).filter((j) => j.is_featured).slice(0, 3),
+    [jobs.data]
   )
 
-  const stats = [
-    { key: 'applications', label: 'Applications', value: 12, icon: 'bi-file-earmark-text', tone: 'primary' },
-    { key: 'saved', label: 'Saved Jobs', value: savedCount, icon: 'bi-bookmark-heart', tone: 'success' },
-    { key: 'interviews', label: 'Interviews', value: 3, icon: 'bi-camera-video', tone: 'info' },
-    { key: 'views', label: 'Profile Views', value: 124, icon: 'bi-eye', tone: 'warning' },
-  ]
+  const stats = useMemo(
+    () =>
+      (dashboard?.stats ?? []).map((stat) => ({
+        ...stat,
+        icon: STAT_ICONS[stat.key] || 'bi-clipboard-data',
+      })),
+    [dashboard]
+  )
+
+  if (loading) {
+    return (
+      <section className="hh-section-space bg-white">
+        <div className="page-container">
+          <Reveal>
+            <LoadingState text="Loading your dashboard…" />
+          </Reveal>
+        </div>
+      </section>
+    )
+  }
+
+  if (error) {
+    return (
+      <section className="hh-section-space bg-white">
+        <div className="page-container">
+          <Reveal>
+            <EmptyState
+              icon="exclamation-triangle"
+              title="Couldn't load your dashboard"
+              text="Something went wrong while fetching your data. Please try again."
+              action={
+                <button type="button" className="hh-btn hh-btn-outline-primary hh-btn-pill" onClick={() => reload()}>
+                  Try again
+                </button>
+              }
+            />
+          </Reveal>
+        </div>
+      </section>
+    )
+  }
 
   return (
     <>
@@ -96,8 +147,8 @@ export default function SeekerDashboardPage() {
                 <Card className="hh-card-body">
                   <div className="hh-card-title-md hh-mb-4">Recent applications</div>
                   {recent.length > 0 ? (
-                    recent.map(({ job, applied, status }) => (
-                      <div className="hh-app-row" key={`${job.id}-${applied}`}>
+                    recent.map(({ id, job, applied, status }) => (
+                      <div className="hh-app-row" key={id}>
                         <div
                           className="hh-app-logo"
                           style={{
@@ -108,7 +159,7 @@ export default function SeekerDashboardPage() {
                           {job.company?.logoText || job.company?.name?.charAt(0)}
                         </div>
                         <div className="hh-app-info">
-                          <Link to={`/jobs/${job.id}`} className="hh-app-title">
+                          <Link to={`/jobs/${job.slug || job.id}`} className="hh-app-title">
                             {job.title}
                           </Link>
                           <div className="hh-app-company">{job.company?.name}</div>
@@ -121,7 +172,7 @@ export default function SeekerDashboardPage() {
                           <Badge variant={STATUS_VARIANT[status] || 'secondary'}>
                             {status.replace('-', ' ')}
                           </Badge>
-                          <Button to={`/seeker/applications/${job.id}`} variant="outline-primary" size="sm">
+                          <Button to={`/seeker/applications/${id}`} variant="outline-primary" size="sm">
                             View
                           </Button>
                         </div>

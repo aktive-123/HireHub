@@ -1,79 +1,13 @@
-import { useState } from 'react'
 import { Link } from 'react-router-dom'
-import Reveal from '../ui/Reveal'
-import { formatSalaryAmount, formatSalaryPeriod } from '../../utils/jobs'
-
-const FEATURED_JOBS = [
-  {
-    id: 'job-1',
-    company: 'Google',
-    verified: true,
-    logoText: 'G',
-    logoBg: '#ffffff',
-    logoColor: '#4285f4',
-    title: 'Frontend Developer',
-    location: 'Lagos, Nigeria',
-    workplace: 'Remote',
-    employmentType: 'Full-time',
-    level: 'Mid Level',
-    salary: { min: 80000, max: 120000, period: 'year' },
-  },
-  {
-    id: 'job-2',
-    company: 'Microsoft',
-    verified: true,
-    logoText: 'M',
-    logoBg: '#f8fafc',
-    logoColor: '#00a4ef',
-    title: 'Backend Developer',
-    location: 'Abuja, Nigeria',
-    workplace: 'On-site',
-    employmentType: 'Full-time',
-    level: 'Senior',
-    salary: { min: 70000, max: 100000, period: 'year' },
-  },
-  {
-    id: 'job-3',
-    company: 'Flutterwave',
-    verified: true,
-    logoText: 'F',
-    logoBg: '#fff7ed',
-    logoColor: '#f97316',
-    title: 'Product Designer',
-    location: 'Lagos, Nigeria',
-    workplace: 'Remote',
-    employmentType: 'Contract',
-    level: 'Mid Level',
-    salary: { min: 40000, max: 70000, period: 'month' },
-  },
-  {
-    id: 'job-4',
-    company: 'Dangote',
-    verified: true,
-    logoText: 'D',
-    logoBg: '#f0fdf4',
-    logoColor: '#15803d',
-    title: 'Data Analyst',
-    location: 'Lagos, Nigeria',
-    workplace: 'On-site',
-    employmentType: 'Full-time',
-    level: 'Entry Level',
-    salary: { min: 50000, max: 75000, period: 'year' },
-  },
-]
+import JobCard from '../ui/JobCard'
+import { jobsApi } from '../../services/api'
+import { useApiData } from '../../hooks/useApiData'
 
 export default function FeaturedJobsSection() {
-  const [savedJobs, setSavedJobs] = useState({})
-  const [bouncingId, setBouncingId] = useState(null)
+  const { data: loaded, loading } = useApiData(() => jobsApi.list().then((r) => r.items), [])
+  const jobs = (loaded ?? []).filter((job) => job.is_featured).slice(0, 4)
 
-  const toggleSaveJob = (id) => {
-    setSavedJobs((prev) => ({
-      ...prev,
-      [id]: !prev[id],
-    }))
-    setBouncingId(id)
-    window.setTimeout(() => setBouncingId(null), 260)
-  }
+  if (loading) return null
 
   return (
     <section className="hh-section-space bg-white">
@@ -93,82 +27,11 @@ export default function FeaturedJobsSection() {
 
         {/* 4 Job Cards Grid */}
         <div className="row g-4">
-          {FEATURED_JOBS.map((job, index) => {
-            const isSaved = Boolean(savedJobs[job.id])
-            return (
-              <div key={job.id} className="col-12 col-md-6 col-lg-3">
-                <Reveal delay={index * 100}>
-                  <div className="hh-job-card">
-                  <div className="hh-job-card-header">
-                    <div className="hh-job-company-group">
-                      <div className="hh-job-company-logo">
-                        {job.logoText}
-                      </div>
-                      <div className="hh-job-company-name">
-                        <span>{job.company}</span>
-                        {job.verified && (
-                          <i
-                            className="bi bi-patch-check-fill text-primary"
-                            title="Verified Company"
-                            aria-label="Verified"
-                          />
-                        )}
-                      </div>
-                    </div>
-
-                    <button
-                      type="button"
-                      className={`hh-job-bookmark-btn ${isSaved ? 'is-active' : ''}`}
-                      onClick={() => toggleSaveJob(job.id)}
-                      aria-label={isSaved ? 'Remove saved job' : 'Save job'}
-                    >
-                      <i
-                        className={`bi ${isSaved ? 'bi-bookmark-fill' : 'bi-bookmark'} ${
-                          bouncingId === job.id ? 'is-bouncing' : ''
-                        }`}
-                      />
-                    </button>
-                  </div>
-
-                  <h3 className="hh-job-title">{job.title}</h3>
-
-                  <div className="hh-job-location">
-                    <i className="bi bi-geo-alt" aria-hidden="true" />
-                    <span>{job.location} • {job.workplace}</span>
-                  </div>
-
-                  <div className="hh-job-badges">
-                    <span className="hh-badge hh-badge-accent">
-                      <i className="bi bi-star-fill" aria-hidden="true" />
-                      Featured
-                    </span>
-                    <span className="hh-badge hh-badge-primary">
-                      <span className="hh-badge-dot" aria-hidden="true" />
-                      {job.employmentType}
-                    </span>
-                    <span className="hh-badge hh-badge-secondary hh-badge-outline">
-                      {job.level}
-                    </span>
-                  </div>
-
-                  <div className="hh-job-salary">
-                    <span className="hh-job-salary-amount">
-                      {formatSalaryAmount(job.salary)}
-                    </span>
-                    <span className="hh-job-pay-basis">{formatSalaryPeriod(job.salary)}</span>
-                  </div>
-
-                  <Link
-                    to={`/jobs/${job.id}`}
-                    className="hh-btn hh-btn-primary hh-btn-block hh-btn-pill"
-                  >
-                    Apply Now
-                  </Link>
-                  </div>
-                </Reveal>
-              </div>
-            )
-          })}
+          {jobs.map((job, index) => (
+            <div key={job.id} className="col-12 col-md-6 col-lg-3">
+              <JobCard job={job} index={index} featured />
+            </div>
+          ))}
         </div>
       </div>
     </section>

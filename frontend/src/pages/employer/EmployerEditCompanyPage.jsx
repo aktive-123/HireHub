@@ -1,7 +1,8 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
-import { publicCompanies } from '../../data/companies'
-import SectionHeading from '../../components/ui/SectionHeading'
+import { employerApi } from '../../services/api'
+import { useApiData } from '../../hooks/useApiData'
+import PageHeader from '../../components/ui/PageHeader'
 import Reveal from '../../components/ui/Reveal'
 import Card from '../../components/ui/Card'
 import Button from '../../components/ui/Button'
@@ -9,6 +10,7 @@ import FormInput from '../../components/ui/FormInput'
 import FormSelect from '../../components/ui/FormSelect'
 import Alert from '../../components/ui/Alert'
 import EmptyState from '../../components/ui/EmptyState'
+import LoadingState from '../../components/ui/LoadingState'
 import { publicJobCategories } from '../../data/jobs'
 
 const INDUSTRY_OPTIONS = publicJobCategories.map((c) => c.name)
@@ -22,17 +24,18 @@ const SIZE_OPTIONS = [
 ]
 
 export default function EmployerEditCompanyPage() {
-  const company = publicCompanies[0]
+  const { data: company, loading, error, reload } = useApiData(() => employerApi.company(), [])
 
   const [saved, setSaved] = useState(false)
+  const [saveError, setSaveError] = useState(false)
   const [values, setValues] = useState(() => ({
-    name: company?.name || '',
-    industry: company?.industry || '',
-    size: company?.size || '',
-    location: company?.location || '',
-    website: company?.website || '',
-    tagline: company?.tagline || '',
-    about: company?.description || '',
+    name: '',
+    industry: '',
+    size: '',
+    location: '',
+    website: '',
+    tagline: '',
+    about: '',
     culture: 'We move fast, take ownership and support each other. Time zones and flexible work are respected across our team.',
     benefits: [
       'Competitive salary and equity',
@@ -42,12 +45,75 @@ export default function EmployerEditCompanyPage() {
     ].join('\n'),
   }))
 
+  useEffect(() => {
+    if (company) {
+      setValues((prev) => ({
+        ...prev,
+        name: company.name ?? '',
+        industry: company.industry ?? '',
+        size: company.size ?? '',
+        location: company.location ?? '',
+        website: company.website ?? '',
+        tagline: company.tagline ?? '',
+        about: company.description ?? '',
+      }))
+    }
+  }, [company])
+
   const set = (key, value) => setValues((prev) => ({ ...prev, [key]: value }))
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault()
-    setSaved(true)
-    window.scrollTo({ top: 0, behavior: 'smooth' })
+    setSaveError(false)
+    try {
+      await employerApi.updateCompany({
+        name: values.name,
+        industry: values.industry,
+        location: values.location,
+        size: values.size,
+        founded: company?.founded,
+        website: values.website,
+        tagline: values.tagline,
+        description: values.about,
+      })
+      setSaved(true)
+      window.scrollTo({ top: 0, behavior: 'smooth' })
+    } catch {
+      setSaveError(true)
+    }
+  }
+
+  if (loading) {
+    return (
+      <section className="hh-section-space bg-white">
+        <div className="page-container">
+          <Reveal>
+            <LoadingState text="Loading company profile…" />
+          </Reveal>
+        </div>
+      </section>
+    )
+  }
+
+  if (error) {
+    return (
+      <section className="hh-section-space bg-white">
+        <div className="page-container">
+          <Reveal>
+            <EmptyState
+              icon="exclamation-triangle"
+              title="Couldn't load your company profile"
+              text="Something went wrong while fetching your company. Please try again."
+              action={
+                <button type="button" className="hh-btn hh-btn-outline-primary hh-btn-pill" onClick={() => reload()}>
+                  Try again
+                </button>
+              }
+            />
+          </Reveal>
+        </div>
+      </section>
+    )
   }
 
   if (!company) {
@@ -58,21 +124,26 @@ export default function EmployerEditCompanyPage() {
     <>
       <section className="hh-section-space bg-white">
         <div className="page-container">
-          <div className="hh-toolbar hh-toolbar-between hh-mb-4">
-            <SectionHeading
-              eyebrow="EMPLOYER"
-              title="Edit company profile"
-              subtitle="Update how your company appears to candidates."
-            />
-            <Link to="/employer/company">
-              <Button variant="outline-primary" icon="bi-eye">Preview profile</Button>
-            </Link>
-          </div>
+          <PageHeader
+            eyebrow="EMPLOYER"
+            title="Edit company profile"
+            subtitle="Update how your company appears to candidates."
+            action={
+              <Link to="/employer/company">
+                <Button variant="outline-primary" icon="bi-eye">Preview profile</Button>
+              </Link>
+            }
+          />
 
           <Reveal>
             {saved && (
               <Alert variant="success" dismissible onDismiss={() => setSaved(false)} className="hh-mb-4">
                 Your company profile has been updated.
+              </Alert>
+            )}
+            {saveError && (
+              <Alert variant="danger" dismissible onDismiss={() => setSaveError(false)} className="hh-mb-4">
+                Couldn't save your company profile. Please try again.
               </Alert>
             )}
           </Reveal>

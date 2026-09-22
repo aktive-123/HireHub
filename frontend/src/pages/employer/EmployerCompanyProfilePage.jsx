@@ -1,14 +1,49 @@
 import { Link } from 'react-router-dom'
-import { publicCompanies } from '../../data/companies'
-import SectionHeading from '../../components/ui/SectionHeading'
+import { employerApi } from '../../services/api'
+import { useApiData } from '../../hooks/useApiData'
+import PageHeader from '../../components/ui/PageHeader'
 import Reveal from '../../components/ui/Reveal'
-import Badge from '../../components/ui/Badge'
+import StatusBadge from '../../components/ui/StatusBadge'
 import EmptyState from '../../components/ui/EmptyState'
 import Card from '../../components/ui/Card'
 import Button from '../../components/ui/Button'
+import LoadingState from '../../components/ui/LoadingState'
 
 export default function EmployerCompanyProfilePage() {
-  const company = publicCompanies[0]
+  const { data: company, loading, error, reload } = useApiData(() => employerApi.company(), [])
+
+  if (loading) {
+    return (
+      <section className="hh-section-space bg-white">
+        <div className="page-container">
+          <Reveal>
+            <LoadingState text="Loading company profile…" />
+          </Reveal>
+        </div>
+      </section>
+    )
+  }
+
+  if (error) {
+    return (
+      <section className="hh-section-space bg-white">
+        <div className="page-container">
+          <Reveal>
+            <EmptyState
+              icon="exclamation-triangle"
+              title="Couldn't load your company profile"
+              text="Something went wrong while fetching your company. Please try again."
+              action={
+                <button type="button" className="hh-btn hh-btn-outline-primary hh-btn-pill" onClick={() => reload()}>
+                  Try again
+                </button>
+              }
+            />
+          </Reveal>
+        </div>
+      </section>
+    )
+  }
 
   if (!company) {
     return (
@@ -23,27 +58,27 @@ export default function EmployerCompanyProfilePage() {
     )
   }
 
+  const companySlug = company.slug || company.id
+
   return (
     <>
       <section className="hh-section-space bg-white">
         <div className="page-container">
-          <Reveal>
-            <div className="hh-toolbar hh-toolbar-between hh-mb-4">
-              <SectionHeading
-                eyebrow="EMPLOYER"
-                title="Company profile"
-                subtitle="Manage how your company appears to candidates."
-              />
+          <PageHeader
+            eyebrow="EMPLOYER"
+            title="Company profile"
+            subtitle="Manage how your company appears to candidates."
+            action={
               <div className="d-flex flex-wrap gap-2">
-                <Link to={`/companies/${company.id}`}>
+                <Link to={`/companies/${companySlug}`}>
                   <Button variant="outline-primary" icon="bi-box-arrow-up-right">View public profile</Button>
                 </Link>
                 <Link to="/employer/company/edit">
                   <Button variant="primary" icon="bi-pencil">Edit profile</Button>
                 </Link>
               </div>
-            </div>
-          </Reveal>
+            }
+          />
 
           <Reveal>
             <Card className="hh-card-body hh-mb-4">
@@ -53,12 +88,12 @@ export default function EmployerCompanyProfilePage() {
                   style={{ background: company.logoBg, color: company.logoColor }}
                   aria-hidden="true"
                 >
-                  {company.logoText}
+                  {company.logoText || company.name?.charAt(0)}
                 </span>
                 <div className="hh-profile-head-main">
                   <h2 className="hh-profile-name hh-mb-1">
                     {company.name}
-                    {company.verified && <Badge className="ms-2" variant="success" icon="patch-check-fill">Verified</Badge>}
+                    {company.verified && <StatusBadge status="verified" className="ms-2" />}
                   </h2>
                   <div className="hh-profile-title-line">{company.tagline}</div>
                   <ul className="hh-meta-list hh-mt-2">
@@ -76,7 +111,7 @@ export default function EmployerCompanyProfilePage() {
           <Reveal>
             <div className="hh-stat-band hh-mb-4">
               <div className="hh-stat-tile">
-                <span className="hh-stat-tile-value">{company.rating.toFixed(1)}</span>
+                <span className="hh-stat-tile-value">{Number(company.rating ?? 0).toFixed(1)}</span>
                 <span className="hh-stat-tile-label">Rating</span>
               </div>
               <div className="hh-stat-tile">
@@ -113,7 +148,7 @@ export default function EmployerCompanyProfilePage() {
                   <div className="hh-card-title-md hh-mb-3">Quick links</div>
                   <nav className="hh-vert-list">
                     <Link to="/employer/company/edit"><i className="bi bi-pencil hh-me-2" />Edit company profile</Link>
-                    <Link to={`/companies/${company.id}`}><i className="bi bi-box-arrow-up-right hh-me-2" />View as a candidate</Link>
+                    <Link to={`/companies/${companySlug}`}><i className="bi bi-box-arrow-up-right hh-me-2" />View as a candidate</Link>
                     <Link to="/employer/jobs/create"><i className="bi bi-plus-circle hh-me-2" />Post a job</Link>
                     <Link to="/employer/jobs"><i className="bi bi-briefcase hh-me-2" />Manage job posts</Link>
                   </nav>

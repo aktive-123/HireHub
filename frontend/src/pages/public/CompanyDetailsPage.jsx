@@ -1,12 +1,12 @@
 import { Link, useParams } from 'react-router-dom'
-import { getPublicCompanyById } from '../../data/companies'
-import { getPublicJobsByCompany, publicJobs } from '../../data/jobs'
+import { companiesApi } from '../../services/api'
+import { useApiData } from '../../hooks/useApiData'
 import JobCard from '../../components/ui/JobCard'
 import Reveal from '../../components/ui/Reveal'
 import EmptyState from '../../components/ui/EmptyState'
 import Button from '../../components/ui/Button'
 import Badge from '../../components/ui/Badge'
-import HeroSection from '../../components/ui/HeroSection'
+import PageHero from '../../components/ui/PageHero'
 import heroSlide1 from '../../assets/company1.jpg'
 import heroSlide2 from '../../assets/company3.jpg'
 import heroSlide3 from '../../assets/company4.jpg'
@@ -15,32 +15,40 @@ const heroSlides = [heroSlide1, heroSlide2, heroSlide3]
 
 export default function CompanyDetailsPage() {
   const { id } = useParams()
-  const company = getPublicCompanyById(id)
+  const { data: company, loading, error } = useApiData(() => companiesApi.bySlug(id), [id])
+
+  if (loading) {
+    return (
+      <section className="page-container hh-py-6">
+        <div className="hh-loading-block">
+          <span className="spinner-border spinner-border-sm me-2" aria-hidden="true" />
+          Loading company…
+        </div>
+      </section>
+    )
+  }
 
   if (!company) {
     return (
       <section className="page-container">
         <EmptyState
-          icon="buildings"
-          title="Company not found"
-          text="This company profile may not exist or was removed."
+          icon={error ? 'wifi-off' : 'buildings'}
+          title={error ? 'Could not load company' : 'Company not found'}
+          text={error ? 'There was a problem connecting to the company directory.' : 'This company profile may not exist or was removed.'}
           action={<Button to="/companies" variant="primary">Browse companies</Button>}
         />
       </section>
     )
   }
 
-  const openJobs = getPublicJobsByCompany(company.id)
-  const featuredJobs =
-    openJobs.length > 0
-      ? openJobs
-      : publicJobs.filter((j) => j.is_featured).slice(0, 3)
+  const openJobs = company.jobs ?? []
+  const featuredJobs = openJobs
 
-  const foundedFrom = (company.founded ?? 0) > 0 ? company.founded : null
+  const foundedFrom = company.founded || null
 
   return (
     <>
-      <HeroSection images={heroSlides} deep>
+      <PageHero images={heroSlides} deep>
         <div className="hh-mb-4">
           <Link to="/companies" className="hh-btn hh-btn-outline-white hh-btn-sm hh-btn-pill">
             <i className="bi bi-arrow-left" aria-hidden="true" />
@@ -65,8 +73,7 @@ export default function CompanyDetailsPage() {
                 {company.name}
                 {company.is_verified && (
                   <i
-                    className="bi bi-patch-check-fill ms-2"
-                    style={{ color: 'var(--hh-blue-light)' }}
+                    className="bi bi-patch-check-fill ms-2 hh-on-dark-accent"
                     aria-label="Verified company"
                   />
                 )}
@@ -77,17 +84,17 @@ export default function CompanyDetailsPage() {
 
           <div className="hh-toolbar">
             <Badge variant="primary" dot>{company.industry}</Badge>
-            <span className="hh-small" style={{ color: 'rgba(255,255,255,0.7)' }}>
+            <span className="hh-small hh-on-dark-muted">
               <i className="bi bi-geo-alt me-1" aria-hidden="true" />
               {company.location}
             </span>
-            <span className="hh-small" style={{ color: 'rgba(255,255,255,0.7)' }}>
+            <span className="hh-small hh-on-dark-muted">
               <i className="bi bi-people me-1" aria-hidden="true" />
               {company.size}
             </span>
           </div>
         </Reveal>
-      </HeroSection>
+      </PageHero>
 
       <section className="hh-section-space bg-white">
         <div className="page-container">
@@ -223,8 +230,7 @@ export default function CompanyDetailsPage() {
                           href={company.website}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="hh-small"
-                          style={{ color: 'var(--hh-primary)' }}
+                          className="hh-small hh-text-primary"
                         >
                           {company.website.replace(/^https?:\/\//, '')}
                         </a>

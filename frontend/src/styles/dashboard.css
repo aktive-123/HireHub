@@ -459,7 +459,7 @@
   color: var(--hh-secondary);
   background: var(--hh-bg-soft);
   padding: var(--hh-space-3) var(--hh-space-4);
-  border-bottom: 1px solid var(--hh-border);
+  border-bottom: 2px solid var(--hh-border-strong);
   white-space: nowrap;
 }
 
@@ -475,11 +475,13 @@
   border-bottom: none;
 }
 
-.hh-table-hover tbody tr {
+/* Hover rows by default so every dashboard table shares the interaction
+   affordance; plain row dividers already separate data rows. */
+.hh-table tbody tr {
   transition: background-color var(--hh-transition-fast);
 }
 
-.hh-table-hover tbody tr:hover {
+.hh-table tbody tr:hover {
   background-color: var(--hh-bg-soft);
 }
 
@@ -522,6 +524,47 @@
 
 .hh-card--table .table-responsive {
   border-radius: inherit;
+}
+
+/* Horizontal-scroll affordance for shared table cards. Wide tables are
+   intentional, so instead of a raw browser scrollbar we offer a thin branded
+   scrollbar plus a soft white fade at each edge (the fade "burns off" the
+   first/last column once the table no longer overflows). */
+.hh-table-responsive {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: thin;
+  scrollbar-color: color-mix(in srgb, var(--hh-secondary) 28%, transparent) transparent;
+  background:
+    linear-gradient(to right, var(--hh-white) var(--hh-space-2), rgba(255, 255, 255, 0))
+      left top / 56px 100% no-repeat,
+    linear-gradient(to left, var(--hh-white) var(--hh-space-2), rgba(255, 255, 255, 0))
+      right top / 56px 100% no-repeat;
+  background-attachment: local, local;
+}
+
+.hh-table-responsive::-webkit-scrollbar {
+  height: 8px;
+}
+
+.hh-table-responsive::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.hh-table-responsive::-webkit-scrollbar-thumb {
+  background: color-mix(in srgb, var(--hh-secondary) 25%, transparent);
+  border-radius: 999px;
+}
+
+.hh-table-responsive::-webkit-scrollbar-thumb:hover {
+  background: color-mix(in srgb, var(--hh-secondary) 45%, transparent);
+}
+
+@media (max-width: 575.98px) {
+  .hh-table-responsive .hh-table thead th,
+  .hh-table-responsive .hh-table tbody td {
+    padding-inline: var(--hh-space-3);
+  }
 }
 
 /* -------------------------------------------------------------
@@ -1540,4 +1583,389 @@
   text-align: center;
   border: 1px dashed var(--hh-border-strong);
   border-radius: var(--hh-radius);
+}
+
+/* -------------------------------------------------------------
+   Employer dashboard + premium dashboard surfaces
+   Welcome-band hero, avatar/pill identity, stat polish,
+   applications trend chart (inline SVG) and job-status donut.
+   Adds a subtle dot-grid canvas + animated shape layer.
+------------------------------------------------------------- */
+
+/* Full-bleed canvas texture for dashboard sections */
+.hh-canvas {
+  background-image:
+    radial-gradient(circle at 16% 0%, rgba(0, 84, 236, 0.05), transparent 30%),
+    radial-gradient(circle at 88% 8%, rgba(4, 232, 164, 0.05), transparent 26%),
+    radial-gradient(circle, rgba(11, 31, 58, 0.04) 1px, transparent 1.4px);
+  background-size: auto, auto, 26px 26px;
+  background-position: 0 0, 0 0, 0 0;
+}
+
+/* Employer welcome band: reuses the shared hero, text left + CTA right */
+.hh-welcome-hero--employer {
+  grid-template-columns: minmax(0, 1fr) minmax(0, 250px);
+  min-height: 232px;
+}
+
+.hh-welcome-hero--employer .hh-welcome-hero-text {
+  min-width: 0;
+}
+
+/* Staggered reveal for the hero text block */
+.hh-welcome-hero--employer .hh-welcome-hero-text > * {
+  animation: hh-hero-rise 0.6s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.hh-welcome-hero--employer .hh-welcome-hero-text > *:nth-child(1) { animation-delay: 0.05s; }
+.hh-welcome-hero--employer .hh-welcome-hero-text > *:nth-child(2) { animation-delay: 0.16s; }
+.hh-welcome-hero--employer .hh-welcome-hero-text > *:nth-child(3) { animation-delay: 0.27s; }
+.hh-welcome-hero--employer .hh-welcome-hero-actions { animation: hh-hero-rise 0.6s 0.34s cubic-bezier(0.16, 1, 0.3, 1) both; }
+
+@keyframes hh-hero-rise {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.hh-dashboard-hero-id {
+  display: flex;
+  align-items: center;
+  gap: var(--hh-space-3);
+  margin-bottom: var(--hh-space-4);
+}
+
+.hh-dashboard-hero-avatar {
+  width: 56px;
+  height: 56px;
+  flex-shrink: 0;
+  font-size: 1.35rem;
+  font-weight: var(--hh-fw-extrabold);
+  border: 2px solid rgba(255, 255, 255, 0.28);
+  box-shadow: var(--hh-shadow-md);
+}
+
+.hh-dashboard-hero-id-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--hh-space-2);
+  margin-top: var(--hh-space-1);
+  padding: var(--hh-space-1) var(--hh-space-3);
+  border-radius: var(--hh-radius-pill);
+  background: rgba(255, 255, 255, 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  font-size: var(--hh-fs-xs);
+  font-weight: var(--hh-fw-semibold);
+  color: var(--hh-white);
+  backdrop-filter: blur(4px);
+}
+
+.hh-dashboard-hero-id-pill::before {
+  content: "";
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--hh-logo-mint);
+  box-shadow: 0 0 0 3px rgba(28, 252, 184, 0.18);
+}
+
+.hh-welcome-hero--employer .hh-welcome-hero-actions {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: var(--hh-space-2);
+}
+
+/* Animated abstract shape layer */
+.hh-dashboard-hero-orb {
+  position: absolute;
+  z-index: 0;
+  right: -64px;
+  bottom: -110px;
+  width: 280px;
+  height: 280px;
+  border-radius: 50%;
+  border: 1.5px dashed rgba(255, 255, 255, 0.16);
+  animation: hh-ellipse-spin 32s linear infinite;
+  pointer-events: none;
+}
+
+.hh-dashboard-hero-orb::before {
+  content: "";
+  position: absolute;
+  inset: 30px;
+  border-radius: 50%;
+  border: 1.5px dashed rgba(255, 255, 255, 0.12);
+}
+
+@keyframes hh-ellipse-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (max-width: 991.98px) {
+  .hh-welcome-hero--employer {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Stat tile polish — softer chip + lift on hover (depth layer) */
+.hh-stat-icon {
+  border-radius: 14px;
+  transition: transform var(--hh-transition-fast), box-shadow var(--hh-transition-fast);
+}
+
+.hh-card:hover .hh-stat-icon {
+  transform: translateY(-2px) scale(1.04);
+  box-shadow: 0 6px 14px color-mix(in srgb, var(--hh-primary) 14%, transparent);
+}
+
+.hh-activity-row {
+  transition: background-color var(--hh-transition-fast);
+  border-radius: var(--hh-radius);
+}
+
+.hh-activity-row:hover {
+  background: var(--hh-gray-50);
+}
+
+/* -------------------------------------------------------------
+   Applications trend chart (inline SVG area chart)
+------------------------------------------------------------- */
+.hh-chart-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--hh-space-3);
+  flex-wrap: wrap;
+  margin-bottom: var(--hh-space-2);
+}
+
+.hh-kpi-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--hh-space-1);
+  padding: 3px var(--hh-space-3);
+  border-radius: var(--hh-radius-pill);
+  background-color: var(--hh-primary-light);
+  color: var(--hh-primary-dark);
+  font-size: var(--hh-fs-xs);
+  font-weight: var(--hh-fw-bold);
+  white-space: nowrap;
+}
+
+.hh-chart-area {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.hh-chart-area .hh-chart-grid {
+  stroke: var(--hh-border);
+  stroke-width: 1;
+  stroke-dasharray: 3 5;
+}
+
+.hh-chart-area .hh-chart-gridlabel {
+  fill: var(--hh-muted-light);
+  font-size: 10px;
+  font-family: var(--hh-font-sans);
+}
+
+.hh-chart-area .hh-chart-axislabel {
+  fill: var(--hh-muted);
+  font-size: 11px;
+  font-family: var(--hh-font-sans);
+  font-weight: var(--hh-fw-medium);
+}
+
+.hh-chart-area .hh-chart-valuelabel {
+  fill: var(--hh-secondary);
+  font-size: 10.5px;
+  font-family: var(--hh-font-sans);
+  font-weight: var(--hh-fw-semibold);
+}
+
+.hh-chart-area .hh-chart-line {
+  fill: none;
+  stroke: var(--hh-primary);
+  stroke-width: 3;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.hh-chart-dot {
+  fill: var(--hh-white);
+  stroke: var(--hh-primary);
+  stroke-width: 2.5;
+}
+
+.hh-chart-dot--last {
+  fill: var(--hh-primary);
+  stroke: var(--hh-white);
+  stroke-width: 3;
+}
+
+/* -------------------------------------------------------------
+   Job status donut (pure conic-gradient — no chart library)
+------------------------------------------------------------- */
+.hh-donut {
+  position: relative;
+  width: 172px;
+  height: 172px;
+  margin-inline: auto;
+  border-radius: 50%;
+}
+
+.hh-donut::before {
+  content: "";
+  position: absolute;
+  inset: 24px;
+  border-radius: 50%;
+  background: var(--hh-white);
+  box-shadow: inset 0 1px 3px rgba(11, 31, 58, 0.08);
+}
+
+.hh-donut-center {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  text-align: center;
+}
+
+.hh-donut-center strong {
+  font-size: 1.8rem;
+  font-weight: var(--hh-fw-extrabold);
+  color: var(--hh-secondary);
+  letter-spacing: -0.03em;
+  line-height: 1;
+}
+
+.hh-donut-center span {
+  font-size: var(--hh-fs-xs);
+  color: var(--hh-muted);
+}
+
+.hh-donut-legend {
+  display: flex;
+  flex-direction: column;
+  gap: var(--hh-space-2);
+  margin-top: var(--hh-space-5);
+}
+
+.hh-donut-legend-row {
+  display: flex;
+  align-items: center;
+  gap: var(--hh-space-2);
+  font-size: var(--hh-fs-sm);
+}
+
+.hh-donut-legend-dot {
+  width: 10px;
+  height: 10px;
+  flex-shrink: 0;
+  border-radius: 50%;
+}
+
+.hh-donut-legend-label {
+  color: var(--hh-muted);
+}
+
+.hh-donut-legend-value {
+  margin-left: auto;
+  color: var(--hh-secondary);
+  font-weight: var(--hh-fw-bold);
+}
+
+/* -------------------------------------------------------------
+   Shared PageHeader (employer + admin variants)
+------------------------------------------------------------- */
+.hh-page-header {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: var(--hh-space-5);
+  flex-wrap: wrap;
+  /* Header band ↔ first card below: one semantic spacing token so every
+     dashboard page (admin + employer) inherits the same rhythm. */
+  margin-bottom: var(--hh-gap-block);
+}
+
+.hh-page-header-text {
+  min-width: 0;
+}
+
+.hh-page-title {
+  margin: 0 0 var(--hh-space-1);
+  font-size: clamp(1.5rem, 2.4vw, 2rem);
+  font-weight: var(--hh-fw-extrabold);
+  letter-spacing: -0.02em;
+  line-height: 1.2;
+  color: var(--hh-secondary);
+}
+
+.hh-page-subtitle {
+  margin: 0;
+  font-size: var(--hh-fs-md);
+  color: var(--hh-muted);
+  line-height: 1.6;
+  max-width: 64ch;
+}
+
+.hh-page-header-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--hh-gap-item);
+  flex-wrap: wrap;
+}
+
+/* White eyebrow on the gradient admin hero band (shared PageHeader variant) */
+.hh-admin-page-hero .hh-section-eyebrow {
+  color: var(--hh-logo-teal);
+}
+
+/* -------------------------------------------------------------
+   Table footer — item count indicator + pagination
+------------------------------------------------------------- */
+.hh-table-pagination {
+  display: flex;
+  align-items: center;
+  gap: var(--hh-space-4);
+  flex-wrap: wrap;
+  margin-top: var(--hh-space-5);
+}
+
+.hh-table-pagination--between {
+  justify-content: space-between;
+}
+
+.hh-table-pagination--center {
+  justify-content: center;
+}
+
+.hh-table-pagination .pagination {
+  margin: 0;
+}
+
+.hh-results-meta {
+  font-size: var(--hh-fs-sm);
+  color: var(--hh-muted);
+}
+
+.hh-results-meta strong {
+  color: var(--hh-secondary);
+  font-weight: var(--hh-fw-bold);
 }

@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react'
-import HeroSection from '@/components/ui/HeroSection'
+import PageHero from '@/components/ui/PageHero'
 import SectionHeading from '@/components/ui/SectionHeading'
 import Reveal from '@/components/ui/Reveal'
 import Button from '@/components/ui/Button'
@@ -78,8 +78,9 @@ export default function CareerResourcesPage() {
 
   return (
     <>
-      <HeroSection
+      <PageHero
         deep
+        className="hh-page-hero--resources"
         images={heroSlides}
         eyebrow="CAREER RESOURCES"
         title="Build Your Career With Confidence"

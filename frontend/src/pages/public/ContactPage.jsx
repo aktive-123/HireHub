@@ -5,7 +5,7 @@ import Alert from '../../components/ui/Alert'
 import Button from '../../components/ui/Button'
 import FormInput from '../../components/ui/FormInput'
 import FormSelect from '../../components/ui/FormSelect'
-import HeroSection from '../../components/ui/HeroSection'
+import PageHero from '../../components/ui/PageHero'
 import heroSlide1 from '../../assets/contact.jpg'
 import heroSlide2 from '../../assets/contact3.jpg'
 import heroSlide3 from '../../assets/contact4.jpg'
@@ -121,7 +121,7 @@ export default function ContactPage() {
 
   return (
     <>
-      <HeroSection
+      <PageHero
         images={heroSlides}
         eyebrow="CONTACT US"
         title="How Can We Help?"

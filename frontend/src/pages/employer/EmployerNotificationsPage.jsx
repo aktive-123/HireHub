@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
-import SectionHeading from '../../components/ui/SectionHeading'
-import Reveal from '../../components/ui/Reveal'
+import PageHeader from '../../components/ui/PageHeader'
+import TablePagination from '../../components/ui/TablePagination'
 import Card from '../../components/ui/Card'
 import Button from '../../components/ui/Button'
 import EmptyState from '../../components/ui/EmptyState'
@@ -46,16 +46,16 @@ export default function EmployerNotificationsPage() {
     <>
       <section className="hh-section-space bg-white">
         <div className="page-container">
-          <div className="hh-toolbar hh-toolbar-between hh-mb-4">
-            <SectionHeading
-              eyebrow="EMPLOYER"
-              title="Notifications"
-              subtitle="Track applicant activity, interviews, and account updates."
-            />
+<PageHeader
+          eyebrow="EMPLOYER"
+          title="Notifications"
+          subtitle="Track applicant activity, interviews, and account updates."
+          action={
             <Button type="button" variant="outline-primary" icon="bi-check2-all" pill onClick={markAllRead} disabled={!hasUnread}>
               Mark all as read
             </Button>
-          </div>
+          }
+        />
 
           <div className="hh-tabs hh-mb-4" role="tablist" aria-label="Filter notifications by category">
             {CATEGORIES.map((cat) => (
@@ -72,9 +72,8 @@ export default function EmployerNotificationsPage() {
             ))}
           </div>
 
-          <Reveal>
-            {visible.length > 0 ? (
-              <Card className="hh-card-body">
+          {visible.length > 0 ? (
+            <Card className="hh-card-body">
                 {visible.map((note) => {
                   const meta = CATEGORY_META[note.category] || CATEGORY_META.platform
                   const isUnread = unread(note.id)
@@ -99,14 +98,19 @@ export default function EmployerNotificationsPage() {
                   )
                 })}
               </Card>
-            ) : (
-              <EmptyState
-                icon="bell-slash"
-                title="No notifications here"
-                text="Notifications in this category will appear here."
-              />
-            )}
-          </Reveal>
+          ) : (
+            <EmptyState
+              icon="bell-slash"
+              title="No notifications here"
+              text="Notifications in this category will appear here."
+            />
+          )}
+
+          <TablePagination
+            page={1}
+            pageSize={8}
+            total={visible.length}
+          />
         </div>
       </section>
     </>

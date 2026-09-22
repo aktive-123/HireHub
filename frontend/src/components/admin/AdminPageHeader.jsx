@@ -1,21 +1,14 @@
-import Reveal from '../ui/Reveal'
+import PageHeader from '../ui/PageHeader'
 
-export default function AdminPageHeader({
-  eyebrow = 'ADMIN CONSOLE',
-  title,
-  subtitle,
-  action,
-}) {
+// Admin pages use the gradient hero variant of the shared PageHeader.
+export default function AdminPageHeader({ eyebrow = 'ADMIN CONSOLE', title, subtitle, action }) {
   return (
-    <Reveal>
-      <div className="hh-admin-page-hero hh-mb-4">
-        <div className="hh-admin-page-hero-text">
-          <span className="hh-welcome-eyebrow">{eyebrow}</span>
-          <h1 className="hh-admin-page-title">{title}</h1>
-          {subtitle && <p className="hh-admin-page-subtitle">{subtitle}</p>}
-        </div>
-        {action && <div className="hh-admin-page-hero-action">{action}</div>}
-      </div>
-    </Reveal>
+    <PageHeader
+      variant="admin"
+      eyebrow={eyebrow}
+      title={title}
+      subtitle={subtitle}
+      action={action}
+    />
   )
 }

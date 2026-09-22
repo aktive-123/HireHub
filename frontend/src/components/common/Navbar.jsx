@@ -1,13 +1,23 @@
 import { useState } from 'react'
-import { Link, NavLink } from 'react-router-dom'
+import { Link, NavLink, useNavigate } from 'react-router-dom'
 import logoImg from '../../assets/HIREHUBlogo.png'
+import { useAuth } from '../../context/AuthContext'
 
 export default function Navbar() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+  const { user, isAuthenticated, role, logout } = useAuth()
+  const navigate = useNavigate()
 
   const toggleMobileMenu = () => {
     setMobileMenuOpen(!mobileMenuOpen)
   }
+
+  const handleLogout = async () => {
+    await logout()
+    navigate('/')
+  }
+
+  const dashboardPath = role === 'seeker' ? '/seeker' : role === 'employer' ? '/employer' : '/admin'
 
   return (
     <header className="hh-navbar">
@@ -97,12 +107,39 @@ export default function Navbar() {
               >
                 <i className="bi bi-search" aria-hidden="true" />
               </Link>
-              <Link to="/login" className="hh-btn hh-btn-outline-primary hh-btn-pill">
-                Log In
-              </Link>
-              <Link to="/register/job-seeker" className="hh-btn hh-btn-primary hh-btn-pill">
-                Sign Up
-              </Link>
+              {isAuthenticated ? (
+                <>
+                  <Link to={dashboardPath} className="hh-user-chip hh-navbar-user-chip">
+                    <span className="hh-avatar hh-avatar-sm hh-avatar-soft" aria-hidden="true">
+                      {user?.name ? user.name.charAt(0).toUpperCase() : user?.email?.charAt(0).toUpperCase()}
+                    </span>
+                    <span className="hh-user-name">
+                      {user?.name?.split(' ')[0] || 'Dashboard'}
+                    </span>
+                  </Link>
+                  <button
+                    type="button"
+                    className="hh-btn hh-btn-outline-primary hh-btn-pill"
+                    onClick={handleLogout}
+                  >
+                    Log Out
+                  </button>
+                </>
+              ) : (
+                <>
+                  <Link to="/login" className="hh-btn hh-btn-outline-primary hh-btn-pill">
+                    Log In
+                  </Link>
+                  <Link to="/register/job-seeker" className="hh-btn hh-btn-primary hh-btn-pill">
+                    Sign Up
+                  </Link>
+                </>
+              )}
+              {role === 'employer' && (
+                <Link to="/employer/jobs/create" className="hh-btn hh-btn-primary hh-btn-pill">
+                  Post a Job
+                </Link>
+              )}
             </div>
           </nav>
 

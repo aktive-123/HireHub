@@ -40,7 +40,7 @@ export default function Button({
     .filter(Boolean)
     .join(' ')
 
-  const iconEl = icon ? <i className={`bi bi-${icon}`} aria-hidden="true" /> : null
+  const iconEl = icon ? <i className={`bi bi-${String(icon).replace(/^bi-/, '')}`} aria-hidden="true" /> : null
 
   if (to) {
     return (

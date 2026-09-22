@@ -212,9 +212,11 @@
 }
 
 .hh-footer-link {
+  display: block;
   color: rgba(255, 255, 255, 0.65);
   text-decoration: none;
   font-size: var(--hh-fs-sm);
+  padding: var(--hh-space-1) 0;
   transition: color var(--hh-transition-fast);
 }
 
@@ -271,6 +273,8 @@
 .hh-dashboard-sidebar {
   width: 270px;
   background-color: var(--hh-secondary);
+  background-image: radial-gradient(340px 260px at 12% -12%, rgba(0, 84, 236, 0.3), transparent 62%),
+    linear-gradient(180deg, var(--hh-secondary) 0%, var(--hh-secondary-dark) 100%);
   color: var(--hh-white);
   flex-shrink: 0;
   display: flex;
@@ -299,35 +303,91 @@
 }
 
 .hh-dashboard-nav-link {
+  position: relative;
   display: flex;
   align-items: center;
   gap: var(--hh-space-3);
   padding: var(--hh-space-3) var(--hh-space-4);
-  color: rgba(255, 255, 255, 0.7);
+  color: rgba(255, 255, 255, 0.72);
+  font-family: var(--hh-font-sans);
   font-size: var(--hh-fs-sm);
   font-weight: var(--hh-fw-medium);
   border-radius: var(--hh-radius);
   text-decoration: none;
-  transition: all var(--hh-transition-fast);
-}
-
-.hh-dashboard-nav-link:hover {
-  color: var(--hh-white);
-  background-color: rgba(255, 255, 255, 0.08);
-  text-decoration: none;
-}
-
-.hh-dashboard-nav-link--active {
-  color: var(--hh-white);
-  background-color: var(--hh-primary);
-}
-
-.hh-dashboard-nav-link--active:hover {
-  background-color: var(--hh-primary-dark);
+  transition: background-color var(--hh-transition-fast), color var(--hh-transition-fast), box-shadow var(--hh-transition-fast);
 }
 
 .hh-dashboard-nav-link i {
-  font-size: 1.15rem;
+  width: 24px;
+  height: 24px;
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 7px;
+  font-size: 1.05rem;
+  color: inherit;
+  background: rgba(255, 255, 255, 0.08);
+  transition: background-color var(--hh-transition-fast), color var(--hh-transition-fast), transform var(--hh-transition-fast);
+}
+
+/* Hover states are explicit so label + icon can never collapse into the
+   hover background (root-cause fix for invisible nav/button text). */
+.hh-dashboard-nav-link:hover {
+  color: var(--hh-white) !important;
+  background-color: rgba(255, 255, 255, 0.1);
+  text-decoration: none;
+}
+
+.hh-dashboard-nav-link:hover i {
+  color: var(--hh-white) !important;
+  background-color: var(--hh-primary);
+  transform: translateY(-1px);
+}
+
+.hh-dashboard-nav-link--active {
+  color: var(--hh-white) !important;
+  background: linear-gradient(90deg, var(--hh-primary), var(--hh-primary-dark));
+  box-shadow: var(--hh-shadow-primary), inset 0 1px 0 rgba(255, 255, 255, 0.18);
+}
+
+.hh-dashboard-nav-link--active::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 3px;
+  height: 60%;
+  border-radius: 0 3px 3px 0;
+  background: var(--hh-white);
+  opacity: 0.9;
+}
+
+.hh-dashboard-nav-link--active:hover {
+  color: var(--hh-white) !important;
+  background: linear-gradient(90deg, var(--hh-primary-dark), var(--hh-primary-darker));
+}
+
+.hh-dashboard-nav-link--active i {
+  color: var(--hh-white) !important;
+  background-color: rgba(255, 255, 255, 0.2);
+}
+
+/* "Exit to Website" keeps its red accent on hover — never a white-on-colour wipeout */
+.hh-dashboard-nav-link.text-danger {
+  color: var(--hh-danger) !important;
+  background: transparent;
+}
+
+.hh-dashboard-nav-link.text-danger:hover {
+  color: var(--hh-white) !important;
+  background-color: color-mix(in srgb, var(--hh-danger) 26%, transparent);
+}
+
+.hh-dashboard-nav-link.text-danger:hover i {
+  color: var(--hh-white) !important;
+  background-color: color-mix(in srgb, var(--hh-danger) 40%, transparent);
 }
 
 .hh-dashboard-content {
@@ -349,11 +409,23 @@
   position: sticky;
   top: 0;
   z-index: 100;
+  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.9), var(--hh-shadow-sm);
 }
 
 .hh-dashboard-body {
   padding: var(--hh-space-6);
   flex-grow: 1;
+  background-image: radial-gradient(circle at 15% 0%, rgba(0, 84, 236, 0.05), transparent 28%),
+    radial-gradient(circle at 88% 8%, rgba(4, 232, 164, 0.05), transparent 24%),
+    radial-gradient(rgba(11, 31, 58, 0.035) 1px, transparent 1.4px);
+  background-size: auto, auto, 26px 26px;
+}
+
+/* Dashboard pages sit under the sticky topbar — keep a tight, consistent gap
+   between the topbar and the first heading/content block instead of the large
+   landing-page section padding. */
+.hh-dashboard-body > .hh-section-space {
+  padding-block: var(--hh-space-3) var(--hh-space-8);
 }
 
 @media (max-width: 991.98px) {
@@ -369,6 +441,10 @@
 
   .hh-dashboard-body {
     padding: var(--hh-space-4);
+  }
+
+  .hh-dashboard-body > .hh-section-space {
+    padding-block: var(--hh-space-2) var(--hh-space-7);
   }
 }
 

@@ -67,7 +67,7 @@ export default function AdminSettingsPage() {
 
   return (
     <section className="hh-section-space bg-white">
-      <div className="page-container" style={{ maxWidth: 900 }}>
+      <div className="page-container hh-page-container-narrow">
         <AdminPageHeader
           eyebrow="ADMIN CONSOLE"
           title="Platform Settings"

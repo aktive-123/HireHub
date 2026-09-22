@@ -12,7 +12,7 @@ import HeroSlideshow from './HeroSlideshow'
    - children: anything rendered after the copy block (search bars, detail rows, …)
    - deep: opt-in stronger scrim for photos that need extra contrast
  */
-export default function HeroSection({
+export default function PageHero({
   images = [],
   eyebrow,
   title,

@@ -303,17 +303,6 @@
   transform: scale(1.12);
 }
 
-/* Tight top padding — lets admin page heroes sit high under the topbar */
-.hh-dashboard-body--admin > .hh-section-space {
-  padding-block: var(--hh-space-4) var(--hh-space-8);
-}
-
-@media (max-width: 767.98px) {
-  .hh-dashboard-body--admin > .hh-section-space {
-    padding-block: var(--hh-space-3) var(--hh-space-8);
-  }
-}
-
 /* -------------------------------------------------------------
    Admin page header band (shared by all management pages)
 ------------------------------------------------------------- */
@@ -326,6 +315,7 @@
   gap: var(--hh-space-5);
   flex-wrap: wrap;
   padding: var(--hh-space-6) var(--hh-space-7);
+  margin-bottom: var(--hh-space-5);
   border-radius: var(--hh-radius-lg);
   background: linear-gradient(115deg, var(--hh-secondary-deep) 0%, var(--hh-secondary) 45%, var(--hh-primary) 135%);
   box-shadow: var(--hh-shadow);
@@ -369,13 +359,13 @@
 .hh-admin-page-hero-action .hh-btn {
   background: var(--hh-white);
   border-color: var(--hh-white);
-  color: var(--hh-primary);
+  color: var(--hh-primary) !important;
 }
 
 .hh-admin-page-hero-action .hh-btn:hover {
   background: var(--hh-blue-tint);
   border-color: var(--hh-blue-tint);
-  color: var(--hh-primary);
+  color: var(--hh-primary) !important;
 }
 
 /* -------------------------------------------------------------

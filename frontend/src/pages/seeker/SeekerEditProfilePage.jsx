@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { seekerApi } from '../../services/api'
 import SectionHeading from '../../components/ui/SectionHeading'
 import Reveal from '../../components/ui/Reveal'
 import Card from '../../components/ui/Card'
@@ -8,12 +9,41 @@ import FormSelect from '../../components/ui/FormSelect'
 import Alert from '../../components/ui/Alert'
 
 export default function SeekerEditProfilePage() {
-  const [saved, setSaved] = useState(false)
+  const [notice, setNotice] = useState(null)
+  const [saving, setSaving] = useState(false)
 
-  const handleSubmit = (e) => {
+  const splitList = (value) =>
+    value
+      .split(',')
+      .map((item) => item.trim())
+      .filter(Boolean)
+
+  const handleSubmit = async (e) => {
     e.preventDefault()
-    setSaved(true)
-    window.scrollTo({ top: 0, behavior: 'smooth' })
+    const form = e.currentTarget
+    const get = (name) => form.elements[name]?.value?.trim() ?? ''
+
+    const payload = {
+      name: [get('first_name'), get('last_name')].filter(Boolean).join(' '),
+      headline: get('headline'),
+      location: get('location'),
+      phone: get('phone'),
+      summary: get('summary'),
+      skills: splitList(get('skills')),
+      portfolio: [get('portfolio'), get('github'), get('linkedin')].filter(Boolean),
+    }
+
+    setSaving(true)
+    setNotice(null)
+    try {
+      await seekerApi.updateProfile(payload)
+      setNotice({ type: 'success', message: 'Your profile has been saved successfully.' })
+    } catch {
+      setNotice({ type: 'danger', message: "We couldn't save your profile. Please try again." })
+    } finally {
+      setSaving(false)
+      window.scrollTo({ top: 0, behavior: 'smooth' })
+    }
   }
 
   return (
@@ -32,9 +62,9 @@ export default function SeekerEditProfilePage() {
           </div>
 
           <Reveal>
-            {saved && (
-              <Alert variant="success" dismissible onDismiss={() => setSaved(false)} className="hh-mb-4">
-                Your profile has been saved successfully.
+            {notice && (
+              <Alert variant={notice.type} dismissible onDismiss={() => setNotice(null)} className="hh-mb-4">
+                {notice.message}
               </Alert>
             )}
           </Reveal>
@@ -45,19 +75,19 @@ export default function SeekerEditProfilePage() {
                 <div className="hh-card-title-md hh-mb-4">Personal information</div>
                 <div className="row g-3">
                   <div className="col-12 col-md-6">
-                    <FormInput label="First name" defaultValue="Sarah" required />
+                    <FormInput label="First name" name="first_name" defaultValue="Sarah" required />
                   </div>
                   <div className="col-12 col-md-6">
-                    <FormInput label="Last name" defaultValue="Obi" required />
+                    <FormInput label="Last name" name="last_name" defaultValue="Obi" required />
                   </div>
                   <div className="col-12 col-md-6">
-                    <FormInput label="Professional headline" defaultValue="Frontend Developer" icon="bi-asterisk" helperText="A short title that describes your expertise." />
+                    <FormInput label="Professional headline" name="headline" defaultValue="Frontend Developer" icon="bi-asterisk" helperText="A short title that describes your expertise." />
                   </div>
                   <div className="col-12 col-md-6">
-                    <FormInput label="Location" defaultValue="Lagos, Nigeria" icon="bi-geo-alt" />
+                    <FormInput label="Location" name="location" defaultValue="Lagos, Nigeria" icon="bi-geo-alt" />
                   </div>
                   <div className="col-12 col-md-6">
-                    <FormInput label="Phone number" type="tel" defaultValue="+234 800 000 0000" icon="bi-telephone" />
+                    <FormInput label="Phone number" type="tel" name="phone" defaultValue="+234 800 000 0000" icon="bi-telephone" />
                   </div>
                   <div className="col-12 col-md-6">
                     <FormSelect
@@ -74,6 +104,7 @@ export default function SeekerEditProfilePage() {
                     <label htmlFor="about" className="form-label">About me <span className="text-danger">*</span></label>
                     <textarea
                       id="about"
+                      name="summary"
                       className="form-control"
                       rows="4"
                       defaultValue="Frontend developer with 5 years of experience building fast, accessible web applications."
@@ -92,6 +123,7 @@ export default function SeekerEditProfilePage() {
                 <label htmlFor="skills" className="form-label">Skills</label>
                 <input
                   id="skills"
+                  name="skills"
                   className="form-control"
                   defaultValue="React, JavaScript, TypeScript, CSS, HTML, Git, Figma, SQL"
                 />
@@ -103,13 +135,13 @@ export default function SeekerEditProfilePage() {
                 <div className="hh-card-title-md hh-mb-4">Social links</div>
                 <div className="row g-3">
                   <div className="col-12 col-md-6">
-                    <FormInput label="LinkedIn" placeholder="https://linkedin.com/in/you" icon="bi-linkedin" />
+                    <FormInput label="LinkedIn" name="linkedin" placeholder="https://linkedin.com/in/you" icon="bi-linkedin" />
                   </div>
                   <div className="col-12 col-md-6">
-                    <FormInput label="Portfolio / website" placeholder="https://yourwebsite.com" icon="bi-globe2" />
+                    <FormInput label="Portfolio / website" name="portfolio" placeholder="https://yourwebsite.com" icon="bi-globe2" />
                   </div>
                   <div className="col-12 col-md-6">
-                    <FormInput label="GitHub" placeholder="https://github.com/you" icon="bi-github" />
+                    <FormInput label="GitHub" name="github" placeholder="https://github.com/you" icon="bi-github" />
                   </div>
                   <div className="col-12 col-md-6">
                     <FormInput label="Twitter / X" placeholder="https://x.com/you" icon="bi-twitter-x" />
@@ -123,7 +155,9 @@ export default function SeekerEditProfilePage() {
                 <Button to="/seeker/profile" variant="ghost" icon="bi-x-lg">Cancel</Button>
                 <div className="d-flex gap-2">
                   <Button type="button" variant="outline-primary" icon="bi-eye">Preview profile</Button>
-                  <Button type="submit" variant="primary" icon="bi-check-lg">Save changes</Button>
+                  <Button type="submit" variant="primary" icon="bi-check-lg" disabled={saving}>
+                    {saving ? 'Saving…' : 'Save changes'}
+                  </Button>
                 </div>
               </div>
             </Reveal>

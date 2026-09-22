@@ -1,5 +1,5 @@
 import { useParams } from 'react-router-dom'
-import HeroSection from '@/components/ui/HeroSection'
+import PageHero from '@/components/ui/PageHero'
 import SectionHeading from '@/components/ui/SectionHeading'
 import Reveal from '@/components/ui/Reveal'
 import Button from '@/components/ui/Button'
@@ -46,7 +46,7 @@ export default function CareerArticlePage() {
 
   return (
     <>
-      <HeroSection
+      <PageHero
         deep
         images={CATEGORY_HERO_SLIDES[article.category] || []}
         className="hh-hero--article"
@@ -67,7 +67,7 @@ export default function CareerArticlePage() {
             {article.readTime}
           </span>
         </div>
-      </HeroSection>
+      </PageHero>
 
       <section className="hh-section-space bg-white">
         <div className="page-container">

@@ -55,7 +55,7 @@ export default function CompanyCard({ company, index = 0 }) {
 
         <div className="hh-company-card-footer">
           <Link
-            to={`/companies/${company.id}`}
+            to={`/companies/${company.slug ?? company.id}`}
             className="hh-btn hh-btn-outline-primary hh-btn-sm hh-btn-pill"
           >
             View Profile

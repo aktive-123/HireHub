@@ -3,11 +3,13 @@ import { Link } from 'react-router-dom'
 import AdminPageHeader from '../../components/admin/AdminPageHeader'
 import UserCell from '../../components/admin/UserCell'
 import Badge from '../../components/ui/Badge'
+import StatusBadge from '../../components/ui/StatusBadge'
+import DataTable from '../../components/ui/DataTable'
+import TablePagination from '../../components/ui/TablePagination'
 import Card from '../../components/ui/Card'
 import EmptyState from '../../components/ui/EmptyState'
 import Button from '../../components/ui/Button'
-import Pagination from '../../components/ui/Pagination'
-import { adminCompanies, ACCOUNT_LABELS, ACCOUNT_VARIANT } from '../../data/admin'
+import { adminCompanies, ACCOUNT_LABELS } from '../../data/admin'
 
 const PAGE_SIZE = 8
 
@@ -36,7 +38,6 @@ export default function AdminCompaniesPage() {
     })
   }, [tab, query])
 
-  const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE))
   const visible = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE)
 
   return (
@@ -101,7 +102,7 @@ export default function AdminCompaniesPage() {
           ))}
         </div>
 
-        <div className="hh-search-field hh-mb-4">
+        <div className="hh-search-field-lg hh-mb-4">
           <i className="bi bi-search" aria-hidden="true" />
           <input
             type="search"
@@ -118,63 +119,54 @@ export default function AdminCompaniesPage() {
 
         <Card className="hh-card-body hh-p-0 hh-card--table">
           {visible.length > 0 ? (
-            <div className="table-responsive">
-              <table className="hh-table hh-table-hover hh-mb-0">
-                <thead>
-                  <tr>
-                    <th>Company</th>
-                    <th>Industry</th>
-                    <th>Location</th>
-                    <th>Size</th>
-                    <th>Open jobs</th>
-                    <th>Verified</th>
-                    <th>Status</th>
-                    <th className="hh-table-col-right">Actions</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {visible.map((company) => (
-                    <tr key={company.id}>
-                      <td>
-                        <UserCell
-                          name={company.name}
-                          meta={company.slug}
-                          to={`/companies/${company.id}`}
-                          logoText={company.logoText}
-                          logoBg={company.logoBg}
-                          logoColor={company.logoColor}
-                          square
-                        />
-                      </td>
-                      <td>{company.industry}</td>
-                      <td>{company.location}</td>
-                      <td>{company.size}</td>
-                      <td>{company.jobs}</td>
-                      <td>
-                        <Badge variant={company.verified ? 'success' : 'secondary'} sm icon={company.verified ? 'patch-check' : 'shield-x'}>
-                          {company.verified ? 'Verified' : 'Unverified'}
-                        </Badge>
-                      </td>
-                      <td>
-                        <Badge variant={ACCOUNT_VARIANT[company.status]} dot sm>
-                          {ACCOUNT_LABELS[company.status]}
-                        </Badge>
-                      </td>
-                      <td className="hh-table-col-right">
-                        <div className="d-flex justify-content-end gap-2">
-                          <Link to={`/companies/${company.id}`} className="hh-icon-btn" data-tooltip="View on site" aria-label={`View ${company.name} on site`}>
-                            <i className="bi bi-box-arrow-up-right" aria-hidden="true" />
-                          </Link>
-                          <button type="button" className="hh-icon-btn" data-tooltip="Edit company" aria-label={`Edit ${company.name}`}>
-                            <i className="bi bi-pencil" aria-hidden="true" />
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+            <DataTable
+              zebra
+              columns={[
+                { key: 'company', label: 'Company' },
+                { key: 'industry', label: 'Industry' },
+                { key: 'location', label: 'Location' },
+                { key: 'size', label: 'Size' },
+                { key: 'jobs', label: 'Open jobs' },
+                { key: 'verified', label: 'Verified' },
+                { key: 'status', label: 'Status' },
+                { key: 'actions', label: 'Actions', align: 'right' },
+              ]}
+              rows={visible.map((company) => ({
+                id: company.id,
+                company: (
+                  <UserCell
+                    name={company.name}
+                    meta={company.slug}
+                    to={`/companies/${company.id}`}
+                    logoText={company.logoText}
+                    logoBg={company.logoBg}
+                    logoColor={company.logoColor}
+                    square
+                  />
+                ),
+                industry: company.industry,
+                location: company.location,
+                size: company.size,
+                jobs: company.jobs,
+                verified: (
+                  <Badge variant={company.verified ? 'success' : 'secondary'} sm icon={company.verified ? 'patch-check' : 'shield-x'}>
+                    {company.verified ? 'Verified' : 'Unverified'}
+                  </Badge>
+                ),
+                status: <StatusBadge status={company.status} label={ACCOUNT_LABELS[company.status]} />,
+                actions: (
+                  <div className="d-flex justify-content-end gap-2">
+                    <Link to={`/companies/${company.id}`} className="hh-icon-btn" data-tooltip="View on site" aria-label={`View ${company.name} on site`}>
+                      <i className="bi bi-box-arrow-up-right" aria-hidden="true" />
+                    </Link>
+                    <button type="button" className="hh-icon-btn" data-tooltip="Edit company" aria-label={`Edit ${company.name}`}>
+                      <i className="bi bi-pencil" aria-hidden="true" />
+                    </button>
+                  </div>
+                ),
+              }))}
+              rowKey={(row) => row.id}
+            />
           ) : (
             <div className="hh-p-5">
               <EmptyState icon="buildings" title="No companies match" text="Try a different search term or status filter." />
@@ -182,11 +174,12 @@ export default function AdminCompaniesPage() {
           )}
         </Card>
 
-        {totalPages > 1 && (
-          <div className="hh-mt-4">
-            <Pagination currentPage={page} totalPages={totalPages} onPageChange={setPage} />
-          </div>
-        )}
+        <TablePagination
+          page={page}
+          pageSize={PAGE_SIZE}
+          total={filtered.length}
+          onPageChange={setPage}
+        />
       </div>
     </section>
   )

@@ -67,7 +67,7 @@ export default function JobCard({ job, index = 0, featured = false }) {
         </div>
 
         <h3 className="hh-job-title">
-          <Link to={`/jobs/${job.id}`} className="hh-job-title-link">
+          <Link to={`/jobs/${job.slug ?? job.id}`} className="hh-job-title-link">
             {job.title}
           </Link>
         </h3>
@@ -108,7 +108,7 @@ export default function JobCard({ job, index = 0, featured = false }) {
 
         <div className="hh-job-card-footer">
           <Link
-            to={`/jobs/${job.id}`}
+            to={`/jobs/${job.slug ?? job.id}`}
             className="hh-btn hh-btn-primary hh-btn-sm hh-btn-pill"
           >
             {featured ? 'Apply Now' : 'View Details'}

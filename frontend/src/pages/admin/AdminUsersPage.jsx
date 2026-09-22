@@ -2,15 +2,16 @@ import { useState, useMemo } from 'react'
 import AdminPageHeader from '../../components/admin/AdminPageHeader'
 import UserCell from '../../components/admin/UserCell'
 import Badge from '../../components/ui/Badge'
+import StatusBadge from '../../components/ui/StatusBadge'
+import DataTable from '../../components/ui/DataTable'
+import TablePagination from '../../components/ui/TablePagination'
 import Card from '../../components/ui/Card'
 import EmptyState from '../../components/ui/EmptyState'
-import Pagination from '../../components/ui/Pagination'
 import {
   adminUsers,
   ROLE_LABELS,
   ROLE_VARIANT,
   ACCOUNT_LABELS,
-  ACCOUNT_VARIANT,
 } from '../../data/admin'
 
 const PAGE_SIZE = 8
@@ -42,7 +43,6 @@ export default function AdminUsersPage() {
     })
   }, [tab, query])
 
-  const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE))
   const visible = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE)
 
   return (
@@ -72,7 +72,7 @@ export default function AdminUsersPage() {
           ))}
         </div>
 
-        <div className="hh-search-field hh-mb-4">
+        <div className="hh-search-field-lg hh-mb-4">
           <i className="bi bi-search" aria-hidden="true" />
           <input
             type="search"
@@ -89,57 +89,46 @@ export default function AdminUsersPage() {
 
         <Card className="hh-card-body hh-p-0 hh-card--table">
           {visible.length > 0 ? (
-            <div className="table-responsive">
-              <table className="hh-table hh-table-hover hh-mb-0">
-                <thead>
-                  <tr>
-                    <th>User</th>
-                    <th>Role</th>
-                    <th>Status</th>
-                    <th>Joined</th>
-                    <th>Last active</th>
-                    <th className="hh-table-col-right">Actions</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {visible.map((user) => (
-                    <tr key={user.id}>
-                      <td>
-                        <UserCell name={user.name} meta={user.email} />
-                      </td>
-                      <td>
-                        <Badge variant={ROLE_VARIANT[user.role]} sm>
-                          {ROLE_LABELS[user.role]}
-                        </Badge>
-                      </td>
-                      <td>
-                        <Badge variant={ACCOUNT_VARIANT[user.status]} dot sm>
-                          {ACCOUNT_LABELS[user.status]}
-                        </Badge>
-                      </td>
-                      <td>{user.joined}</td>
-                      <td>{user.last_active}</td>
-                      <td className="hh-table-col-right">
-                        <div className="d-flex justify-content-end gap-2">
-                          <button type="button" className="hh-icon-btn" data-tooltip="View user" aria-label={`View ${user.name}`}>
-                            <i className="bi bi-eye" aria-hidden="true" />
-                          </button>
-                          <button
-                            type="button"
-                            className="hh-icon-btn hh-icon-btn-danger hh-tip-start"
-                            data-tooltip="Suspend user"
-                            aria-label={`Suspend ${user.name}`}
-                            disabled={user.role === 'admin'}
-                          >
-                            <i className="bi bi-person-x" aria-hidden="true" />
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+            <DataTable
+              zebra
+              columns={[
+                { key: 'user', label: 'User' },
+                { key: 'role', label: 'Role' },
+                { key: 'status', label: 'Status' },
+                { key: 'joined', label: 'Joined' },
+                { key: 'last_active', label: 'Last active' },
+                { key: 'actions', label: 'Actions', align: 'right' },
+              ]}
+              rows={visible.map((user) => ({
+                id: user.id,
+                user: <UserCell name={user.name} meta={user.email} />,
+                role: (
+                  <Badge variant={ROLE_VARIANT[user.role]} sm>
+                    {ROLE_LABELS[user.role]}
+                  </Badge>
+                ),
+                status: <StatusBadge status={user.status} label={ACCOUNT_LABELS[user.status]} />,
+                joined: user.joined,
+                last_active: user.last_active,
+                actions: (
+                  <div className="d-flex justify-content-end gap-2">
+                    <button type="button" className="hh-icon-btn" data-tooltip="View user" aria-label={`View ${user.name}`}>
+                      <i className="bi bi-eye" aria-hidden="true" />
+                    </button>
+                    <button
+                      type="button"
+                      className="hh-icon-btn hh-icon-btn-danger hh-tip-start"
+                      data-tooltip="Suspend user"
+                      aria-label={`Suspend ${user.name}`}
+                      disabled={user.role === 'admin'}
+                    >
+                      <i className="bi bi-person-x" aria-hidden="true" />
+                    </button>
+                  </div>
+                ),
+              }))}
+              rowKey={(row) => row.id}
+            />
           ) : (
             <div className="hh-p-5">
               <EmptyState icon="people" title="No users match" text="Try a different search term or role filter." />
@@ -147,11 +136,12 @@ export default function AdminUsersPage() {
           )}
         </Card>
 
-        {totalPages > 1 && (
-          <div className="hh-mt-4">
-            <Pagination currentPage={page} totalPages={totalPages} onPageChange={setPage} />
-          </div>
-        )}
+        <TablePagination
+          page={page}
+          pageSize={PAGE_SIZE}
+          total={filtered.length}
+          onPageChange={setPage}
+        />
       </div>
     </section>
   )

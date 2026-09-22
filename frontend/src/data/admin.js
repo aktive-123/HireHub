@@ -5,6 +5,7 @@
 import { applicants } from './applicants'
 import { publicCompanies } from './companies'
 import { publicJobs, publicJobCategories } from './jobs'
+import { STATUS_VARIANT, STATUS_LABEL } from './status'
 
 export const ROLE_LABELS = {
   seeker: 'Job Seeker',
@@ -18,34 +19,34 @@ export const ROLE_VARIANT = {
   admin: 'accent',
 }
 
+// Account and moderation statuses reuse the canonical colour system so status
+// colours mean the same thing in the admin console and the employer dashboard.
 export const ACCOUNT_LABELS = {
-  active: 'Active',
-  suspended: 'Suspended',
-  pending: 'Pending',
+  active: STATUS_LABEL.active,
+  suspended: STATUS_LABEL.suspended,
+  pending: STATUS_LABEL.pending,
 }
 
 export const ACCOUNT_VARIANT = {
-  active: 'success',
-  suspended: 'danger',
-  pending: 'warning',
+  active: STATUS_VARIANT.active,
+  suspended: STATUS_VARIANT.suspended,
+  pending: STATUS_VARIANT.pending,
 }
 
 export const MODERATION_LABELS = {
-  published: 'Published',
+  published: STATUS_LABEL.published,
   pending: 'Pending review',
-  flagged: 'Flagged',
+  flagged: STATUS_LABEL.flagged,
 }
 
 export const MODERATION_VARIANT = {
-  published: 'success',
-  pending: 'warning',
-  flagged: 'danger',
+  published: STATUS_VARIANT.published,
+  pending: STATUS_VARIANT.pending,
+  flagged: STATUS_VARIANT.flagged,
 }
 
-export const CATEGORY_STATUS_LABELS = {
-  active: 'Active',
-  hidden: 'Hidden',
-}
+// Category statuses reuse the canonical colour system (see data/status.js);
+// StatusBadge resolves the label and colour automatically from category.status.
 
 const JOINED_DATES = [
   'Jan 12, 2025',

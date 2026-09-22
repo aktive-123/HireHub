@@ -1,3 +1,13 @@
+import cvImage from '@/assets/cv.jpg'
+import cvMistakesImage from '@/assets/cv1.jpg'
+import cvTailorImage from '@/assets/cv2.jpg'
+import interviewImage from '@/assets/interview.jpg'
+import interviewPrepareImage from '@/assets/interview2.jpg'
+import interviewTipsImage from '@/assets/interview3.jpg'
+import growthImage from '@/assets/about.jpg'
+import growthSkillsImage from '@/assets/about2.jpg'
+import growthBurnoutImage from '@/assets/company1.jpg'
+
 export const RESOURCE_CATEGORIES = [
   {
     id: 'resume',
@@ -24,6 +34,7 @@ export const RESOURCES = [
     slug: 'how-to-write-a-great-cv',
     category: 'resume',
     title: 'How to Write a CV That Gets Noticed',
+    image: cvImage,
     excerpt:
       'Recruiters spend seconds on the first scan of your CV. Here is how to make those seconds count.',
     tone: 1,
@@ -72,6 +83,7 @@ export const RESOURCES = [
     slug: 'cv-mistakes-to-avoid',
     category: 'resume',
     title: '5 CV Mistakes Quietly Killing Your Applications',
+    image: cvMistakesImage,
     excerpt:
       'Small errors can end an application before a recruiter talks to you. Remove these five and watch your reply rate climb.',
     tone: 2,
@@ -121,6 +133,7 @@ export const RESOURCES = [
     slug: 'how-to-tailor-your-cv',
     category: 'resume',
     title: 'How to Tailor Your CV in 10 Minutes',
+    image: cvTailorImage,
     excerpt:
       'You do not need to rewrite your CV for every application. A ten-minute pass on the right spots lifts your match score dramatically.',
     tone: 3,
@@ -164,6 +177,7 @@ export const RESOURCES = [
     slug: 'common-interview-questions',
     category: 'interviews',
     title: '12 Common Interview Questions and How to Answer Them',
+    image: interviewImage,
     excerpt:
       'Most interviews reuse a familiar set of questions. Prepare strong, honest answers in advance and the room feels smaller.',
     tone: 2,
@@ -213,6 +227,7 @@ export const RESOURCES = [
     slug: 'how-to-prepare-for-an-interview',
     category: 'interviews',
     title: 'How to Prepare for an Interview in 3 Days',
+    image: interviewPrepareImage,
     excerpt:
       'A calm three-day plan beats a night of cramming. Follow this rhythm to walk in prepared and composed.',
     tone: 3,
@@ -250,6 +265,7 @@ export const RESOURCES = [
     slug: 'interview-tips-that-stand-out',
     category: 'interviews',
     title: 'Seven Interview Tips That Help You Stand Out',
+    image: interviewTipsImage,
     excerpt:
       'Small, deliberate choices — before, during, and after the chat — separate memorable candidates from forgettable ones.',
     tone: 1,
@@ -293,6 +309,7 @@ export const RESOURCES = [
     slug: 'choosing-the-right-career',
     category: 'growth',
     title: 'Choosing the Right Career (Not the Loudest One)',
+    image: growthImage,
     excerpt:
       'A good career fits your skills, energy, and values — not just the highest salary. Here is a practical filter.',
     tone: 3,
@@ -336,6 +353,7 @@ export const RESOURCES = [
     slug: 'building-professional-skills',
     category: 'growth',
     title: 'A Realistic Plan for Building Professional Skills',
+    image: growthSkillsImage,
     excerpt:
       'Skill building fails when it is vague. Give yourself constraints, a feedback loop, and a deadline you can actually hit.',
     tone: 2,
@@ -379,6 +397,7 @@ export const RESOURCES = [
     slug: 'growing-your-career',
     category: 'growth',
     title: 'Growing Your Career Without Burning Out',
+    image: growthBurnoutImage,
     excerpt:
       'Growth is a marathon with sprints in it. These practices keep you moving forward without trading your life away.',
     tone: 1,

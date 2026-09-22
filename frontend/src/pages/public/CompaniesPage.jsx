@@ -1,12 +1,13 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
-import { publicCompanies } from '../../data/companies'
+import { companiesApi } from '../../services/api'
+import { useApiData } from '../../hooks/useApiData'
 import CompanyCard from '../../components/ui/CompanyCard'
 import EmptyState from '../../components/ui/EmptyState'
 import Pagination from '../../components/ui/Pagination'
 import Button from '../../components/ui/Button'
 import SortDropdown from '../../components/ui/SortDropdown'
-import HeroSection from '../../components/ui/HeroSection'
+import PageHero from '../../components/ui/PageHero'
 import heroSlide1 from '../../assets/company1.jpg'
 import heroSlide2 from '../../assets/company3.jpg'
 import heroSlide3 from '../../assets/company4.jpg'
@@ -24,14 +25,23 @@ const SORT_OPTIONS = [
 
 const PAGE_SIZE = 8
 
-const INDUSTRIES = Array.from(new Set(publicCompanies.map((c) => c.industry))).sort()
-const LOCATIONS = Array.from(new Set(publicCompanies.map((c) => c.location))).sort()
-
 export default function CompaniesPage() {
   const [searchParams, setSearchParams] = useSearchParams()
   const [page, setPage] = useState(1)
   const [filtersOpen, setFiltersOpen] = useState(false)
   const resultsRef = useRef(null)
+
+  const { data: loaded, loading, error } = useApiData(() => companiesApi.list().then((r) => r.items), [])
+  const companies = loaded ?? []
+
+  const industriesList = useMemo(
+    () => Array.from(new Set(companies.map((c) => c.industry).filter(Boolean))).sort(),
+    [companies]
+  )
+  const locationsList = useMemo(
+    () => Array.from(new Set(companies.map((c) => c.location).filter(Boolean))).sort(),
+    [companies]
+  )
 
   const filterSignature = searchParams.toString()
 
@@ -136,17 +146,17 @@ export default function CompaniesPage() {
       Object.fromEntries(
         values.map((value) => [
           value,
-          publicCompanies.filter((c) => matchesOther(c, except) && getValue(c) === value).length,
+          companies.filter((c) => matchesOther(c, except) && getValue(c) === value).length,
         ])
       )
 
     const counts = {
-      industry: countGroup('ind', INDUSTRIES, (c) => c.industry),
-      location: countGroup('loc', LOCATIONS, (c) => c.location),
-      verified: publicCompanies.filter((c) => matchesOther(c, 'verified')).length,
+      industry: countGroup('ind', industriesList, (c) => c.industry),
+      location: countGroup('loc', locationsList, (c) => c.location),
+      verified: companies.filter((c) => matchesOther(c, 'verified')).length,
     }
 
-    const list = publicCompanies.filter((company) => matchesOther(company, null))
+    const list = companies.filter((company) => matchesOther(company, null))
 
     const sorted = [...list]
     if (sort === 'open-jobs') {
@@ -177,14 +187,14 @@ export default function CompaniesPage() {
   if (verifiedOnly) chips.push({ key: 'verified', label: 'Verified only', clear: toggleVerified })
 
   const heroStats = [
-    { value: `${publicCompanies.length}+`, icon: 'buildings', label: 'Hiring companies' },
+    { value: `${companies.length}+`, icon: 'buildings', label: 'Hiring companies' },
     {
-      value: `${publicCompanies.reduce((sum, c) => sum + (c.open_jobs_count ?? 0), 0)}+`,
+      value: `${companies.reduce((sum, c) => sum + (c.open_jobs_count ?? 0), 0)}+`,
       icon: 'briefcase',
       label: 'Open roles',
     },
     {
-      value: `${publicCompanies.filter((c) => c.is_verified).length}+`,
+      value: `${companies.filter((c) => c.is_verified).length}+`,
       icon: 'patch-check-fill',
       label: 'Verified companies',
     },
@@ -192,7 +202,7 @@ export default function CompaniesPage() {
 
   return (
     <>
-      <HeroSection
+      <PageHero
         images={heroSlides}
         eyebrow="COMPANY DIRECTORY"
         title="Companies Hiring Now"
@@ -245,7 +255,7 @@ export default function CompaniesPage() {
             </div>
           ))}
         </div>
-      </HeroSection>
+      </PageHero>
 
       <section className="hh-section-space bg-white" ref={resultsRef}>
         <div className="page-container">
@@ -271,7 +281,7 @@ export default function CompaniesPage() {
                 <div className="hh-filter-group">
                   <h3>Industry</h3>
                   <div className="hh-filter-list">
-                    {INDUSTRIES.map((name) => {
+                    {industriesList.map((name) => {
                       const count = counts.industry[name] || 0
                       return (
                         <label
@@ -295,7 +305,7 @@ export default function CompaniesPage() {
                 <div className="hh-filter-group">
                   <h3>Location</h3>
                   <div className="hh-filter-list">
-                    {LOCATIONS.map((name) => {
+                    {locationsList.map((name) => {
                       const count = counts.location[name] || 0
                       return (
                         <label
@@ -397,7 +407,18 @@ export default function CompaniesPage() {
               </div>
 
               <div className={`hh-results-body ${refreshing ? 'is-refreshing' : ''}`}>
-                {pageCompanies.length > 0 ? (
+                {loading ? (
+                  <div className="hh-loading-block">
+                    <span className="spinner-border spinner-border-sm me-2" aria-hidden="true" />
+                    Loading companies…
+                  </div>
+                ) : error ? (
+                  <EmptyState
+                    icon="wifi-off"
+                    title="Could not load companies"
+                    text="There was a problem connecting to the company directory. Please try again."
+                  />
+                ) : pageCompanies.length > 0 ? (
                   <div className="row g-4">
                     {pageCompanies.map((company, index) => (
                       <div className="col-12 col-md-6" key={company.id}>

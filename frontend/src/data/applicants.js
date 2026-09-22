@@ -247,27 +247,10 @@ export const STATUS_OPTIONS = [
   { value: 'rejected', label: 'Rejected' },
 ]
 
-// Formal applicant status colour system (extends the job-card badge system):
-//   gray   = new        (secondary)
-//   blue   = shortlisted (primary)
-//   orange = interview  (warning)
-//   green  = hired      (success)
-//   red    = rejected   (danger)
-export const STATUS_VARIANT = {
-  new: 'secondary',
-  shortlisted: 'primary',
-  interview: 'warning',
-  hired: 'success',
-  rejected: 'danger',
-}
-
-export const STATUS_LABEL = {
-  new: 'New',
-  shortlisted: 'Shortlisted',
-  interview: 'Interview',
-  hired: 'Hired',
-  rejected: 'Rejected',
-}
+// Applicant statuses come from the canonical colour system in ./status so the
+// employer and admin dashboards always agree. Kept as re-exports so existing
+// call sites keep importing from here.
+export { STATUS_LABEL, STATUS_VARIANT } from './status'
 
 export function getApplicantById(id) {
   return applicants.find((applicant) => applicant.id === id)

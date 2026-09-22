@@ -1,7 +1,17 @@
 import { Link, NavLink, Outlet } from 'react-router-dom'
 import whiteLogo from '../assets/white logo.png'
+import { useAuth } from '../context/AuthContext'
 
 export default function EmployerLayout() {
+  const { user } = useAuth()
+  const userName = user?.name || 'Employer'
+  const userInitials =
+    userName
+      .split(' ')
+      .filter(Boolean)
+      .slice(0, 2)
+      .map((part) => part.charAt(0).toUpperCase())
+      .join('') || 'EM'
   return (
     <div className="hh-dashboard-layout">
       <aside className="hh-dashboard-sidebar">
@@ -28,7 +38,7 @@ export default function EmployerLayout() {
               `hh-dashboard-nav-link ${isActive ? 'hh-dashboard-nav-link--active' : ''}`
             }
           >
-            <i className="bi bi-briefcase" /> Job Postings
+            <i className="bi bi-briefcase-fill" /> Job Postings
           </NavLink>
           <NavLink
             to="/employer/jobs/create"
@@ -36,7 +46,7 @@ export default function EmployerLayout() {
               `hh-dashboard-nav-link ${isActive ? 'hh-dashboard-nav-link--active' : ''}`
             }
           >
-            <i className="bi bi-plus-circle" /> Post a Job
+            <i className="bi bi-plus-circle-fill" /> Post a Job
           </NavLink>
           <NavLink
             to="/employer/applicants"
@@ -44,7 +54,7 @@ export default function EmployerLayout() {
               `hh-dashboard-nav-link ${isActive ? 'hh-dashboard-nav-link--active' : ''}`
             }
           >
-            <i className="bi bi-people" /> All Applicants
+            <i className="bi bi-people-fill" /> All Applicants
           </NavLink>
           <NavLink
             to="/employer/tracking"
@@ -60,7 +70,7 @@ export default function EmployerLayout() {
               `hh-dashboard-nav-link ${isActive ? 'hh-dashboard-nav-link--active' : ''}`
             }
           >
-            <i className="bi bi-calendar-event" /> Interviews
+            <i className="bi bi-calendar-event-fill" /> Interviews
           </NavLink>
           <NavLink
             to="/employer/company"
@@ -68,7 +78,7 @@ export default function EmployerLayout() {
               `hh-dashboard-nav-link ${isActive ? 'hh-dashboard-nav-link--active' : ''}`
             }
           >
-            <i className="bi bi-building" /> Company Profile
+            <i className="bi bi-building-fill" /> Company Profile
           </NavLink>
           <NavLink
             to="/employer/notifications"
@@ -76,7 +86,7 @@ export default function EmployerLayout() {
               `hh-dashboard-nav-link ${isActive ? 'hh-dashboard-nav-link--active' : ''}`
             }
           >
-            <i className="bi bi-bell" /> Notifications
+            <i className="bi bi-bell-fill" /> Notifications
           </NavLink>
           <NavLink
             to="/employer/settings"
@@ -84,7 +94,7 @@ export default function EmployerLayout() {
               `hh-dashboard-nav-link ${isActive ? 'hh-dashboard-nav-link--active' : ''}`
             }
           >
-            <i className="bi bi-gear" /> Settings
+            <i className="bi bi-gear-fill" /> Settings
           </NavLink>
         </nav>
 
@@ -99,10 +109,20 @@ export default function EmployerLayout() {
         <header className="hh-dashboard-topbar">
           <div className="fw-semibold text-secondary">Employer Recruiting Center</div>
           <div className="d-flex align-items-center gap-3">
-            <Link to="/employer/jobs/create" className="hh-btn hh-btn-primary hh-btn-sm">
-              <i className="bi bi-plus" /> New Job
+            <Link to="/employer/notifications" className="hh-topbar-icon hh-tip-bottom" data-tooltip="Notifications" aria-label="Notifications">
+              <i className="bi bi-bell" aria-hidden="true" />
             </Link>
+            <div className="d-flex align-items-center gap-2 hh-topbar-user">
+              <span className="hh-avatar hh-avatar-sm hh-avatar-soft" aria-hidden="true">{userInitials}</span>
+              <div className="hh-topbar-user-meta d-none d-xl-block">
+                <div className="hh-topbar-user-name">{userName}</div>
+                <div className="hh-topbar-user-role">Employer</div>
+              </div>
+            </div>
             <span className="hh-badge hh-badge-accent">Employer</span>
+            <Link to="/login" className="hh-topbar-icon hh-tip-bottom hh-tip-end" data-tooltip="Log out" aria-label="Log out">
+              <i className="bi bi-box-arrow-right" aria-hidden="true" />
+            </Link>
           </div>
         </header>
 

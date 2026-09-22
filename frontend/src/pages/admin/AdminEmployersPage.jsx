@@ -3,10 +3,12 @@ import AdminPageHeader from '../../components/admin/AdminPageHeader'
 import AdminStatGrid from '../../components/admin/AdminStatGrid'
 import UserCell from '../../components/admin/UserCell'
 import Badge from '../../components/ui/Badge'
+import StatusBadge from '../../components/ui/StatusBadge'
+import DataTable from '../../components/ui/DataTable'
+import TablePagination from '../../components/ui/TablePagination'
 import Card from '../../components/ui/Card'
 import EmptyState from '../../components/ui/EmptyState'
-import Pagination from '../../components/ui/Pagination'
-import { adminEmployers, ACCOUNT_LABELS, ACCOUNT_VARIANT } from '../../data/admin'
+import { adminEmployers, ACCOUNT_LABELS } from '../../data/admin'
 
 const PAGE_SIZE = 8
 
@@ -45,7 +47,6 @@ export default function AdminEmployersPage() {
     })
   }, [tab, query])
 
-  const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE))
   const visible = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE)
 
   return (
@@ -77,7 +78,7 @@ export default function AdminEmployersPage() {
           ))}
         </div>
 
-        <div className="hh-search-field hh-mb-4">
+        <div className="hh-search-field-lg hh-mb-4">
           <i className="bi bi-search" aria-hidden="true" />
           <input
             type="search"
@@ -94,67 +95,60 @@ export default function AdminEmployersPage() {
 
         <Card className="hh-card-body hh-p-0 hh-card--table">
           {visible.length > 0 ? (
-            <div className="table-responsive">
-              <table className="hh-table hh-table-hover hh-mb-0">
-                <thead>
-                  <tr>
-                    <th>Company</th>
-                    <th>Contact</th>
-                    <th>Industry</th>
-                    <th>Open jobs</th>
-                    <th>Verified</th>
-                    <th>Status</th>
-                    <th className="hh-table-col-right">Actions</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {visible.map((emp) => (
-                    <tr key={emp.id}>
-                      <td>
-                        <UserCell
-                          name={emp.company}
-                          logoText={emp.logoText}
-                          logoBg={emp.logoBg}
-                          logoColor={emp.logoColor}
-                          square
-                        />
-                      </td>
-                      <td>
-                        <span className="hh-fw-medium">{emp.contact}</span>
-                        <span className="text-muted d-block small">{emp.email}</span>
-                      </td>
-                      <td>{emp.industry}</td>
-                      <td>{emp.jobs}</td>
-                      <td>
-                        <Badge variant={emp.verified ? 'success' : 'secondary'} sm icon={emp.verified ? 'patch-check' : 'shield-x'}>
-                          {emp.verified ? 'Verified' : 'Unverified'}
-                        </Badge>
-                      </td>
-                      <td>
-                        <Badge variant={ACCOUNT_VARIANT[emp.status]} dot sm>
-                          {ACCOUNT_LABELS[emp.status]}
-                        </Badge>
-                      </td>
-                      <td className="hh-table-col-right">
-                        <div className="d-flex justify-content-end gap-2">
-                          <button type="button" className="hh-icon-btn" data-tooltip="View employer" aria-label={`View ${emp.company}`}>
-                            <i className="bi bi-eye" aria-hidden="true" />
-                          </button>
-                          <button
-                            type="button"
-                            className="hh-icon-btn hh-icon-btn-danger hh-tip-start"
-                            data-tooltip="Suspend employer"
-                            aria-label={`Suspend ${emp.company}`}
-                          >
-                            <i className="bi bi-person-x" aria-hidden="true" />
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+            <DataTable
+              zebra
+              columns={[
+                { key: 'company', label: 'Company' },
+                { key: 'contact', label: 'Contact' },
+                { key: 'industry', label: 'Industry' },
+                { key: 'jobs', label: 'Open jobs' },
+                { key: 'verified', label: 'Verified' },
+                { key: 'status', label: 'Status' },
+                { key: 'actions', label: 'Actions', align: 'right' },
+              ]}
+              rows={visible.map((emp) => ({
+                id: emp.id,
+                company: (
+                  <UserCell
+                    name={emp.company}
+                    logoText={emp.logoText}
+                    logoBg={emp.logoBg}
+                    logoColor={emp.logoColor}
+                    square
+                  />
+                ),
+                contact: (
+                  <>
+                    <span className="hh-fw-medium">{emp.contact}</span>
+                    <span className="text-muted d-block small">{emp.email}</span>
+                  </>
+                ),
+                industry: emp.industry,
+                jobs: emp.jobs,
+                verified: (
+                  <Badge variant={emp.verified ? 'success' : 'secondary'} sm icon={emp.verified ? 'patch-check' : 'shield-x'}>
+                    {emp.verified ? 'Verified' : 'Unverified'}
+                  </Badge>
+                ),
+                status: <StatusBadge status={emp.status} label={ACCOUNT_LABELS[emp.status]} />,
+                actions: (
+                  <div className="d-flex justify-content-end gap-2">
+                    <button type="button" className="hh-icon-btn" data-tooltip="View employer" aria-label={`View ${emp.company}`}>
+                      <i className="bi bi-eye" aria-hidden="true" />
+                    </button>
+                    <button
+                      type="button"
+                      className="hh-icon-btn hh-icon-btn-danger hh-tip-start"
+                      data-tooltip="Suspend employer"
+                      aria-label={`Suspend ${emp.company}`}
+                    >
+                      <i className="bi bi-person-x" aria-hidden="true" />
+                    </button>
+                  </div>
+                ),
+              }))}
+              rowKey={(row) => row.id}
+            />
           ) : (
             <div className="hh-p-5">
               <EmptyState icon="briefcase" title="No employers match" text="Try a different search term or status filter." />
@@ -162,11 +156,12 @@ export default function AdminEmployersPage() {
           )}
         </Card>
 
-        {totalPages > 1 && (
-          <div className="hh-mt-4">
-            <Pagination currentPage={page} totalPages={totalPages} onPageChange={setPage} />
-          </div>
-        )}
+        <TablePagination
+          page={page}
+          pageSize={PAGE_SIZE}
+          total={filtered.length}
+          onPageChange={setPage}
+        />
       </div>
     </section>
   )

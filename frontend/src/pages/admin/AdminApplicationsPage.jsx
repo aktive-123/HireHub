@@ -2,11 +2,13 @@ import { useState, useMemo } from 'react'
 import AdminPageHeader from '../../components/admin/AdminPageHeader'
 import UserCell from '../../components/admin/UserCell'
 import Badge from '../../components/ui/Badge'
+import StatusBadge from '../../components/ui/StatusBadge'
+import DataTable from '../../components/ui/DataTable'
+import TablePagination from '../../components/ui/TablePagination'
 import Card from '../../components/ui/Card'
 import EmptyState from '../../components/ui/EmptyState'
-import Pagination from '../../components/ui/Pagination'
 import { adminApplications } from '../../data/admin'
-import { STATUS_LABEL, STATUS_VARIANT, STATUS_OPTIONS } from '../../data/applicants'
+import { STATUS_OPTIONS, STATUS_LABEL } from '../../data/applicants'
 
 const PAGE_SIZE = 8
 
@@ -40,7 +42,6 @@ export default function AdminApplicationsPage() {
     })
   }, [tab, query])
 
-  const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE))
   const visible = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE)
 
   return (
@@ -70,7 +71,7 @@ export default function AdminApplicationsPage() {
           ))}
         </div>
 
-        <div className="hh-search-field hh-mb-4">
+        <div className="hh-search-field-lg hh-mb-4">
           <i className="bi bi-search" aria-hidden="true" />
           <input
             type="search"
@@ -87,52 +88,41 @@ export default function AdminApplicationsPage() {
 
         <Card className="hh-card-body hh-p-0 hh-card--table">
           {visible.length > 0 ? (
-            <div className="table-responsive">
-              <table className="hh-table hh-table-hover hh-mb-0">
-                <thead>
-                  <tr>
-                    <th>Applicant</th>
-                    <th>Applied for</th>
-                    <th>Applied</th>
-                    <th className="hh-table-col-center">Match</th>
-                    <th>Status</th>
-                    <th className="hh-table-col-right">Actions</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {visible.map((app) => (
-                    <tr key={app.id}>
-                      <td>
-                        <UserCell name={app.applicant} meta={app.email} />
-                      </td>
-                      <td>
-                        <span className="hh-fw-medium">{app.job}</span>
-                        <span className="text-muted d-block small">{app.company}</span>
-                      </td>
-                      <td>{app.applied}</td>
-                      <td className="hh-table-col-center">
-                        <Badge variant="info" sm>{app.match}%</Badge>
-                      </td>
-                      <td>
-                        <Badge variant={STATUS_VARIANT[app.status]} dot sm>
-                          {STATUS_LABEL[app.status]}
-                        </Badge>
-                      </td>
-                      <td className="hh-table-col-right">
-                        <div className="d-flex justify-content-end gap-2">
-                          <button type="button" className="hh-icon-btn" data-tooltip="View application" aria-label={`View application from ${app.applicant}`}>
-                            <i className="bi bi-eye" aria-hidden="true" />
-                          </button>
-                          <button type="button" className="hh-icon-btn" data-tooltip="Move to next stage" aria-label={`Move ${app.applicant} to next stage`}>
-                            <i className="bi bi-arrow-right-circle" aria-hidden="true" />
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+            <DataTable
+              zebra
+              columns={[
+                { key: 'applicant', label: 'Applicant' },
+                { key: 'job', label: 'Applied for' },
+                { key: 'applied', label: 'Applied' },
+                { key: 'match', label: 'Match', align: 'center' },
+                { key: 'status', label: 'Status' },
+                { key: 'actions', label: 'Actions', align: 'right' },
+              ]}
+              rows={visible.map((app) => ({
+                id: app.id,
+                applicant: <UserCell name={app.applicant} meta={app.email} />,
+                job: (
+                  <>
+                    <span className="hh-fw-medium">{app.job}</span>
+                    <span className="text-muted d-block small">{app.company}</span>
+                  </>
+                ),
+                applied: app.applied,
+                match: <Badge variant="info" sm>{app.match}%</Badge>,
+                status: <StatusBadge status={app.status} />,
+                actions: (
+                  <div className="d-flex justify-content-end gap-2">
+                    <button type="button" className="hh-icon-btn" data-tooltip="View application" aria-label={`View application from ${app.applicant}`}>
+                      <i className="bi bi-eye" aria-hidden="true" />
+                    </button>
+                    <button type="button" className="hh-icon-btn" data-tooltip="Move to next stage" aria-label={`Move ${app.applicant} to next stage`}>
+                      <i className="bi bi-arrow-right-circle" aria-hidden="true" />
+                    </button>
+                  </div>
+                ),
+              }))}
+              rowKey={(row) => row.id}
+            />
           ) : (
             <div className="hh-p-5">
               <EmptyState icon="inbox" title="No applications match" text="Try a different search term or status filter." />
@@ -140,11 +130,12 @@ export default function AdminApplicationsPage() {
           )}
         </Card>
 
-        {totalPages > 1 && (
-          <div className="hh-mt-4">
-            <Pagination currentPage={page} totalPages={totalPages} onPageChange={setPage} />
-          </div>
-        )}
+        <TablePagination
+          page={page}
+          pageSize={PAGE_SIZE}
+          total={filtered.length}
+          onPageChange={setPage}
+        />
       </div>
     </section>
   )

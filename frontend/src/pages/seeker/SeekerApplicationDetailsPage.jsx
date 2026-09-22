@@ -1,11 +1,14 @@
 import { useMemo } from 'react'
 import { useParams } from 'react-router-dom'
-import { getPublicJobById } from '../../data/jobs'
+import { seekerApi } from '../../services/api'
+import { useApiData } from '../../hooks/useApiData'
 import SectionHeading from '../../components/ui/SectionHeading'
 import Reveal from '../../components/ui/Reveal'
 import Badge from '../../components/ui/Badge'
 import Card from '../../components/ui/Card'
 import Button from '../../components/ui/Button'
+import EmptyState from '../../components/ui/EmptyState'
+import LoadingState from '../../components/ui/LoadingState'
 import { formatSalaryAmount, formatSalaryPeriod } from '../../utils/jobs'
 
 const STAGES = [
@@ -36,9 +39,27 @@ const STATUS_DATE = {
 
 export default function SeekerApplicationDetailsPage() {
   const { id } = useParams()
-  const job = useMemo(() => getPublicJobById(id) || getPublicJobById('job-1'), [id])
-  const status = 'shortlisted'
+  const { data: application, loading, error, reload } = useApiData(
+    () => seekerApi.application(id),
+    [id]
+  )
 
+  const job = useMemo(() => {
+    const app = application || {}
+    return {
+      ...app,
+      title: app.job,
+      location: app.location,
+      employment_type: app.employment_type || 'Full-time',
+      workplace: app.workplace || 'On-site',
+      salary: app.salary ?? null,
+      category: app.category || 'General',
+      company:
+        typeof app.company === 'string' ? { name: app.company } : (app.company ?? {}),
+    }
+  }, [application])
+
+  const status = application?.status || ''
   const stageIndex = Math.max(0, STAGES.findIndex((s) => s.key === status))
   const isHired = status === 'hired'
   const isRejected = status === 'rejected'
@@ -50,6 +71,39 @@ export default function SeekerApplicationDetailsPage() {
     if (isHired && idx === STAGES.length - 1) state = 'is-complete'
     return { ...stage, state }
   })
+
+  if (loading) {
+    return (
+      <section className="hh-section-space bg-white">
+        <div className="page-container">
+          <Reveal>
+            <LoadingState text="Loading application…" />
+          </Reveal>
+        </div>
+      </section>
+    )
+  }
+
+  if (error) {
+    return (
+      <section className="hh-section-space bg-white">
+        <div className="page-container">
+          <Reveal>
+            <EmptyState
+              icon="exclamation-triangle"
+              title="Couldn't load this application"
+              text="Something went wrong while fetching this application. Please try again."
+              action={
+                <button type="button" className="hh-btn hh-btn-outline-primary hh-btn-pill" onClick={() => reload()}>
+                  Try again
+                </button>
+              }
+            />
+          </Reveal>
+        </div>
+      </section>
+    )
+  }
 
   return (
     <>
@@ -151,7 +205,7 @@ export default function SeekerApplicationDetailsPage() {
                         Respond to offer
                       </Button>
                     )}
-                    <Button to={`/jobs/${job.id}`} variant="outline-primary" icon="bi-eye" block pill>
+                    <Button to={`/jobs/${job.job_slug || job.job_id}`} variant="outline-primary" icon="bi-eye" block pill>
                       View job posting
                     </Button>
                   </div>

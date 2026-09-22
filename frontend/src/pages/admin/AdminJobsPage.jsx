@@ -1,14 +1,14 @@
 import { useState, useMemo } from 'react'
 import AdminPageHeader from '../../components/admin/AdminPageHeader'
 import UserCell from '../../components/admin/UserCell'
-import Badge from '../../components/ui/Badge'
+import StatusBadge from '../../components/ui/StatusBadge'
+import DataTable from '../../components/ui/DataTable'
+import TablePagination from '../../components/ui/TablePagination'
 import Card from '../../components/ui/Card'
 import EmptyState from '../../components/ui/EmptyState'
-import Pagination from '../../components/ui/Pagination'
 import {
   adminJobs,
   MODERATION_LABELS,
-  MODERATION_VARIANT,
 } from '../../data/admin'
 
 const PAGE_SIZE = 8
@@ -35,7 +35,6 @@ export default function AdminJobsPage() {
     })
   }, [tab, query])
 
-  const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE))
   const visible = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE)
 
   return (
@@ -65,7 +64,7 @@ export default function AdminJobsPage() {
           ))}
         </div>
 
-        <div className="hh-search-field hh-mb-4">
+        <div className="hh-search-field-lg hh-mb-4">
           <i className="bi bi-search" aria-hidden="true" />
           <input
             type="search"
@@ -82,65 +81,56 @@ export default function AdminJobsPage() {
 
         <Card className="hh-card-body hh-p-0 hh-card--table">
           {visible.length > 0 ? (
-            <div className="table-responsive">
-              <table className="hh-table hh-table-hover hh-mb-0">
-                <thead>
-                  <tr>
-                    <th>Job</th>
-                    <th>Company</th>
-                    <th>Category</th>
-                    <th>Applications</th>
-                    <th>Views</th>
-                    <th>Posted</th>
-                    <th>Status</th>
-                    <th className="hh-table-col-right">Actions</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {visible.map((job) => (
-                    <tr key={job.id}>
-                      <td>
-                        <span className="hh-fw-semibold">{job.title}</span>
-                        <span className="text-muted d-block small">{job.type}</span>
-                      </td>
-                      <td>
-                        <UserCell name={job.company} />
-                      </td>
-                      <td>{job.category}</td>
-                      <td>{job.applications}</td>
-                      <td>{job.views.toLocaleString()}</td>
-                      <td>{job.posted}</td>
-                      <td>
-                        <Badge variant={MODERATION_VARIANT[job.status]} dot sm>
-                          {MODERATION_LABELS[job.status]}
-                        </Badge>
-                      </td>
-                      <td className="hh-table-col-right">
-                        <div className="d-flex justify-content-end gap-2">
-                          {job.status !== 'published' && (
-                            <button type="button" className="hh-icon-btn" data-tooltip="Approve job" aria-label={`Approve ${job.title}`}>
-                              <i className="bi bi-check2-circle" aria-hidden="true" />
-                            </button>
-                          )}
-                          <button
-                            type="button"
-                            className="hh-icon-btn"
-                            data-tooltip="Pause job"
-                            aria-label={`Pause ${job.title}`}
-                            disabled={job.status !== 'published'}
-                          >
-                            <i className="bi bi-pause-circle" aria-hidden="true" />
-                          </button>
-                          <button type="button" className="hh-icon-btn hh-icon-btn-danger hh-tip-start" data-tooltip="Delete job" aria-label={`Delete ${job.title}`}>
-                            <i className="bi bi-trash" aria-hidden="true" />
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+            <DataTable
+              zebra
+              columns={[
+                { key: 'job', label: 'Job' },
+                { key: 'company', label: 'Company' },
+                { key: 'category', label: 'Category' },
+                { key: 'applications', label: 'Applications' },
+                { key: 'views', label: 'Views' },
+                { key: 'posted', label: 'Posted' },
+                { key: 'status', label: 'Status' },
+                { key: 'actions', label: 'Actions', align: 'right' },
+              ]}
+              rows={visible.map((job) => ({
+                id: job.id,
+                job: (
+                  <>
+                    <span className="hh-fw-semibold">{job.title}</span>
+                    <span className="text-muted d-block small">{job.type}</span>
+                  </>
+                ),
+                company: <UserCell name={job.company} />,
+                category: job.category,
+                applications: job.applications,
+                views: job.views.toLocaleString(),
+                posted: job.posted,
+                status: <StatusBadge status={job.status} label={MODERATION_LABELS[job.status]} />,
+                actions: (
+                  <div className="d-flex justify-content-end gap-2">
+                    {job.status !== 'published' && (
+                      <button type="button" className="hh-icon-btn" data-tooltip="Approve job" aria-label={`Approve ${job.title}`}>
+                        <i className="bi bi-check2-circle" aria-hidden="true" />
+                      </button>
+                    )}
+                    <button
+                      type="button"
+                      className="hh-icon-btn"
+                      data-tooltip="Pause job"
+                      aria-label={`Pause ${job.title}`}
+                      disabled={job.status !== 'published'}
+                    >
+                      <i className="bi bi-pause-circle" aria-hidden="true" />
+                    </button>
+                    <button type="button" className="hh-icon-btn hh-icon-btn-danger hh-tip-start" data-tooltip="Delete job" aria-label={`Delete ${job.title}`}>
+                      <i className="bi bi-trash" aria-hidden="true" />
+                    </button>
+                  </div>
+                ),
+              }))}
+              rowKey={(row) => row.id}
+            />
           ) : (
             <div className="hh-p-5">
               <EmptyState icon="file-earmark-text" title="No jobs match" text="Try a different search term or moderation filter." />
@@ -148,11 +138,12 @@ export default function AdminJobsPage() {
           )}
         </Card>
 
-        {totalPages > 1 && (
-          <div className="hh-mt-4">
-            <Pagination currentPage={page} totalPages={totalPages} onPageChange={setPage} />
-          </div>
-        )}
+        <TablePagination
+          page={page}
+          pageSize={PAGE_SIZE}
+          total={filtered.length}
+          onPageChange={setPage}
+        />
       </div>
     </section>
   )

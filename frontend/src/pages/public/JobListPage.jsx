@@ -1,12 +1,14 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
-import { publicJobs, publicJobCategories } from '../../data/jobs'
+import { publicJobCategories } from '../../data/jobs'
+import { jobsApi } from '../../services/api'
+import { useApiData } from '../../hooks/useApiData'
 import JobCard from '../../components/ui/JobCard'
 import EmptyState from '../../components/ui/EmptyState'
 import Pagination from '../../components/ui/Pagination'
 import Button from '../../components/ui/Button'
 import SortDropdown from '../../components/ui/SortDropdown'
-import HeroSection from '../../components/ui/HeroSection'
+import PageHero from '../../components/ui/PageHero'
 import heroSlide1 from '../../assets/findjob.webp'
 import heroSlide2 from '../../assets/findjob2.jpg'
 import heroSlide3 from '../../assets/findjob3.jpg'
@@ -24,8 +26,6 @@ const SALARY_BUCKETS = [
   { value: '50k-90k', label: '$50k - $90k', min: 50000, max: 90000 },
   { value: '90k-plus', label: '$90k and above', min: 90000, max: Infinity },
 ]
-
-const CATEGORY_NAMES = Array.from(new Set(publicJobs.map((job) => job.category)))
 
 const POPULAR_SEARCHES = ['Frontend Developer', 'Data Analyst', 'Designer', 'Laravel', 'Remote']
 
@@ -60,6 +60,14 @@ export default function JobListPage() {
   const [page, setPage] = useState(1)
   const [filtersOpen, setFiltersOpen] = useState(false)
   const resultsRef = useRef(null)
+
+  const { data: loadedJobs, loading, error } = useApiData(() => jobsApi.list().then((r) => r.items), [])
+  const jobs = loadedJobs ?? []
+
+  const categoryNames = useMemo(
+    () => Array.from(new Set(jobs.map((job) => job.category).filter(Boolean))),
+    [jobs]
+  )
 
   const q = searchParams.get('q') ?? ''
   const loc = searchParams.get('loc') ?? ''
@@ -152,7 +160,7 @@ export default function JobListPage() {
       Object.fromEntries(
         values.map((value) => [
           value,
-          publicJobs.filter((job) => matchesOther(job, except) && getValue(job) === value).length,
+          jobs.filter((job) => matchesOther(job, except) && getValue(job) === value).length,
         ])
       )
 
@@ -160,17 +168,17 @@ export default function JobListPage() {
       type: countGroup('type', JOB_TYPES, (job) => job.employment_type),
       workplace: countGroup('workplace', WORKPLACES, (job) => job.workplace),
       level: countGroup('level', LEVELS, (job) => job.level),
-      category: countGroup('cat', CATEGORY_NAMES, (job) => job.category),
+      category: countGroup('cat', categoryNames, (job) => job.category),
       salary: Object.fromEntries(
         SALARY_BUCKETS.map((bucket) => [
           bucket.value,
-          publicJobs.filter((job) => matchesOther(job, 'salary') && jobMatchesSalary(job, bucket))
+          jobs.filter((job) => matchesOther(job, 'salary') && jobMatchesSalary(job, bucket))
             .length,
         ])
       ),
     }
 
-    const list = publicJobs.filter((job) => matchesOther(job, null))
+    const list = jobs.filter((job) => matchesOther(job, null))
 
     const sorted = [...list]
     if (sort === 'salary-high') {
@@ -209,14 +217,14 @@ export default function JobListPage() {
   }
 
   const heroStats = [
-    { value: String(publicJobs.length), icon: 'briefcase', label: 'Active jobs' },
+    { value: String(jobs.length), icon: 'briefcase', label: 'Active jobs' },
     {
-      value: String(new Set(publicJobs.map((job) => job.company.name)).size),
+      value: String(new Set(jobs.map((job) => job.company.name)).size),
       icon: 'buildings',
       label: 'Hiring companies',
     },
     {
-      value: String(publicJobs.filter((job) => (job.posted_days_ago ?? 99) <= 7).length),
+      value: String(jobs.filter((job) => (job.posted_days_ago ?? 99) <= 7).length),
       icon: 'clock-history',
       label: 'New this week',
     },
@@ -224,7 +232,7 @@ export default function JobListPage() {
 
   return (
     <>
-      <HeroSection
+      <PageHero
         images={heroSlides}
         eyebrow="JOB SEARCH"
         title="Find Your Next Opportunity"
@@ -311,7 +319,7 @@ export default function JobListPage() {
             </div>
           ))}
         </div>
-      </HeroSection>
+      </PageHero>
 
       <section className="hh-section-space bg-white" ref={resultsRef}>
         <div className="page-container">
@@ -410,7 +418,7 @@ export default function JobListPage() {
                   <h3>Category</h3>
                   <div className="hh-filter-list">
                     {publicJobCategories
-                      .filter((c) => CATEGORY_NAMES.includes(c.name))
+                      .filter((c) => categoryNames.includes(c.name))
                       .map((c) => {
                         const count = counts.category[c.name] || 0
                         return (
@@ -522,7 +530,18 @@ export default function JobListPage() {
               </div>
 
               <div className={`hh-results-body ${refreshing ? 'is-refreshing' : ''}`}>
-                {pageJobs.length > 0 ? (
+                {loading ? (
+                  <div className="hh-loading-block">
+                    <span className="spinner-border spinner-border-sm me-2" aria-hidden="true" />
+                    Loading jobs…
+                  </div>
+                ) : error ? (
+                  <EmptyState
+                    icon="wifi-off"
+                    title="Could not load jobs"
+                    text="There was a problem connecting to the job board. Please try again."
+                  />
+                ) : pageJobs.length > 0 ? (
                   <div className="row g-4">
                     {pageJobs.map((job, index) => (
                       <div className="col-12 col-md-6" key={job.id}>
@@ -547,7 +566,7 @@ export default function JobListPage() {
                     }
                   />
                 )}
-              </div>
+                </div>
 
               <Pagination
                 currentPage={page}

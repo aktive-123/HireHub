@@ -29,6 +29,12 @@
   pointer-events: none;
 }
 
+/* Keyboard visibility — explicit ring so focus never relies on hover bg alone */
+.hh-btn:focus-visible {
+  outline: 3px solid var(--hh-primary-ring);
+  outline-offset: 2px;
+}
+
 .hh-btn-primary {
   background-color: var(--hh-primary);
   color: var(--hh-white) !important;
@@ -283,24 +289,28 @@
 }
 
 .hh-card {
-  background: var(--hh-white);
+  position: relative;
+  background: linear-gradient(180deg, var(--hh-white) 0%, var(--hh-white) 60%, var(--hh-gray-50) 100%);
   border: 1px solid var(--hh-border);
   border-radius: var(--hh-radius-lg);
+  box-shadow: var(--hh-shadow-sm), inset 0 1px 0 rgba(255, 255, 255, 0.92);
   transition: all var(--hh-transition);
 }
 
 .hh-card:hover {
-  box-shadow: var(--hh-shadow-md);
+  box-shadow: var(--hh-shadow-md), inset 0 1px 0 rgba(255, 255, 255, 0.92);
   border-color: var(--hh-primary-soft);
+  transform: translateY(-2px);
 }
 
 .hh-card-elevated {
   border: none;
-  box-shadow: var(--hh-shadow);
+  box-shadow: var(--hh-shadow), inset 0 1px 0 rgba(255, 255, 255, 0.92);
 }
 
 .hh-card-elevated:hover {
-  box-shadow: var(--hh-shadow-lg);
+  box-shadow: var(--hh-shadow-lg), inset 0 1px 0 rgba(255, 255, 255, 0.92);
+  transform: translateY(-3px);
 }
 
 .hh-loading {
@@ -435,19 +445,6 @@
   height: 2px;
   background: var(--hh-primary);
   border-radius: 1px;
-}
-
-.hh-footer-link {
-  display: block;
-  font-size: var(--hh-fs-sm);
-  color: rgba(255, 255, 255, 0.6);
-  padding: var(--hh-space-1) 0;
-  transition: color var(--hh-transition-fast);
-}
-
-.hh-footer-link:hover {
-  color: var(--hh-white);
-  text-decoration: none;
 }
 
 /* -------------------------------------------------------------
