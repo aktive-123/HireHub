@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api\V1;
 
+use App\Enums\JobStatus;
 use App\Http\Controllers\Api\ApiController;
 use App\Http\Resources\V1\JobResource;
 use App\Models\Job;
@@ -21,7 +22,8 @@ class JobController extends ApiController
     {
         $query = Job::query()
             ->with(['company:id,slug,name,logo_text,logo_bg,logo_color,is_verified', 'category:id,slug,name,icon'])
-            ->whereNull('deleted_at');
+            ->whereNull('deleted_at')
+            ->where('status', 'open');
 
         if ($request->filled('search')) {
             $term = trim($request->input('search'));
@@ -57,8 +59,10 @@ class JobController extends ApiController
             }
         }
 
-        if ($request->filled('status') && ! in_array($request->input('status'), ['all', ',all'], true)) {
-            $query->whereIn('status', explode(',', $request->input('status')));
+        if ($request->filled('status')) {
+            // Public listings only ever surface live jobs; other statuses are
+            // never exposed to unauthenticated visitors.
+            $query->where('status', JobStatus::Open->value);
         }
 
         if ($request->filled('featured')) {
@@ -100,6 +104,8 @@ class JobController extends ApiController
 
     public function show(Job $job)
     {
+        abort_if($job->status !== JobStatus::Open, 404);
+
         $job->load(['company:id,slug,name,logo_text,logo_bg,logo_color,is_verified', 'category:id,slug,name,icon']);
         $job->increment('view_count');
 

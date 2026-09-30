@@ -5,15 +5,21 @@ namespace App\Http\Controllers\Api\V1;
 use App\Http\Controllers\Api\ApiController;
 use App\Http\Resources\V1\ApplicationResource;
 use App\Models\Application;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
 
 class ApplicationController extends ApiController
 {
     private const STATUSES = ['new', 'reviewing', 'shortlisted', 'interview', 'offer', 'hired', 'rejected', 'withdrawn'];
 
+    /**
+     * Applications are never listed globally. The query is always narrowed to
+     * the caller first: seekers see their own submissions, employers see
+     * applicants to their own company's jobs, and admins see everything.
+     */
     public function index(Request $request)
     {
-        $query = Application::query()
+        $query = $this->scopeToCaller(Application::query(), $request)
             ->with([
                 'job.company:id,slug,name,logo_text,logo_bg,logo_color,is_verified',
                 'seeker:id,name,email,phone',
@@ -55,8 +61,12 @@ class ApplicationController extends ApiController
         );
     }
 
-    public function show(Application $application)
+    public function show(Request $request, Application $application)
     {
+        // Policy denies cross-tenant reads (candidate owns it, or the
+        // application targets one of the employer's own jobs).
+        $this->authorize('view', $application);
+
         $application->load([
             'job.company:id,slug,name,logo_text,logo_bg,logo_color,is_verified',
             'seeker:id,name,email,phone',
@@ -65,5 +75,22 @@ class ApplicationController extends ApiController
         ]);
 
         return $this->success(new ApplicationResource($application), 'Application retrieved.');
+    }
+
+    private function scopeToCaller(Builder $query, Request $request): Builder
+    {
+        $user = $request->user();
+
+        if ($user->isAdmin()) {
+            return $query;
+        }
+
+        if ($user->isEmployer()) {
+            $companyId = $user->company?->id;
+
+            return $query->whereHas('job', fn ($job) => $job->where('company_id', $companyId));
+        }
+
+        return $query->where('seeker_id', $user->id);
     }
 }

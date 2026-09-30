@@ -12,6 +12,12 @@ class Company extends Model
 {
     use HasFactory, SoftDeletes;
 
+    /**
+     * `status`, `is_verified` and `is_featured` are moderation flags, not user
+     * editable profile data. Leaving them fillable means a single careless
+     * `fill($request->all())` would let an employer verify their own company,
+     * so they are only ever assigned explicitly by admin and seeding code.
+     */
     protected $fillable = [
         'user_id',
         'slug',
@@ -27,11 +33,8 @@ class Company extends Model
         'logo_text',
         'logo_bg',
         'logo_color',
-        'is_featured',
-        'is_verified',
         'tagline',
         'description',
-        'status',
     ];
 
     protected function casts(): array
@@ -52,6 +55,15 @@ class Company extends Model
     public function jobs(): HasMany
     {
         return $this->hasMany(Job::class);
+    }
+
+    /**
+     * Placement fees this company has been charged. The admin revenue
+     * breakdown groups by company, so this is the relation behind it.
+     */
+    public function hiringFees(): HasMany
+    {
+        return $this->hasMany(HiringFee::class);
     }
 
     public function getRouteKeyName(): string

@@ -6,6 +6,7 @@ use App\Enums\ApplicationStatus;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class Application extends Model
 {
@@ -19,6 +20,7 @@ class Application extends Model
         'cover_letter',
         'cv_path',
         'applied_at',
+        'status_changed_at',
     ];
 
     protected function casts(): array
@@ -27,7 +29,36 @@ class Application extends Model
             'status' => ApplicationStatus::class,
             'match_score' => 'integer',
             'applied_at' => 'datetime',
+            'status_changed_at' => 'datetime',
         ];
+    }
+
+    /**
+     * Stamp the pipeline transition, whatever wrote it.
+     *
+     * Centralised on the model rather than in each controller so the employer
+     * and admin status endpoints — and anything added later — all produce the
+     * same audit trail. Time-to-hire is derived from this column, so letting one
+     * path skip it would quietly corrupt the number.
+     */
+    protected static function booted(): void
+    {
+        static::saving(function (self $application): void {
+            $status = $application->status instanceof ApplicationStatus
+                ? $application->status->value
+                : $application->status;
+
+            $changed = ! $application->exists
+                || $application->getOriginal('status') !== $status;
+
+            if ($changed && $status !== null) {
+                $application->status_changed_at = now();
+
+                // A brand new application enters the pipeline at "new", and its
+                // first transition is the moment it arrived.
+                $application->applied_at ??= now();
+            }
+        });
     }
 
     public function job(): BelongsTo
@@ -38,5 +69,15 @@ class Application extends Model
     public function seeker(): BelongsTo
     {
         return $this->belongsTo(User::class, 'seeker_id');
+    }
+
+    /**
+     * The placement fee charged for hiring this applicant, if one has been
+     * raised. HasOne because `hiring_fees.application_id` is unique: a hire
+     * generates exactly one fee.
+     */
+    public function hiringFee(): HasOne
+    {
+        return $this->hasOne(HiringFee::class);
     }
 }

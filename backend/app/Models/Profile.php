@@ -21,6 +21,9 @@ class Profile extends Model
         'skills',
         'certifications',
         'portfolio',
+        'cv_path',
+        'cv_name',
+        'cv_updated_at',
     ];
 
     protected function casts(): array
@@ -29,6 +32,7 @@ class Profile extends Model
             'skills' => 'array',
             'certifications' => 'array',
             'portfolio' => 'array',
+            'cv_updated_at' => 'datetime',
         ];
     }
 

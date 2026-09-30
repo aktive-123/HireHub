@@ -56,6 +56,20 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Frontend Origin
+    |--------------------------------------------------------------------------
+    |
+    | The React app lives on its own origin. Every link that has to leave the
+    | API — email verification, password reset, payment return — is built from
+    | this value rather than from env() at call time, so a cached config in
+    | production cannot silently fall back to the API's own host.
+    |
+    */
+
+    'frontend_url' => rtrim((string) env('FRONTEND_URL', env('APP_URL', 'http://localhost:5173')), '/'),
+
+    /*
+    |--------------------------------------------------------------------------
     | Application Timezone
     |--------------------------------------------------------------------------
     |

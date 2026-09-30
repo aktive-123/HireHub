@@ -15,6 +15,11 @@ class Job extends Model
 {
     use HasFactory, SoftDeletes;
 
+    /**
+     * `is_featured` and `is_verified` are moderation badges. They are absent
+     * on purpose so no employer-facing endpoint can fill them from request
+     * input — only admin and seeding code sets them, explicitly.
+     */
     protected $fillable = [
         'company_id',
         'category_id',
@@ -34,8 +39,6 @@ class Job extends Model
         'responsibilities',
         'requirements',
         'benefits',
-        'is_featured',
-        'is_verified',
         'status',
         'view_count',
         'applications_count',

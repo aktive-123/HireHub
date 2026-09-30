@@ -73,6 +73,25 @@ return [
             'replace_placeholders' => true,
         ],
 
+        /*
+         * Live one-time passwords, written only while mail delivery is disabled.
+         *
+         * Without this, developing or demoing the verification flow means either
+         * standing up an SMTP account or reading a hex-ish stack trace in
+         * laravel.log. Keeping the codes here makes them one `tail -f` away.
+         *
+         * SECURITY: this channel is the plaintext counterpart of a value that is
+         * hashed everywhere else. It is written only when MAIL_ENABLED is false,
+         * which is a local-development setting, and it should never be enabled
+         * on a deployed environment.
+         */
+        'otp-codes' => [
+            'driver' => 'single',
+            'path' => storage_path('logs/otp-codes.log'),
+            'level' => 'notice',
+            'replace_placeholders' => false,
+        ],
+
         'slack' => [
             'driver' => 'slack',
             'url' => env('LOG_SLACK_WEBHOOK_URL'),
