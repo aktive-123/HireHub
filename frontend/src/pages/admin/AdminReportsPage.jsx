@@ -10,19 +10,113 @@ import {
   categoryDistribution,
   topCompanies,
 } from '../../data/admin'
+import { adminApi } from '../../services/api'
+import { useAdminData } from '../../hooks/useAdminData'
+import { downloadCsv, withDateStamp } from '../../utils/exportData'
 
 function formatValue(value) {
   return value >= 1000 ? `${(value / 1000).toFixed(1)}k` : String(value)
 }
 
-export default function AdminReportsPage() {
-  const metrics = adminStats.filter((stat) =>
-    ['seekers', 'jobs', 'applications', 'hired'].includes(stat.key)
-  )
+function initials(name) {
+  return name
+    .split(' ')
+    .map((part) => part[0])
+    .join('')
+    .slice(0, 2)
+    .toUpperCase()
+}
 
-  const maxApplications = Math.max(...applicationsByMonth.map((item) => item.value))
-  const maxCategory = Math.max(...categoryDistribution.map((item) => item.value))
-  const maxCompany = Math.max(...topCompanies.map((item) => item.applications))
+export default function AdminReportsPage() {
+  const reports = useAdminData(() => adminApi.reports(), {})
+  const categoryData = useAdminData(() => adminApi.categories(), null)
+
+  const metrics = adminStats
+    .filter((stat) => ['seekers', 'jobs', 'applications', 'hired'].includes(stat.key))
+    .map((stat) => {
+      let value = stat.value
+      if (stat.key === 'seekers') value = reports.new_users ?? value
+      else if (stat.key === 'jobs') value = reports.new_jobs ?? value
+      else if (stat.key === 'applications') value = reports.new_applications ?? value
+      return { ...stat, value }
+    })
+
+  const applicationsOverTime = (reports.applications_by_day ?? applicationsByMonth)
+    .slice(-9)
+    .map((item) => ({ label: item.label ?? item.date, value: item.value }))
+
+  const categoryDist =
+    (categoryData ?? []).length > 0
+      ? categoryData.map((category) => ({ label: category.name, value: category.jobs_count ?? 0 }))
+      : categoryDistribution
+
+  const topCompanyList = (reports.top_companies ?? topCompanies).map((company) => ({
+    id: company.id ?? company.name,
+    name: company.name,
+    logoText: company.logoText ?? initials(company.name),
+    logoBg: company.logoBg ?? '#eef2ff',
+    logoColor: company.logoColor ?? '#4f46e5',
+    jobs: company.jobs ?? company.jobs_count ?? 0,
+    applications: company.applications ?? company.jobs_count ?? 0,
+  }))
+
+  const maxApplications = Math.max(...applicationsOverTime.map((item) => item.value))
+  const maxCategory = Math.max(...categoryDist.map((item) => item.value))
+  const maxCompany = Math.max(...topCompanyList.map((item) => item.applications))
+
+  // One row per section keeps the spreadsheet readable instead of flattening
+  // every chart into a single mismatched table.
+  const handleExport = () => {
+    const stamp = withDateStamp('hirehub-report')
+    downloadCsv(
+      `${stamp}.csv`,
+      [
+        {
+          section: 'Summary',
+          metric: 'New job seekers',
+          period: 'This month',
+          value: reports.new_users ?? 0,
+        },
+        {
+          section: 'Summary',
+          metric: 'New jobs',
+          period: 'This month',
+          value: reports.new_jobs ?? 0,
+        },
+        {
+          section: 'Summary',
+          metric: 'New applications',
+          period: 'This month',
+          value: reports.new_applications ?? 0,
+        },
+        ...applicationsOverTime.map((item) => ({
+          section: 'Applications over time',
+          metric: item.label,
+          period: '',
+          value: item.value,
+        })),
+        ...categoryDist.map((item) => ({
+          section: 'Jobs by category',
+          metric: item.label,
+          period: '',
+          value: item.value,
+        })),
+        ...topCompanyList.map((item) => ({
+          section: 'Top companies',
+          metric: item.name,
+          period: 'jobs',
+          value: item.jobs,
+        })),
+        ...topCompanyList.map((item) => ({
+          section: 'Top companies',
+          metric: item.name,
+          period: 'applications',
+          value: item.applications,
+        })),
+      ],
+      ['section', 'metric', 'period', 'value']
+    )
+  }
 
   return (
     <section className="hh-section-space bg-white">
@@ -32,7 +126,7 @@ export default function AdminReportsPage() {
           title="Reports & Analytics"
           subtitle="A snapshot of platform growth, application volume and hiring demand."
           action={
-            <Button variant="outline" icon="bi-download">
+            <Button variant="outline" icon="bi-download" onClick={handleExport}>
               Export report
             </Button>
           }
@@ -50,7 +144,7 @@ export default function AdminReportsPage() {
                 </Badge>
               </div>
               <div className="hh-chart">
-                {applicationsByMonth.map((item) => (
+                {applicationsOverTime.map((item) => (
                   <div className="hh-chart-bar" key={item.label}>
                     <span className="hh-chart-value">{formatValue(item.value)}</span>
                     <span
@@ -72,7 +166,7 @@ export default function AdminReportsPage() {
               <Card className="hh-card-body hh-card-hover h-100">
                 <h3 className="hh-card-title-md hh-mb-3">Open roles by category</h3>
                 <div className="hh-rank">
-                  {categoryDistribution.map((item) => (
+                  {categoryDist.map((item) => (
                     <div className="hh-rank-item" key={item.label}>
                       <span className="hh-rank-name">
                         <span className="hh-rank-name-text">{item.label}</span>
@@ -96,7 +190,7 @@ export default function AdminReportsPage() {
               <Card className="hh-card-body hh-card-hover h-100">
                 <h3 className="hh-card-title-md hh-mb-3">Top companies by applications</h3>
                 <div className="hh-rank">
-                  {topCompanies.map((company) => (
+                  {topCompanyList.map((company) => (
                     <div className="hh-rank-item" key={company.id}>
                       <span className="hh-rank-name">
                         <span

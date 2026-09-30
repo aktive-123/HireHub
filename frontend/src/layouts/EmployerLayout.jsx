@@ -1,10 +1,20 @@
 import { Link, NavLink, Navigate, Outlet } from 'react-router-dom'
+import ErrorBoundary from '../components/common/ErrorBoundary'
+import SessionGate from '../components/common/SessionGate'
+import PlanUsageIndicator from '../components/employer/PlanUsageIndicator'
+import PlanPaywallModal from '../components/employer/PlanPaywallModal'
 import whiteLogo from '../assets/white logo.png'
 import { useAuth } from '../context/AuthContext'
 
 export default function EmployerLayout() {
-  const { user, bootstrapped } = useAuth()
+  const { user, role, bootstrapped } = useAuth()
   if (bootstrapped && !user) return <Navigate to="/login" replace state={{ from: '/employer' }} />
+  // Same reasoning as the other layouts: a signed-in seeker has no employer
+  // endpoints to call, so show their own dashboard instead of an error page.
+  if (bootstrapped && role && role !== 'employer') {
+    return <Navigate to={role === 'admin' ? '/admin' : '/seeker'} replace />
+  }
+  if (!bootstrapped) return <SessionGate />
   const userName = user?.name || 'Employer'
   const userInitials =
     userName
@@ -90,6 +100,15 @@ export default function EmployerLayout() {
             <i className="bi bi-bell-fill" /> Notifications
           </NavLink>
           <NavLink
+            to="/employer/billing"
+            className={({ isActive }) =>
+              `hh-dashboard-nav-link ${isActive ? 'hh-dashboard-nav-link--active' : ''}`
+            }
+          >
+            <i className="bi bi-credit-card-2-front-fill" /> Billing &amp; Plan
+            <PlanUsageIndicator />
+          </NavLink>
+          <NavLink
             to="/employer/settings"
             className={({ isActive }) =>
               `hh-dashboard-nav-link ${isActive ? 'hh-dashboard-nav-link--active' : ''}`
@@ -128,7 +147,12 @@ export default function EmployerLayout() {
         </header>
 
         <main className="hh-dashboard-body" id="main-content">
-          <Outlet />
+          <ErrorBoundary>
+            <Outlet />
+          </ErrorBoundary>
+          {/* Mounted once for the whole console: any page that hits a plan
+              refusal opens the upgrade prompt without knowing this exists. */}
+          <PlanPaywallModal />
         </main>
       </div>
     </div>

@@ -8,7 +8,6 @@ import PasswordStrength from '../../components/ui/PasswordStrength'
 import ValidationChecklist from '../../components/ui/ValidationChecklist'
 import { GoogleIcon, LinkedInIcon } from '../../components/common/SocialIcons'
 import { authApi } from '../../services/api'
-import { useAuth } from '../../context/AuthContext'
 
 const ROLE_LINKS = [
   { key: 'seeker', to: '/register/job-seeker', label: 'Job Seeker' },
@@ -34,7 +33,8 @@ const apiErrorMessage = (err) => {
 
 export default function RegisterEmployerPage() {
   const navigate = useNavigate()
-  const { setSession } = useAuth()
+  // Registration no longer establishes a session: the account stays pending until the
+  // emailed code is entered, so the verify screen signs the user in afterwards.
   const [showPassword, setShowPassword] = useState(false)
   const [agreed, setAgreed] = useState(false)
   const [error, setError] = useState('')
@@ -69,8 +69,15 @@ export default function RegisterEmployerPage() {
         password,
         password_confirmation: password,
       })
-      setSession(payload)
-      navigate('/employer')
+
+      // No token comes back: the account is created pending until the emailed
+      // code is entered, so there is nothing to sign in with yet.
+      navigate(
+        `/verify-email?email=${encodeURIComponent(payload.email ?? email)}&cooldown=${
+          payload.resend_cooldown_seconds ?? 60
+        }`,
+        { replace: true },
+      )
     } catch (err) {
       setError(apiErrorMessage(err))
     } finally {

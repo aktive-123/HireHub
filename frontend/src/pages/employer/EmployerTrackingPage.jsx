@@ -7,6 +7,8 @@ import Button from '../../components/ui/Button'
 import LoadingState from '../../components/ui/LoadingState'
 import EmptyState from '../../components/ui/EmptyState'
 import Reveal from '../../components/ui/Reveal'
+import Alert from '../../components/ui/Alert'
+import HiringFeeModal from '../../components/employer/HiringFeeModal'
 
 const STAGES = [
   { key: 'applied', label: 'Applied', icon: 'bi-inbox', tone: 'secondary' },
@@ -29,6 +31,18 @@ const STATUS_TO_STAGE = {
   hired: 'hired',
 }
 
+// The board speaks in stage names; the API only accepts real statuses. Sending
+// a stage key straight back — 'applied', 'review' — is not a valid status and
+// would be rejected, so the reverse mapping is explicit rather than implied.
+const STAGE_TO_STATUS = {
+  applied: 'new',
+  review: 'reviewing',
+  shortlisted: 'shortlisted',
+  interview: 'interview',
+  offer: 'offer',
+  hired: 'hired',
+}
+
 function buildBoard(applicants) {
   const groups = Object.fromEntries(STAGES.map((s) => [s.key, []]))
   for (const applicant of applicants) {
@@ -41,6 +55,12 @@ function buildBoard(applicants) {
 export default function EmployerTrackingPage() {
   const { data: applicants, loading, error, reload } = useApiData(() => employerApi.applicants(), [])
   const [board, setBoard] = useState({})
+  // A move into `hired` is refused until the placement fee is paid. The refusal
+  // is what opens this, and the board is rolled back so the column never shows a
+  // hire that did not happen.
+  const [feeApplicationId, setFeeApplicationId] = useState(null)
+  const [feeQuote, setFeeQuote] = useState(null)
+  const [moveError, setMoveError] = useState(null)
 
   useEffect(() => {
     if (!loading) setBoard(buildBoard(applicants ?? []))
@@ -48,12 +68,29 @@ export default function EmployerTrackingPage() {
 
   const move = (id, from, to) => {
     if (!to || !board[to]) return
+
+    const status = STAGE_TO_STATUS[to]
+    if (!status) return
+
+    setMoveError(null)
     setBoard((prev) => ({
       ...prev,
       [from]: prev[from].filter((c) => c !== id),
       [to]: [...prev[to], id],
     }))
-    employerApi.updateApplicationStatus(id, to).catch(() => reload())
+
+    employerApi
+      .updateApplicationStatus(id, status)
+      .catch((err) => {
+        // Roll the optimistic move back before explaining why.
+        reload()
+        if (err?.code === 'hiring_fee_required') {
+          setFeeQuote(err.payload?.data?.hiring_fee ?? null)
+          setFeeApplicationId(id)
+          return
+        }
+        setMoveError(err?.message || 'Could not move the candidate. Please try again.')
+      })
   }
 
   const stageIndex = (key) => STAGES.findIndex((s) => s.key === key)
@@ -102,9 +139,7 @@ export default function EmployerTrackingPage() {
           title="Applicant Tracking"
           subtitle="Move candidates through your hiring pipeline."
           action={
-            <Link to="/employer/applicants">
-              <Button variant="outline-primary" icon="bi-people">All applicants</Button>
-            </Link>
+            <Button to="/employer/applicants" variant="outline" icon="bi-people">All applicants</Button>
           }
         />
 
@@ -115,6 +150,12 @@ export default function EmployerTrackingPage() {
           </span>
         </div>
 
+        {moveError && (
+          <Alert variant="danger" dismissible onDismiss={() => setMoveError(null)} className="hh-mb-4">
+            {moveError}
+          </Alert>
+        )}
+
         <div className="hh-kanban" role="list" aria-label="Recruitment pipeline">
               {STAGES.map((stage) => {
                 const ids = board[stage.key] || []
@@ -123,7 +164,7 @@ export default function EmployerTrackingPage() {
                   <div className="hh-kanban-col" role="listitem" key={stage.key}>
                     <div className="hh-kanban-col-head">
                       <span className="hh-kanban-col-title">
-                        <span className={`hh-note-icon hh-note-icon-${stage.tone}`} aria-hidden="true" style={{ width: 26, height: 26, fontSize: '0.9rem', borderRadius: 8 }}>
+                        <span className={`hh-note-icon hh-note-icon-sm hh-note-icon-${stage.tone}`} aria-hidden="true">
                           <i className={`bi ${stage.icon}`} />
                         </span>
                         {stage.label}
@@ -186,6 +227,22 @@ export default function EmployerTrackingPage() {
             </div>
         </div>
       </section>
+
+      <HiringFeeModal
+        isOpen={feeApplicationId !== null}
+        applicationId={feeApplicationId}
+        quote={feeQuote}
+        onClose={() => {
+          setFeeApplicationId(null)
+          setFeeQuote(null)
+          reload()
+        }}
+        onPaid={() => {
+          setFeeApplicationId(null)
+          setFeeQuote(null)
+          reload()
+        }}
+      />
     </>
   )
 }

@@ -7,7 +7,9 @@
     "dev": "vite",
     "build": "vite build",
     "lint": "oxlint",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "audit:typography": "node scripts/audit-typography.mjs",
+    "verify": "npm run lint && npm run audit:typography && npm run build"
   },
   "dependencies": {
     "bootstrap": "^5.3.8",

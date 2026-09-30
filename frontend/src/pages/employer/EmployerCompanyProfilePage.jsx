@@ -70,12 +70,8 @@ export default function EmployerCompanyProfilePage() {
             subtitle="Manage how your company appears to candidates."
             action={
               <div className="d-flex flex-wrap gap-2">
-                <Link to={`/companies/${companySlug}`}>
-                  <Button variant="outline-primary" icon="bi-box-arrow-up-right">View public profile</Button>
-                </Link>
-                <Link to="/employer/company/edit">
-                  <Button variant="primary" icon="bi-pencil">Edit profile</Button>
-                </Link>
+                <Button to={`/companies/${companySlug}`} variant="outline" icon="bi-box-arrow-up-right">View public profile</Button>
+                <Button to="/employer/company/edit" variant="primary" icon="bi-pencil">Edit profile</Button>
               </div>
             }
           />

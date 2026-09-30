@@ -1,32 +1,71 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import SectionHeading from '../../components/ui/SectionHeading'
 import Reveal from '../../components/ui/Reveal'
 import Card from '../../components/ui/Card'
 import Button from '../../components/ui/Button'
 import Badge from '../../components/ui/Badge'
-
-const INITIAL_FILES = [
-  { id: 'f1', name: 'Sarah_Obi_Resume.pdf', size: '246 KB', updated: 'September 2026' },
-  { id: 'f2', name: 'Sarah_Obi_Cover_Letter.pdf', size: '112 KB', updated: 'September 2026' },
-]
+import { cvApi } from '../../services/api'
 
 export default function SeekerResumePage() {
-  const [files, setFiles] = useState(INITIAL_FILES)
+  const [files, setFiles] = useState([])
+  const [uploading, setUploading] = useState(false)
+  const [notice, setNotice] = useState('')
 
-  const handleFiles = (e) => {
-    const selected = Array.from(e.target.files || [])
-    const next = selected.map((file, idx) => ({
-      id: `uploaded-${Date.now()}-${idx}`,
-      name: file.name,
-      size: file.size > 1024 * 1024 ? `${(file.size / (1024 * 1024)).toFixed(1)} MB` : `${Math.round(file.size / 1024)} KB`,
-      updated: 'Just now',
-    }))
-    if (next.length) setFiles((prev) => [...next, ...prev])
-    e.target.value = ''
+  const load = async () => {
+    try {
+      const meta = await cvApi.meta()
+      if (!meta) {
+        setFiles([])
+        return
+      }
+      setFiles([
+        {
+          id: 'cv',
+          name: meta.name ?? 'CV',
+          size: meta.size != null ? `${Math.round(meta.size / 1024)} KB` : undefined,
+          updated: meta.uploaded_at ?? '',
+        },
+      ])
+    } catch {
+      setFiles([])
+    }
   }
 
-  const removeFile = (id) => {
-    setFiles((prev) => prev.filter((f) => f.id !== id))
+  useEffect(() => {
+    load()
+  }, [])
+
+  const handleFiles = async (e) => {
+    const selected = Array.from(e.target.files || [])
+    e.target.value = ''
+    if (!selected.length) return
+    setUploading(true)
+    setNotice('')
+    try {
+      await cvApi.upload(selected[0])
+      await load()
+    } catch {
+      setNotice('Upload failed. Use a PDF, DOC or DOCX under 5 MB.')
+    } finally {
+      setUploading(false)
+    }
+  }
+
+  const removeFile = async () => {
+    try {
+      await cvApi.remove()
+      setFiles([])
+    } catch {
+      setNotice('Could not remove the file.')
+    }
+  }
+
+  const download = async () => {
+    try {
+      await cvApi.download()
+    } catch {
+      setNotice('Could not download the file.')
+    }
   }
 
   return (
@@ -39,11 +78,20 @@ export default function SeekerResumePage() {
               title="CV / Resume"
               subtitle="Upload, update, and preview the resume employers see."
             />
-            <div className="d-flex gap-2">
-              <Button variant="outline-primary" icon="bi-download" pill>Download</Button>
-              <Button variant="primary" icon="bi-printer" pill>Print</Button>
-            </div>
+            {files.length > 0 && (
+              <div className="d-flex gap-2">
+                <Button variant="outline" icon="bi-download" pill onClick={download}>
+                  Download
+                </Button>
+              </div>
+            )}
           </div>
+
+          {notice && (
+            <div className="alert alert-warning hh-mb-4" role="alert">
+              {notice}
+            </div>
+          )}
 
           <div className="row g-4">
             <div className="col-12 col-lg-5">
@@ -55,14 +103,15 @@ export default function SeekerResumePage() {
                       id="cv-upload"
                       type="file"
                       accept=".pdf,.doc,.docx"
-                      multiple
                       className="d-none"
                       onChange={handleFiles}
                     />
                     <span className="hh-upload-drop-icon" aria-hidden="true">
                       <i className="bi bi-cloud-arrow-up" />
                     </span>
-                    <span className="hh-upload-drop-title">Drop your CV here or click to browse</span>
+                    <span className="hh-upload-drop-title">
+                      {uploading ? 'Uploading…' : 'Drop your CV here or click to browse'}
+                    </span>
                     <span className="hh-upload-drop-text">PDF, DOC or DOCX · up to 5 MB</span>
                   </label>
                 </Card>
@@ -77,14 +126,14 @@ export default function SeekerResumePage() {
                         <span className="hh-file-icon" aria-hidden="true"><i className="bi bi-file-earmark-pdf" /></span>
                         <div className="hh-file-info">
                           <span className="hh-file-name">{file.name}</span>
-                          <span className="hh-file-size">{file.size} · {file.updated}</span>
+                          <span className="hh-file-size">{[file.size, file.updated].filter(Boolean).join(' · ')}</span>
                         </div>
                         <button
                           type="button"
                           className="hh-file-remove hh-tip-end"
                           data-tooltip="Remove file"
                           aria-label={`Remove ${file.name}`}
-                          onClick={() => removeFile(file.id)}
+                          onClick={removeFile}
                         >
                           <i className="bi bi-x-lg" aria-hidden="true" />
                         </button>
@@ -98,7 +147,9 @@ export default function SeekerResumePage() {
                     </div>
                   )}
                   <div className="hh-mt-4">
-                    <Badge variant="primary" icon="patch-check">CV attached to applications</Badge>
+                    <Badge variant={files.length > 0 ? 'primary' : 'secondary'} icon="patch-check">
+                      {files.length > 0 ? 'CV attached to new applications' : 'Upload a CV to attach to applications'}
+                    </Badge>
                   </div>
                 </Card>
               </Reveal>
@@ -107,52 +158,17 @@ export default function SeekerResumePage() {
             <div className="col-12 col-lg-7">
               <Reveal delay={100}>
                 <article className="hh-resume-paper">
-                  <h2 className="hh-resume-name">Sarah Obi</h2>
-                  <p className="hh-resume-headline">Frontend Developer</p>
+                  <h2 className="hh-resume-name">Your CV</h2>
+                  <p className="hh-resume-headline">Resume preview</p>
                   <div className="hh-app-meta hh-mb-3">
-                    <span><i className="bi bi-geo-alt hh-me-1" aria-hidden="true" />Lagos, Nigeria</span>
-                    <span><i className="bi bi-envelope hh-me-1" aria-hidden="true" />sarah.obi@email.com</span>
-                    <span><i className="bi bi-phone hh-me-1" aria-hidden="true" />+234 800 000 0000</span>
+                    <span><i className="bi bi-geo-alt hh-me-1" aria-hidden="true" />Upload to enable employers to preview</span>
                   </div>
-
                   <div className="hh-resume-block">
                     <h3 className="hh-resume-block-title">Summary</h3>
                     <p className="hh-resume-entry-text">
-                      Frontend developer with 5 years of experience building fast, accessible web
-                      applications using React and modern tooling. Known for translating complex
-                      requirements into clean, maintainable interfaces.
+                      Your uploaded CV will be attached to new job applications and available to
+                      employers you apply to. Keep it up to date for the best results.
                     </p>
-                  </div>
-
-                  <div className="hh-resume-block">
-                    <h3 className="hh-resume-block-title">Experience</h3>
-                    <div className="hh-resume-entry">
-                      <div className="hh-resume-entry-title">Frontend Developer — Paystack</div>
-                      <div className="hh-resume-entry-org">2022 – Present · Lagos, Nigeria</div>
-                      <p className="hh-resume-entry-text">Built and shipped payment dashboard features used by thousands of businesses.</p>
-                    </div>
-                    <div className="hh-resume-entry">
-                      <div className="hh-resume-entry-title">UI Developer — Andela</div>
-                      <div className="hh-resume-entry-org">2020 – 2022 · Remote</div>
-                      <p className="hh-resume-entry-text">Delivered responsive interfaces for fintech clients across three continents.</p>
-                    </div>
-                  </div>
-
-                  <div className="hh-resume-block">
-                    <h3 className="hh-resume-block-title">Education</h3>
-                    <div className="hh-resume-entry">
-                      <div className="hh-resume-entry-title">B.Sc. Computer Science</div>
-                      <div className="hh-resume-entry-org">University of Lagos · 2015 – 2019</div>
-                    </div>
-                  </div>
-
-                  <div className="hh-resume-block">
-                    <h3 className="hh-resume-block-title">Skills</h3>
-                    <div className="hh-chip-row">
-                      {['React', 'JavaScript', 'TypeScript', 'CSS', 'Git', 'Figma', 'SQL'].map((skill) => (
-                        <span className="hh-chip" key={skill}>{skill}</span>
-                      ))}
-                    </div>
                   </div>
                 </article>
               </Reveal>

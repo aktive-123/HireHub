@@ -221,15 +221,14 @@ const SKILL_NAMES = [
   'Agile',
 ]
 
-const SKILL_CATEGORIES = ['Technology', 'Design', 'Business']
 
+// Skills are derived on the server by counting free-text entries in
+// profiles/jobs, so they have no category, status or trend to show. This
+// fallback mirrors that shape: name and usage only.
 export const adminSkills = SKILL_NAMES.map((name, i) => ({
-  id: `skill-${i + 1}`,
+  id: name,
   name,
-  category: SKILL_CATEGORIES[i % SKILL_CATEGORIES.length],
   usage: 42 + ((i * 53) % 360),
-  trend: i % 4 === 0 ? 'up' : i % 4 === 3 ? 'down' : 'flat',
-  status: i === 14 ? 'hidden' : 'active',
 }))
 
 export const activityLogs = [

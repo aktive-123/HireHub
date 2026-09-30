@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import { employerApi } from '../../services/api'
 import { useApiData } from '../../hooks/useApiData'
 import { STATUS_OPTIONS } from '../../data/applicants'
+import { downloadCsv, withDateStamp } from '../../utils/exportData'
 import PageHeader from '../../components/ui/PageHeader'
 import StatusBadge from '../../components/ui/StatusBadge'
 import DataTable from '../../components/ui/DataTable'
@@ -10,10 +11,30 @@ import TablePagination from '../../components/ui/TablePagination'
 import EmptyState from '../../components/ui/EmptyState'
 import Card from '../../components/ui/Card'
 import Badge from '../../components/ui/Badge'
+import Button from '../../components/ui/Button'
+import Alert from '../../components/ui/Alert'
 import LoadingState from '../../components/ui/LoadingState'
 import Reveal from '../../components/ui/Reveal'
 
 const PAGE_SIZE = 8
+
+// Explicit column order keeps the spreadsheet stable between exports; relying
+// on key order would reorder columns the moment the API payload changes.
+const EXPORT_COLUMNS = [
+  'Candidate',
+  'Email',
+  'Phone',
+  'Role',
+  'Job',
+  'Applied',
+  'Match %',
+  'Status',
+  'Location',
+  'Experience',
+  'Notice period',
+  'CV on file',
+  'Skills',
+]
 
 const matchesQuery = (applicant, query) =>
   !query ||
@@ -33,6 +54,7 @@ export default function EmployerApplicantsPage() {
   const [status, setStatus] = useState('all')
   const [query, setQuery] = useState('')
   const [page, setPage] = useState(1)
+  const [exportNotice, setExportNotice] = useState(null)
 
   const { data: list, loading, error, reload } = useApiData(
     () => employerApi.applicants(status === 'all' ? {} : { status }),
@@ -64,6 +86,40 @@ export default function EmployerApplicantsPage() {
   }, [allApplicants, query])
 
   const visible = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE)
+
+  // Exports everything currently matching the search and status filter, not
+  // just the visible page, so the file is never silently truncated by paging.
+  const handleExport = () => {
+    if (filtered.length === 0) return
+    const rows = filtered.map((applicant) => ({
+      Candidate: applicant.name,
+      Email: applicant.email,
+      Phone: applicant.phone || '',
+      Role: applicant.role || '',
+      Job: applicant.job,
+      Applied: applicant.applied_at || applicant.applied || '',
+      'Match %': applicant.match ?? '',
+      Status: applicant.status,
+      Location: applicant.location || '',
+      Experience: applicant.years || '',
+      'Notice period': applicant.notice || '',
+      'CV on file': applicant.has_cv ? 'Yes' : 'No',
+      Skills: (applicant.skills ?? []).join('; '),
+    }))
+    const ok = downloadCsv(
+      `${withDateStamp('hirehub-applicants')}.csv`,
+      rows,
+      EXPORT_COLUMNS
+    )
+    setExportNotice(
+      ok
+        ? {
+            type: 'success',
+            message: `Exported ${rows.length} applicant${rows.length === 1 ? '' : 's'} to CSV.`,
+          }
+        : { type: 'danger', message: 'There was nothing to export.' }
+    )
+  }
 
   if (loading) {
     return (
@@ -122,6 +178,37 @@ export default function EmployerApplicantsPage() {
             </div>
           }
         />
+
+        <div className="hh-toolbar hh-toolbar-between hh-mb-3">
+          <span className="text-muted small">
+            {filtered.length} applicant{filtered.length === 1 ? '' : 's'}
+            {filtered.length !== applicants.length ? ` of ${applicants.length}` : ''}
+          </span>
+          <Button
+            variant="outline"
+            icon="bi-download"
+            onClick={handleExport}
+            disabled={filtered.length === 0}
+            title={
+              filtered.length === 0
+                ? 'No applicants match the current filters'
+                : 'Export the filtered applicants as CSV'
+            }
+          >
+            Export CSV
+          </Button>
+        </div>
+
+        {exportNotice ? (
+          <Alert
+            variant={exportNotice.type}
+            dismissible
+            onDismiss={() => setExportNotice(null)}
+            className="hh-mb-3"
+          >
+            {exportNotice.message}
+          </Alert>
+        ) : null}
 
         <div className="hh-tabs hh-tabs--pills hh-mb-4" role="tablist" aria-label="Filter by status">
           {STATUS_OPTIONS.map((opt) => (

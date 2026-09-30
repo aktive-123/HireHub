@@ -25,10 +25,13 @@ function getInitials(name) {
 
 export default function AuthorAvatar({ name, size }) {
   const tone = PALETTE[hashString(name) % PALETTE.length]
+  // Only the box is dynamic. Type stays in the stylesheet, where the
+  // --hh-fs-12 floor is enforced, so a small avatar cannot shrink the
+  // monogram below the readable minimum.
   const style = {
     background: tone.bg,
     color: tone.fg,
-    ...(size ? { width: size, height: size, fontSize: Math.round(size * 0.38) } : {}),
+    ...(size ? { '--hh-avatar-size': `${size}px` } : {}),
   }
   return (
     <span className="hh-author-avatar" style={style} aria-hidden="true">

@@ -1,6 +1,8 @@
 import { Link, NavLink, Navigate, Outlet, useLocation } from 'react-router-dom'
 import whiteLogo from '../assets/white logo.png'
 import { useAuth } from '../context/AuthContext'
+import ErrorBoundary from '../components/common/ErrorBoundary'
+import SessionGate from '../components/common/SessionGate'
 import { initials } from '../utils/format'
 
 const PAGE_META = [
@@ -18,8 +20,15 @@ const PAGE_META = [
 
 export default function SeekerLayout() {
   const { pathname } = useLocation()
-  const { user, bootstrapped } = useAuth()
+  const { user, role, bootstrapped } = useAuth()
   if (bootstrapped && !user) return <Navigate to="/login" replace state={{ from: '/seeker' }} />
+  // Signed in as an employer or admin: send them to their own dashboard rather
+  // than rendering seeker pages whose API calls will all come back 403.
+  if (bootstrapped && role && role !== 'seeker') {
+    return <Navigate to={role === 'admin' ? '/admin' : '/employer'} replace />
+  }
+  // Hold the page back until the stored token has actually been verified.
+  if (!bootstrapped) return <SessionGate />
   const meta = PAGE_META.find((m) => m.pattern.test(pathname))
   const title = meta?.title ?? 'Job Seeker Portal'
   const userName = user?.name || 'Job Seeker'
@@ -143,7 +152,9 @@ export default function SeekerLayout() {
         </header>
 
         <main className="hh-dashboard-body" id="main-content">
-          <Outlet />
+          <ErrorBoundary>
+            <Outlet />
+          </ErrorBoundary>
         </main>
       </div>
     </div>

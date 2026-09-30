@@ -1,4 +1,5 @@
 import { Link, Outlet } from 'react-router-dom'
+import ErrorBoundary from '../components/common/ErrorBoundary'
 import logoImg from '../assets/HIREHUBlogo.png'
 
 export default function AuthLayout() {
@@ -13,7 +14,9 @@ export default function AuthLayout() {
           />
         </Link>
         <main id="main-content" className="w-100 d-flex justify-content-center">
-          <Outlet />
+          <ErrorBoundary>
+            <Outlet />
+          </ErrorBoundary>
         </main>
         <div className="mt-4 text-center">
           <Link to="/" className="hh-footer-link text-muted small">

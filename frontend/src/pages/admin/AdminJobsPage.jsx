@@ -10,6 +10,9 @@ import {
   adminJobs,
   MODERATION_LABELS,
 } from '../../data/admin'
+import { adminApi } from '../../services/api'
+import { adaptJobs } from '../../services/api/adminAdapters'
+import { useAdminList } from '../../hooks/useAdminData'
 
 const PAGE_SIZE = 8
 
@@ -17,23 +20,44 @@ export default function AdminJobsPage() {
   const [tab, setTab] = useState('all')
   const [query, setQuery] = useState('')
   const [page, setPage] = useState(1)
+  const [reloadTick, setReloadTick] = useState(0)
+
+  const { items: jobs } = useAdminList(
+    () => adminApi.jobs({}).then(adaptJobs),
+    adminJobs,
+    [reloadTick]
+  )
+
+  const changeStatus = (job, status) => {
+    adminApi
+      .updateJobStatus(job.id, status)
+      .catch(() => {})
+      .finally(() => setReloadTick((tick) => tick + 1))
+  }
+
+  const deleteJob = (job) => {
+    adminApi
+      .deleteJob(job.id)
+      .catch(() => {})
+      .finally(() => setReloadTick((tick) => tick + 1))
+  }
 
   const tabs = [
-    { key: 'all', label: 'All', count: adminJobs.length },
-    { key: 'published', label: 'Published', count: adminJobs.filter((job) => job.status === 'published').length },
-    { key: 'pending', label: 'Pending review', count: adminJobs.filter((job) => job.status === 'pending').length },
-    { key: 'flagged', label: 'Flagged', count: adminJobs.filter((job) => job.status === 'flagged').length },
+    { key: 'all', label: 'All', count: jobs.length },
+    { key: 'published', label: 'Published', count: jobs.filter((job) => job.status === 'published').length },
+    { key: 'pending', label: 'Pending review', count: jobs.filter((job) => job.status === 'pending').length },
+    { key: 'flagged', label: 'Flagged', count: jobs.filter((job) => job.status === 'flagged').length },
   ]
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase()
-    return adminJobs.filter((job) => {
+    return jobs.filter((job) => {
       const matchesTab = tab === 'all' || job.status === tab
       const matchesQuery =
         !q || job.title.toLowerCase().includes(q) || job.company.toLowerCase().includes(q)
       return matchesTab && matchesQuery
     })
-  }, [tab, query])
+  }, [tab, query, jobs])
 
   const visible = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE)
 
@@ -110,7 +134,7 @@ export default function AdminJobsPage() {
                 actions: (
                   <div className="d-flex justify-content-end gap-2">
                     {job.status !== 'published' && (
-                      <button type="button" className="hh-icon-btn" data-tooltip="Approve job" aria-label={`Approve ${job.title}`}>
+                      <button type="button" className="hh-icon-btn" data-tooltip="Approve job" aria-label={`Approve ${job.title}`} onClick={() => changeStatus(job, 'open')}>
                         <i className="bi bi-check2-circle" aria-hidden="true" />
                       </button>
                     )}
@@ -120,10 +144,11 @@ export default function AdminJobsPage() {
                       data-tooltip="Pause job"
                       aria-label={`Pause ${job.title}`}
                       disabled={job.status !== 'published'}
+                      onClick={() => changeStatus(job, 'closed')}
                     >
                       <i className="bi bi-pause-circle" aria-hidden="true" />
                     </button>
-                    <button type="button" className="hh-icon-btn hh-icon-btn-danger hh-tip-start" data-tooltip="Delete job" aria-label={`Delete ${job.title}`}>
+                    <button type="button" className="hh-icon-btn hh-icon-btn-danger hh-tip-start" data-tooltip="Delete job" aria-label={`Delete ${job.title}`} onClick={() => deleteJob(job)}>
                       <i className="bi bi-trash" aria-hidden="true" />
                     </button>
                   </div>

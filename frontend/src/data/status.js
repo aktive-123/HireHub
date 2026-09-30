@@ -43,6 +43,20 @@ closed: 'secondary',
   cancelled: 'danger',
   suspended: 'danger',
   declined: 'danger',
+
+  // Money (PaymentStatus). "succeeded" is the only green one: a pending or
+  // processing charge has not paid for anything yet, so showing it as
+  // active would overstate entitlements the employer does not have.
+  succeeded: 'success',
+  refunded: 'secondary',
+  processing: 'primary',
+  failed: 'danger',
+
+  // Subscriptions (SubscriptionStatus). past_due is orange rather than red:
+  // access is still granted while the retry window is open, so the warning has
+  // to be actionable without reading as "your account is closed".
+  trialing: 'primary',
+  past_due: 'warning',
 }
 
 export const STATUS_LABEL = {
@@ -74,4 +88,12 @@ export const STATUS_LABEL = {
   cancelled: 'Cancelled',
   suspended: 'Suspended',
   declined: 'Declined',
+
+  succeeded: 'Paid',
+  refunded: 'Refunded',
+  processing: 'Processing',
+  failed: 'Failed',
+
+  trialing: 'Trial',
+  past_due: 'Past due',
 }
