@@ -1,4 +1,7 @@
 import { apiClient } from './client'
+
+// Re-exported so pages take one import for the whole API surface.
+export { apiErrorMessage, UNREACHABLE_MESSAGE } from './client'
 import { saveResponseAsFile } from '../../utils/exportData'
 
 // Route-bound models are addressed by slug because their getRouteKeyName()

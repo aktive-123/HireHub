@@ -7,7 +7,7 @@ import Alert from '../../components/ui/Alert'
 import PasswordStrength from '../../components/ui/PasswordStrength'
 import ValidationChecklist from '../../components/ui/ValidationChecklist'
 import { GoogleIcon, LinkedInIcon } from '../../components/common/SocialIcons'
-import { authApi } from '../../services/api'
+import { authApi, apiErrorMessage } from '../../services/api'
 
 const ROLE_LINKS = [
   { key: 'seeker', to: '/register/job-seeker', label: 'Job Seeker' },
@@ -17,19 +17,6 @@ const ROLE_LINKS = [
 const COMPANY_SIZES = ['1-10', '11-50', '51-200', '201-500', '501-1,000', '1,000+']
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/
-
-const apiErrorMessage = (err) => {
-  const errors = err?.payload?.errors
-  if (Array.isArray(errors) && errors.length) return errors[0]
-  if (errors && typeof errors === 'object') {
-    const key = Object.keys(errors)[0]
-    if (key) {
-      const value = errors[key]
-      return Array.isArray(value) ? value[0] : value
-    }
-  }
-  return err?.payload?.message || 'Something went wrong. Please try again.'
-}
 
 export default function RegisterEmployerPage() {
   const navigate = useNavigate()

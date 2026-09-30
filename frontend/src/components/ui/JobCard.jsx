@@ -53,7 +53,7 @@ export default function JobCard({ job, index = 0, featured = false }) {
             >
               {job.company?.logoText || job.company?.name?.charAt(0) || 'H'}
             </div>
-            <div>
+            <div className="hh-job-company-info">
               <div className="hh-job-company-name">
                 {job.company?.name}
                 {job.company?.verified && (

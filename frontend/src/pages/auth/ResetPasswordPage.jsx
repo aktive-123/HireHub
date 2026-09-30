@@ -5,7 +5,7 @@ import Button from '../../components/ui/Button'
 import OtpInput from '../../components/ui/OtpInput'
 import PasswordStrength from '../../components/ui/PasswordStrength'
 import useOtpCountdown from '../../hooks/useOtpCountdown'
-import { authApi } from '../../services/api'
+import { authApi, apiErrorMessage } from '../../services/api'
 import { clearSession } from '../../services/api/client'
 
 const MIN_LENGTH = 8
@@ -87,7 +87,7 @@ export default function ResetPasswordPage() {
       setGrant(payload.grant)
       setStep('password')
     } catch (err) {
-      setError(err.payload?.message || 'That code is not valid. Check it and try again.')
+      setError(apiErrorMessage(err, 'That code is not valid. Check it and try again.'))
       setCode('')
     } finally {
       setSubmitting(false)
@@ -104,9 +104,9 @@ export default function ResetPasswordPage() {
     } catch (err) {
       if (err.status === 429) {
         start(err.retryAfter || 60)
-        setError(err.payload?.message || 'Please wait a moment before requesting another code.')
+        setError(apiErrorMessage(err, 'Please wait a moment before requesting another code.'))
       } else {
-        setError('We could not send a new code. Please try again.')
+        setError(apiErrorMessage(err, 'We could not send a new code. Please try again.'))
       }
     } finally {
       setResending(false)
@@ -140,7 +140,7 @@ export default function ResetPasswordPage() {
     } catch (err) {
       // 422 here means the grant expired or was already spent. It is single use
       // and time limited, so the only way forward is a fresh code.
-      setError(err.payload?.message || 'This reset has expired. Request a new code to continue.')
+      setError(apiErrorMessage(err, 'This reset has expired. Request a new code to continue.'))
       if (err.status === 422) {
         setGrant('')
         setStep('code')

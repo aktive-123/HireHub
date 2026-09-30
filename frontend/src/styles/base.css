@@ -410,13 +410,28 @@ select {
   transform: none;
 }
 
-/* Equal-height card grids: only when a Reveal is the single child of a
-   Bootstrap column (one card per cell — job cards, category cards, step
-   cards, feature cards) does it stretch to fill the cell height. Columns
-   that stack several cards (profile / detail pages) keep natural height so
-   cards sit close together instead of blowing up to the column height. */
+/* Equal-height card grids. Two ways a card fills its cell, both defined once
+   here rather than per section:
+     1. <Reveal> as the only child of a Bootstrap column (landing sections,
+        job and company cards). The column is a flex item of .row, so the row
+        stretches it to the tallest card in the line; the Reveal passes that
+        height on and the card inside fills it.
+     2. hh-h-100 on the card itself (grids without a Reveal).
+   Columns that stack several cards (profile / detail pages) keep natural
+   height so cards sit close together instead of blowing up to the column
+   height — hence :only-child. */
 .row > [class*='col-'] > .hh-reveal:only-child {
+  display: flex;
+  flex-direction: column;
   height: 100%;
+}
+
+/* The card is that Reveal's only child, so it grows into the cell. Without
+   this a card whose content is shorter than its neighbour's line stays short:
+   one long tag row or a three-line description was enough to make a single
+   card taller than the rest of the row. */
+.row > [class*='col-'] > .hh-reveal:only-child > * {
+  flex: 1 1 auto;
 }
 
 /* Zoom reveal variant: fade + subtle scale-up */

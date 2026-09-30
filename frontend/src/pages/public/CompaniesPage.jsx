@@ -32,7 +32,9 @@ export default function CompaniesPage() {
   const resultsRef = useRef(null)
 
   const { data: loaded, loading, error } = useApiData(() => companiesApi.list().then((r) => r.items), [])
-  const companies = loaded ?? []
+  // Stable identity: a bare `loaded ?? []` hands out a fresh array on every
+  // render, which both defeats the memo below and warns in the lint output.
+  const companies = useMemo(() => loaded ?? [], [loaded])
 
   const industriesList = useMemo(
     () => Array.from(new Set(companies.map((c) => c.industry).filter(Boolean))).sort(),
@@ -168,7 +170,11 @@ export default function CompaniesPage() {
     }
 
     return { filtered: sorted, counts }
-  }, [searchParams])
+    // companies has to be a dependency, not just searchParams: the memo first
+    // runs while the list is still loading, so without it the directory stayed
+    // on that empty result and rendered "No companies found" even though the
+    // API had returned every company.
+  }, [companies, industriesList, locationsList, searchParams])
 
   const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE))
   const pageCompanies = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE)

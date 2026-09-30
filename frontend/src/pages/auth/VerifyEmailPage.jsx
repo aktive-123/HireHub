@@ -5,7 +5,7 @@ import Button from '../../components/ui/Button'
 import OtpInput from '../../components/ui/OtpInput'
 import useOtpCountdown from '../../hooks/useOtpCountdown'
 import { useAuth } from '../../context/AuthContext'
-import { authApi } from '../../services/api'
+import { authApi, apiErrorMessage } from '../../services/api'
 
 /**
  * Confirming a signup with the six digit code that was emailed.
@@ -78,10 +78,7 @@ export default function VerifyEmailPage() {
             : '/seeker'
       navigate(target, { replace: true })
     } catch (err) {
-      setError(
-        err.payload?.message ||
-          'That code is not valid. Check it and try again.',
-      )
+      setError(apiErrorMessage(err, 'That code is not valid. Check it and try again.'))
       setCode('')
     } finally {
       setVerifying(false)
@@ -105,9 +102,9 @@ export default function VerifyEmailPage() {
         // The server refused inside the cooldown. Believe its own Retry-After
         // and restart the countdown rather than leaving the button dead.
         start(err.retryAfter || 60)
-        setError(err.payload?.message || 'Please wait a moment before requesting another code.')
+        setError(apiErrorMessage(err, 'Please wait a moment before requesting another code.'))
       } else {
-        setError('We could not send a new code. Please try again.')
+        setError(apiErrorMessage(err, 'We could not send a new code. Please try again.'))
       }
     } finally {
       setResending(false)

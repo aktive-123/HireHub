@@ -499,6 +499,11 @@
   border-bottom: 1px solid var(--hh-border);
   padding-block: var(--hh-space-3);
   margin-bottom: var(--hh-space-4);
+  /* Only one element in the card may absorb the leftover height, otherwise the
+     free space is split between two auto margins and the stats row drifts by
+     however much one tagline is longer than the next. Pinning the stats block
+     keeps it directly above the footer, so both line up across a row. */
+  margin-top: auto;
 }
 
 .hh-company-stat {
@@ -541,7 +546,6 @@
   align-items: center;
   justify-content: space-between;
   gap: var(--hh-space-3);
-  margin-top: auto;
 }
 
 /* -------------------------------------------------------------

@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
-import { jobsApi, seekerApi } from '../../services/api'
+import { jobsApi, seekerApi, apiErrorMessage } from '../../services/api'
 import { useApiData } from '../../hooks/useApiData'
 import { useAuth } from '../../context/AuthContext'
 import { useSavedJobs } from '../../context/SavedJobsContext'
@@ -82,8 +82,10 @@ export default function JobDetailsPage() {
       await seekerApi.apply({ job_id: job.id })
       setApplied(true)
     } catch (err) {
-      const message =
-        err?.payload?.message ?? err?.payload?.errors?.job_id?.[0] ?? 'Could not submit your application. Please try again.'
+      const message = apiErrorMessage(
+        err,
+        err?.payload?.errors?.job_id?.[0] ?? 'Could not submit your application. Please try again.'
+      )
       setAppError(message)
     } finally {
       setApplying(false)

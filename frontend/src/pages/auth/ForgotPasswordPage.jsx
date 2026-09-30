@@ -3,7 +3,7 @@ import { Link, useNavigate } from 'react-router-dom'
 import Button from '../../components/ui/Button'
 import FormInput from '../../components/ui/FormInput'
 import Alert from '../../components/ui/Alert'
-import { authApi } from '../../services/api'
+import { authApi, apiErrorMessage } from '../../services/api'
 
 export default function ForgotPasswordPage() {
   const navigate = useNavigate()
@@ -34,7 +34,7 @@ export default function ForgotPasswordPage() {
       if (err.status === 429) {
         setError('Too many reset requests. Wait a moment and try again.')
       } else {
-        setError(err.payload?.message || 'We could not send a reset code. Please try again.')
+        setError(apiErrorMessage(err, 'We could not send a reset code. Please try again.'))
       }
     } finally {
       setSubmitting(false)

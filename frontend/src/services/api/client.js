@@ -44,6 +44,34 @@ function messageForStatus(status) {
   return `Request failed with status ${status}`
 }
 
+// Said when the request never reached the API at all (backend down, wrong port,
+// no route). Callers used to fall back to wording like "we could not send your
+// code", which blames the action the visitor took and hides the one thing they
+// can act on: nothing is listening.
+export const UNREACHABLE_MESSAGE = 'We could not reach HireHub. Please check your connection and try again.'
+
+/**
+ * The message to show for a failed request.
+ *
+ * Prefers the API's own wording, then the first field-level validation error,
+ * and only then the caller's fallback. The unreachable case is checked first:
+ * it has no payload at all, so without this a dead backend is indistinguishable
+ * from a rejected request.
+ */
+export function apiErrorMessage(err, fallback = 'Something went wrong. Please try again.') {
+  if (err?.status === 0) return UNREACHABLE_MESSAGE
+  const errors = err?.payload?.errors
+  if (Array.isArray(errors) && errors.length) return errors[0]
+  if (errors && typeof errors === 'object') {
+    const key = Object.keys(errors)[0]
+    if (key) {
+      const value = errors[key]
+      return Array.isArray(value) ? value[0] : value
+    }
+  }
+  return err?.payload?.message || fallback
+}
+
 export const apiClient = {
   baseUrl: API_BASE_URL,
 
@@ -71,7 +99,7 @@ export const apiClient = {
     } catch (cause) {
       // fetch only rejects on a transport failure, so this is "the API was
       // unreachable" rather than "the API said no".
-      const error = new Error('We could not reach HireHub. Please check your connection and try again.')
+      const error = new Error(UNREACHABLE_MESSAGE)
       error.status = 0
       error.cause = cause
       throw error

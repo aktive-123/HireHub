@@ -39,7 +39,7 @@ export default function PopularCategoriesSection() {
                   <div className="hh-category-icon hh-category-icon--brand">
                     <i className={`bi bi-${cat.icon}`} aria-hidden="true" />
                   </div>
-                  <div>
+                  <div className="hh-category-body">
                     <h3 className="hh-category-title">{cat.name}</h3>
                     <div className="hh-category-count">{cat.count}</div>
                   </div>

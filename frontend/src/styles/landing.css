@@ -396,6 +396,16 @@
   display: flex;
   align-items: center;
   gap: var(--hh-space-3);
+  /* Takes the width the bookmark button leaves behind. Without min-width: 0 a
+     long company name keeps its min-content width and pushes the button past
+     the card edge, which gave the landing page 52px of horizontal scroll at
+     992px, where the featured grid shows four cards across. */
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.hh-job-company-info {
+  min-width: 0;
 }
 
 .hh-job-company-logo {
@@ -421,6 +431,10 @@
   display: flex;
   align-items: center;
   gap: 0.35rem;
+  /* Drops the Verified badge onto its own line in a narrow card rather than
+     forcing the row wider than the card. */
+  flex-wrap: wrap;
+  row-gap: 0.25rem;
 }
 
 .hh-job-bookmark-btn {
@@ -430,6 +444,7 @@
   font-size: var(--hh-icon-lg);
   cursor: pointer;
   padding: 0.25rem;
+  flex-shrink: 0;
   transition: color var(--hh-transition-fast);
   line-height: 1;
 }
@@ -583,6 +598,10 @@
   text-align: center;
   padding: var(--hh-space-6) var(--hh-space-4);
   position: relative;
+  /* Fills the tallest cell in the row so all four steps share one height. */
+  display: flex;
+  flex-direction: column;
+  height: 100%;
 }
 
 .hh-step-icon-wrapper {
@@ -636,6 +655,9 @@
   color: var(--hh-muted);
   max-width: 250px;
   margin-inline: auto;
+  /* Pinned to the bottom of the step card, so every description ends on the
+     same line even when one of them runs to three lines. */
+  margin-top: auto;
 }
 
 /* Popular Categories */
@@ -648,6 +670,9 @@
   align-items: center;
   gap: var(--hh-space-4);
   text-decoration: none;
+  /* Fills the tallest cell in its row; the icon and copy stay vertically
+     centred, so a two-line category name cannot shorten its neighbours. */
+  height: 100%;
   transition: all var(--hh-transition);
 }
 
@@ -683,12 +708,25 @@
   margin-bottom: 0.2rem;
 }
 
+/* Name and job count stack as a flex column so the count can be pinned to the
+   bottom of the card. Without this a two-line category name pushed its count
+   below the other cards' counts, even though the cards were the same height. */
+.hh-category-body {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;
+  align-self: stretch;
+  min-width: 0;
+}
+
 .hh-category-count {
   font-size: var(--hh-type-card-meta-size);
   font-weight: var(--hh-type-card-meta-weight);
   line-height: var(--hh-type-card-meta-lh);
   letter-spacing: var(--hh-type-card-meta-ls);
   color: var(--hh-muted);
+  margin-top: auto;
+  padding-top: var(--hh-space-2);
 }
 
 /* Why Choose Us Dark Section */
@@ -705,10 +743,13 @@
   border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: var(--hh-radius-lg);
   padding: var(--hh-space-5);
-  margin-bottom: var(--hh-space-4);
   display: flex;
   align-items: flex-start;
   gap: var(--hh-space-4);
+  /* Fills the tallest cell in the row. No bottom margin here: the row gutter
+     already spaces the rows, and a margin would leave the card 16px shorter
+     than the cell it is supposed to fill. */
+  height: 100%;
   transition: all var(--hh-transition);
 }
 

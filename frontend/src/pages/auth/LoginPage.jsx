@@ -5,19 +5,7 @@ import FormInput from '../../components/ui/FormInput'
 import Alert from '../../components/ui/Alert'
 import { GoogleIcon, LinkedInIcon } from '../../components/common/SocialIcons'
 import { useAuth } from '../../context/AuthContext'
-
-const apiErrorMessage = (err) => {
-  const errors = err?.payload?.errors
-  if (Array.isArray(errors) && errors.length) return errors[0]
-  if (errors && typeof errors === 'object') {
-    const key = Object.keys(errors)[0]
-    if (key) {
-      const value = errors[key]
-      return Array.isArray(value) ? value[0] : value
-    }
-  }
-  return err?.payload?.message || 'Something went wrong. Please try again.'
-}
+import { apiErrorMessage } from '../../services/api'
 
 export default function LoginPage() {
   const navigate = useNavigate()
