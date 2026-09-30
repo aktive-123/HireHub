@@ -44,7 +44,6 @@
   --hh-gray-700: #334155;
   --hh-gray-900: #0f172a;
 
-  --hh-muted: var(--hh-gray-600);
   --hh-muted-light: var(--hh-gray-400);
 
   --hh-bg: #ffffff;
@@ -72,28 +71,380 @@
   --hh-info: #0891b2;
   --hh-info-soft: #ecfeff;
 
-  --hh-font-sans: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  /* =================================================================
+     TYPOGRAPHY
+     -----------------------------------------------------------------
+     One family for the entire product — headings and body alike. A
+     serif accent was tried here once and read as a different site, so
+     font-family is deliberately set in exactly one place (--hh-font-sans,
+     below) and nothing below re-declares it.
 
-  --hh-fs-xs: 0.75rem;
-  --hh-fs-sm: 0.875rem;
-  --hh-fs-base: 1rem;
-  --hh-fs-md: 1.125rem;
-  --hh-fs-lg: 1.25rem;
-  --hh-fs-xl: 1.5rem;
-  --hh-fs-2xl: 1.875rem;
-  --hh-fs-3xl: 2.25rem;
-  --hh-fs-4xl: 3rem;
+     The type scale is defined in two layers:
 
-  /* Shared hero system tokens – one source of truth for every hero on the
-     site so the pages feel like a single system (padding rhythm, min-height,
-     type scale, and text-block widths all derive from these). */
-  --hh-fs-hero-eyebrow: clamp(0.75rem, 0.7rem + 0.5vw, 0.875rem);
-  --hh-fs-hero-title: clamp(2rem, 1.5rem + 1.8vw, 3.5rem);
-  --hh-fs-hero-subtitle: clamp(0.9375rem, 0.85rem + 0.4vw, 1.125rem);
+       1. The size ramp (--hh-fs-*) — the ONLY font sizes permitted
+          anywhere on the site. Nothing may introduce a value outside
+          this list, and nothing may render below --hh-fs-12.
+       2. The role tokens (--hh-type-*) — a complete typographic style
+          (size + weight + line-height + tracking) per role. These are
+          what components reference, so a heading is described by its
+          role rather than by four loose numbers that can drift.
+
+     scripts/audit-typography.mjs enforces both layers in CI.
+     ================================================================= */
+
+  /* ---- The one permitted family ----------------------------------
+     Inter is a geometric-humanist sans released under the SIL Open Font
+     License 1.1, which explicitly permits self-hosting, so the variable
+     font is bundled from /public/fonts/InterVariable.woff2 and declared in
+     the single @font-face at the top of base.css. Every visitor therefore
+     gets the same typeface, on every OS, with no third-party request.
+
+     This replaced a Gotham-first stack. Gotham is a commercial Hoefler&Co
+     face whose web use needs a paid licence, so it could only ever be
+     requested from the visitor's own OS and fell through to a different
+     face everywhere else.
+
+     The fallback chain stays load-bearing for the brief moment before the
+     woff2 finishes downloading: it is deliberately geometric/neutral
+     (system-ui first, then Helvetica/Arial) so text metrics barely shift
+     and the layout does not reflow. `font-display: swap` covers the rest. */
+  --hh-font-sans: "Inter", system-ui, -apple-system, "Segoe UI", Roboto,
+    "Helvetica Neue", Helvetica, Arial, "Liberation Sans", sans-serif;
+
+  /* ---- Layer 1: the size ramp ------------------------------------ */
+  --hh-fs-12: 0.75rem;     /* 12px — hard floor, nothing renders smaller  */
+  --hh-fs-13: 0.8125rem;   /* 13px — sub-text / muted body copy           */
+  --hh-fs-14: 0.875rem;    /* 14px — card body                            */
+  --hh-fs-15: 0.9375rem;   /* 15px — card body, callout body              */
+  --hh-fs-16: 1rem;        /* 16px — site body copy / list copy           */
+  --hh-fs-17: 1.0625rem;   /* 17px — hero standfirst, long-form reading   */
+  --hh-fs-18: 1.125rem;    /* 18px — h3, pull-quote                       */
+  --hh-fs-20: 1.25rem;     /* 20px — callout title, large card title      */
+  --hh-fs-22: 1.375rem;    /* 22px — detail card heading                  */
+  --hh-fs-24: 1.5rem;      /* 24px — article subheading                   */
+  --hh-fs-28: 1.75rem;     /* 28px — card stat, lower bound               */
+  --hh-fs-32: 2rem;        /* 2rem — page/section title, stat             */
+  --hh-fs-36: 2.25rem;     /* 36px — page/section title, wide screens     */
+  /* Display steps. A hero title is the only text allowed above the page/section
+     title — it has to read as the focal point of the page, a clear tier above
+     every section heading. A clamp() is not permitted on a size (see the
+     audit), so the responsive steps come off the ramp instead. */
+  --hh-fs-40: 2.5rem;      /* 40px — display small screens, article + detail hero */
+  --hh-fs-44: 2.75rem;     /* 44px — display                              */
+  --hh-fs-48: 3rem;        /* 48px — display, standard desktop            */
+  --hh-fs-56: 3.5rem;      /* 56px — display, wide screens                */
+
+  /* ---- Icon sizing ------------------------------------------------- *
+     Icons were being sized with font-size, which is how fifteen slightly
+     different glyph sizes (0.8 / 0.85 / 0.9 / 0.95 / 1.05 / 1.1 / 1.15 /
+     1.25 / 1.35 / 1.4 / 1.5 / 1.75 / 1.8 / 2 / 2.25rem) ended up spread
+     across the site. An icon is not type, so it gets its own scale and the
+     type scale below stays reserved for text.
+
+     Using font-size to size an icon is still the technique (icon fonts size
+     by glyph), but the value now comes from --hh-icon-*, never --hh-fs-*,
+     so "no text outside the scale" is enforceable. */
+  --hh-icon-xs: 0.75rem;    /* 12px — inline chevrons, meta-row icons  */
+  --hh-icon-sm: 0.875rem;   /* 14px — buttons, social, search           */
+  --hh-icon-md: 1.125rem;   /* 18px — the common in-card icon          */
+  --hh-icon-lg: 1.25rem;    /* 20px — topbar, stat tiles, nav arrows    */
+  --hh-icon-xl: 1.5rem;     /* 24px — feature and contact icons        */
+  --hh-icon-2xl: 2rem;      /* 32px — empty states, upload, large mark */
+
+  /* ---- Layer 2: role tokens -------------------------------------- */
+
+  /* display — the hero heading, and the largest text on the site. It sits
+     above every page/section title on purpose: at 48px it is a clear tier
+     above the 32px section title, so the hero reads as the focal point
+     rather than as "a slightly bigger h2". Both halves of a split hero title
+     use this same role, so the white line and the accent line can never drift
+     apart in size. 800 rather than 700 so the hero carries the page on its
+     own — Inter is loaded at 400/500/600/700/800, so this is a real weight
+     and not a synthesised faux bold. */
+  --hh-type-display-size: var(--hh-fs-48);
+  --hh-type-display-weight: var(--hh-fw-extrabold);
+  --hh-type-display-lh: 1.1;
+  --hh-type-display-ls: -0.025em;
+
+  /* hero standfirst — the paragraph directly under a hero heading. Set
+     noticeably larger and looser than the 16px body role: it is the only
+     sentence on the page explaining what the site is, and at body size it
+     read as an afterthought under a 48px title. Lightened to soft slate for
+     contrast against the navy hero artwork, where pure white competed with
+     the background pattern. */
+  --hh-type-hero-body-size: var(--hh-fs-20);
+  --hh-type-hero-body-weight: 400;
+  --hh-type-hero-body-lh: 1.6;
+  --hh-type-hero-body-ls: 0;
+
+  /* h1 — page title. Deliberately the SAME size and weight as h2: on a public
+     page the h1 is either the hero (display) or a section-sized block heading,
+     and giving it a lighter step meant a page title read weaker than the
+     section title directly below it. */
+  --hh-type-h1-size: var(--hh-fs-32);
+  --hh-type-h1-weight: var(--hh-fw-extrabold);
+  --hh-type-h1-lh: 1.2;
+  --hh-type-h1-ls: -0.015em;
+
+  /* Console page name — the h1 every admin, job seeker and employer page opens
+     with. Set to the same 18px as the paragraph copy below it, so the three
+     dashboards read as one system; the heading still separates by weight
+     (extrabold) rather than by size. Scoped to the dashboards in dashboard.css,
+     so public, landing and auth pages keep the 32px h1 above. */
+  --hh-type-console-title-size: var(--hh-fs-18);
+
+  /* Console sidebar navigation — Dashboard, Find Jobs, My Applications, Saved
+     Jobs, CV / Resume, Profile, Notifications, Settings and the admin and
+     employer equivalents. Same 18px as the page copy, so the menu matches the
+     content it navigates to. */
+  --hh-type-console-nav-size: var(--hh-fs-18);
+
+  /* h2 — section title ("Featured Jobs", "Popular Job Categories", "Why Choose
+     HireHub?"). One role for every section heading on every page, so no
+     section can render smaller or lighter than another. */
+  --hh-type-h2-size: var(--hh-fs-32);
+  --hh-type-h2-weight: var(--hh-fw-extrabold);
+  --hh-type-h2-lh: 1.2;
+  --hh-type-h2-ls: -0.015em;
+
+  /* h3 — card / subsection title */
+  --hh-type-h3-size: var(--hh-fs-18);
+  --hh-type-h3-weight: 600;
+  --hh-type-h3-lh: 1.4;
+  --hh-type-h3-ls: 0;
+
+  /* h4 — small heading */
+  --hh-type-h4-size: var(--hh-fs-16);
+  --hh-type-h4-weight: 600;
+  --hh-type-h4-lh: 1.4;
+  --hh-type-h4-ls: 0;
+
+  /* body / p — the default reading size for the whole site */
+  --hh-type-body-size: var(--hh-fs-16);
+  --hh-type-body-weight: 400;
+  --hh-type-body-lh: 1.6;
+  --hh-type-body-ls: 0;
+
+  /* sub-text / muted p — secondary copy, never bold */
+  --hh-type-sub-size: var(--hh-fs-13);
+  --hh-type-sub-weight: 400;
+  --hh-type-sub-lh: 1.5;
+  --hh-type-sub-ls: 0;
+
+  /* caption / label — small field labels. 500, not 600: a form label is UI
+     chrome, and semibold there competes with the value it sits above. */
+  --hh-type-caption-size: var(--hh-fs-12);
+  --hh-type-caption-weight: 500;
+  --hh-type-caption-lh: 1.4;
+  --hh-type-caption-ls: 0.02em;
+
+  /* eyebrow — the small uppercase label above a section heading. Its own
+     role rather than caption, because an eyebrow is 600 with wide tracking
+     while a form label is 500 with normal tracking, and sharing one role
+     meant one of the two was always wrong. */
+  --hh-type-eyebrow-size: var(--hh-fs-12);
+  --hh-type-eyebrow-weight: 600;
+  --hh-type-eyebrow-lh: 1.4;
+  --hh-type-eyebrow-ls: 0.05em;
+
+  /* card title */
+  --hh-type-card-title-size: var(--hh-fs-17);
+  --hh-type-card-title-weight: 600;
+  --hh-type-card-title-lh: 1.4;
+  --hh-type-card-title-ls: 0;
+
+  /* card title, large — a card that carries an argument rather than a listing
+     (the About values cards). A step above card-title so a values card does
+     not read as the same object as a job card. */
+  --hh-type-card-title-lg-size: var(--hh-fs-20);
+  --hh-type-card-title-lg-weight: 600;
+  --hh-type-card-title-lg-lh: 1.4;
+  --hh-type-card-title-lg-ls: 0;
+
+  /* card body — job/category/feature card descriptions */
+  --hh-type-card-body-size: var(--hh-fs-15);
+  --hh-type-card-body-weight: 400;
+  --hh-type-card-body-lh: 1.6;
+  --hh-type-card-body-ls: 0;
+
+  /* card sub-text — meta rows (location, salary, tags), timestamps, status
+     labels. 400, not 500: a meta row is a list of facts, and medium weight
+     made every card look busier than the job title it supports. */
+  --hh-type-card-meta-size: var(--hh-fs-14);
+  --hh-type-card-meta-weight: 400;
+  --hh-type-card-meta-lh: 1.5;
+  --hh-type-card-meta-ls: 0;
+
+  /* card stat — the KPI figure. One of only two roles where 800+ is allowed. */
+  --hh-type-stat-size: var(--hh-fs-32);
+  --hh-type-stat-weight: var(--hh-fw-extrabold);
+  --hh-type-stat-lh: 1.1;
+  --hh-type-stat-ls: -0.01em;
+
+  /* card stat, large — a stat that is meant to be a focal number in its own
+     right (the About page figures). A separate role from `stat` because the
+     shared one also drives dashboard KPI tiles, which must not grow. */
+  --hh-type-stat-lg-size: var(--hh-fs-40);
+  --hh-type-stat-lg-weight: var(--hh-fw-extrabold);
+  --hh-type-stat-lg-lh: 1.1;
+  --hh-type-stat-lg-ls: -0.01em;
+
+  /* =================================================================
+     Long-form / content-page roles.
+     =================================================================
+     Reading copy needs a different scale from UI copy. It is set larger and
+     looser than the 16px body role because a full measure of 16px at 1.6 is
+     tight to read for several paragraphs, and the ink is a softer slate so a
+     wall of long-form text does not read as bold as the headings above it.
+     These are page-template roles, not component roles: every article and
+     guide sub-page binds to them, so a new one inherits the scale. */
+
+  /* article title — the Career Resources page hero. A display step below the
+     standard page hero: an article title is a sentence, not a brand line, so
+     it is set a tier lower to keep a long headline on two comfortable lines. */
+  --hh-type-article-title-size: var(--hh-fs-40);
+  --hh-type-article-title-weight: var(--hh-fw-extrabold);
+  --hh-type-article-title-lh: 1.15;
+  --hh-type-article-title-ls: -0.02em;
+
+  /* article meta — category tag, author, date, read time */
+  --hh-type-article-meta-size: var(--hh-fs-14);
+  --hh-type-article-meta-weight: var(--hh-fw-medium);
+  --hh-type-article-meta-lh: 1.5;
+  --hh-type-article-meta-ls: 0;
+
+  /* article body — long-form paragraph copy */
+  --hh-type-article-body-size: var(--hh-fs-17);
+  --hh-type-article-body-weight: 400;
+  --hh-type-article-body-lh: 1.7;
+  --hh-type-article-body-ls: 0;
+
+  /* article subheading — the h2 inside an article body */
+  --hh-type-article-subhead-size: var(--hh-fs-24);
+  --hh-type-article-subhead-weight: var(--hh-fw-bold);
+  --hh-type-article-subhead-lh: 1.3;
+  --hh-type-article-subhead-ls: -0.01em;
+
+  /* pull-quote — a quoted line lifted out of the body measure */
+  --hh-type-article-quote-size: var(--hh-fs-18);
+  --hh-type-article-quote-weight: var(--hh-fw-medium);
+  --hh-type-article-quote-lh: 1.6;
+  --hh-type-article-quote-ls: 0;
+
+  /* list body — checklist / tick-list items. Held at body size so a bullet
+     list reads as the same voice as the paragraphs around it. */
+  --hh-type-list-body-size: var(--hh-fs-16);
+  --hh-type-list-body-weight: 400;
+  --hh-type-list-body-lh: 1.6;
+  --hh-type-list-body-ls: 0;
+
+  /* callout — a boxed "Next Step" block inside a page */
+  --hh-type-callout-title-size: var(--hh-fs-20);
+  --hh-type-callout-title-weight: var(--hh-fw-bold);
+  --hh-type-callout-title-lh: 1.3;
+  --hh-type-callout-title-ls: -0.01em;
+
+  --hh-type-callout-body-size: var(--hh-fs-15);
+  --hh-type-callout-body-weight: 400;
+  --hh-type-callout-body-lh: 1.6;
+  --hh-type-callout-body-ls: 0;
+
+  /* related-article excerpt — deliberately a step under card body, because an
+     excerpt is a teaser and should not compete with the card title. */
+  --hh-type-related-excerpt-size: var(--hh-fs-14);
+  --hh-type-related-excerpt-weight: 400;
+  --hh-type-related-excerpt-lh: 1.5;
+  --hh-type-related-excerpt-ls: 0;
+
+  /* =================================================================
+     Two-column detail-page roles (job listing, company profile, and any
+     other page built from the same card + sticky-sidebar layout). */
+
+  /* detail title — the hero title of a detail page ("Senior Frontend
+     Developer"). Its own role, NOT display: binding it to display meant the
+     job title tracked every change to the marketing hero and grew past the
+     40px ceiling, making one listing the largest text on the site. */
+  --hh-type-detail-title-size: var(--hh-fs-40);
+  --hh-type-detail-title-weight: var(--hh-fw-extrabold);
+  --hh-type-detail-title-lh: 1.2;
+  --hh-type-detail-title-ls: -0.02em;
+
+  /* detail sub — company name, badges, location under the detail title */
+  --hh-type-detail-sub-size: var(--hh-fs-15);
+  --hh-type-detail-sub-weight: var(--hh-fw-medium);
+  --hh-type-detail-sub-lh: 1.5;
+  --hh-type-detail-sub-ls: 0;
+
+  /* detail section — a heading inside a detail card ("About this role",
+     "Responsibilities"). A tier below the site section title: it heads a
+     panel, not a page section. */
+  --hh-type-detail-section-size: var(--hh-fs-22);
+  --hh-type-detail-section-weight: var(--hh-fw-bold);
+  --hh-type-detail-section-lh: 1.3;
+  --hh-type-detail-section-ls: -0.01em;
+
+  /* detail body — paragraphs and list items inside a detail card */
+  --hh-type-detail-body-size: var(--hh-fs-17);
+  --hh-type-detail-body-weight: 400;
+  --hh-type-detail-body-lh: 1.65;
+  --hh-type-detail-body-ls: 0;
+
+  /* detail label / value — the sidebar fact table ("Employment: Full-time") */
+  --hh-type-detail-label-size: var(--hh-fs-13);
+  --hh-type-detail-label-weight: var(--hh-fw-medium);
+  --hh-type-detail-label-lh: 1.5;
+  --hh-type-detail-label-ls: 0;
+
+  --hh-type-detail-value-size: var(--hh-fs-15);
+  --hh-type-detail-value-weight: 400;
+  --hh-type-detail-value-lh: 1.6;
+  --hh-type-detail-value-ls: 0;
+
+  /* ---- Legacy numeric aliases ----------------------------------- */
+  /* Kept so the existing --hh-fs-* call sites keep working while they
+     migrate to role tokens. Every one is a step ON the ramp above; the
+     values that previously sat off-ramp (1.25 / 1.875 / 2.25 / 3rem)
+     are snapped to the nearest permitted step, because a value outside
+     the ramp is exactly the inconsistency this system exists to remove.
+     Prefer the role tokens in new code. */
+  --hh-fs-xs: var(--hh-fs-12);    /* 12px */
+  --hh-fs-sm: var(--hh-fs-14);    /* 14px */
+  --hh-fs-base: var(--hh-fs-16);  /* 16px */
+  --hh-fs-md: var(--hh-fs-18);    /* 18px */
+  --hh-fs-lg: var(--hh-fs-20);    /* 20px — now an on-ramp step in its own right */
+  --hh-fs-xl: var(--hh-fs-24);    /* 24px */
+  --hh-fs-2xl: var(--hh-fs-32);   /* was 30px — off-ramp, snapped to 32px */
+  --hh-fs-3xl: var(--hh-fs-36);   /* 36px */
+  --hh-fs-4xl: var(--hh-fs-48);   /* 48px */
+
+  /* Text colours. --hh-text-muted is the slate used for all sub-text and
+     caption copy (WCAG AA on white), and --hh-muted aliases it so the 86
+     existing muted declarations inherit the same value instead of drifting
+     onto a second gray. --hh-text-subtle is the quieter step for decorative
+     and disabled-adjacent text. None of them is a flat #999: a desaturated
+     gray like that reads as disabled on a white surface and fails contrast. */
+  --hh-text-muted: #64748b;
+  --hh-muted: var(--hh-text-muted);
+  --hh-text-subtle: #94a3b8;
+  /* Long-form reading ink. A softer slate than --hh-text: a full measure of
+     near-black paragraph copy is as heavy as the headings it sits under, so
+     article and detail body copy drop one step and read as text, not display. */
+  --hh-text-reading: var(--hh-gray-700);
+  /* Hero standfirst colour. Soft slate rather than white: the hero sits on a
+     busy navy artwork pattern, and white at 17px lost its edge against it.
+     Still well above AA on the navy. */
+  --hh-hero-body: #cbd5e1;
+
+  /* Hero type now comes from the display and hero-body roles rather than
+     from h1/sub, which is why a hero can be a size tier above every other
+     heading while the markup still asks for a hero title by name. */
+  --hh-fs-hero-eyebrow: var(--hh-type-eyebrow-size);
+  --hh-fs-hero-title: var(--hh-type-display-size);
+  --hh-fs-hero-subtitle: var(--hh-type-hero-body-size);
   --hh-hero-pad-block: clamp(3.5rem, 7vw, 6rem);
   --hh-hero-min-height: clamp(340px, 44vh, 480px);
   --hh-hero-title-max: 680px;
-  --hh-hero-text-max: 560px;
+  --hh-hero-text-max: 600px;
   --hh-hero-blur: 6px;
   --hh-hero-blur-scale: 1.05;
   --hh-hero-accent: color-mix(in srgb, var(--hh-primary) 30%, #fff);

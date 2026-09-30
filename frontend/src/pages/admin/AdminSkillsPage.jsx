@@ -1,86 +1,94 @@
 import { useState, useMemo } from 'react'
 import AdminPageHeader from '../../components/admin/AdminPageHeader'
-import Badge from '../../components/ui/Badge'
 import DataTable from '../../components/ui/DataTable'
 import TablePagination from '../../components/ui/TablePagination'
 import Card from '../../components/ui/Card'
 import EmptyState from '../../components/ui/EmptyState'
 import { adminSkills } from '../../data/admin'
+import { adminApi } from '../../services/api'
+import { adaptSkills } from '../../services/api/adminAdapters'
+import { useAdminList } from '../../hooks/useAdminData'
 
 const PAGE_SIZE = 8
 
-const CATEGORY_VARIANT = { Technology: 'primary', Design: 'info', Business: 'success' }
-
-const TREND_META = {
-  up: { icon: 'bi-arrow-up-right', variant: 'success', label: 'Rising' },
-  down: { icon: 'bi-arrow-down-right', variant: 'danger', label: 'Declining' },
-  flat: { icon: 'bi-dash', variant: 'secondary', label: 'Steady' },
-}
+const SORTS = [
+  { key: 'usage', label: 'Most used' },
+  { key: 'name', label: 'A–Z' },
+]
 
 export default function AdminSkillsPage() {
-  const [tab, setTab] = useState('all')
   const [query, setQuery] = useState('')
+  const [sort, setSort] = useState('usage')
   const [page, setPage] = useState(1)
 
-  const categories = ['all', 'Technology', 'Design', 'Business']
-
-  const tabs = categories.map((category) => ({
-    key: category,
-    label: category === 'all' ? 'All' : category,
-    count: category === 'all' ? adminSkills.length : adminSkills.filter((skill) => skill.category === category).length,
-  }))
+  const { items: skills, loading, error } = useAdminList(
+    () => adminApi.skills().then(adaptSkills),
+    adminSkills
+  )
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase()
-    return adminSkills.filter((skill) => {
-      const matchesTab = tab === 'all' || skill.category === tab
-      const matchesQuery = !q || skill.name.toLowerCase().includes(q)
-      return matchesTab && matchesQuery
-    })
-  }, [tab, query])
+    const matches = skills.filter((skill) => !q || skill.name.toLowerCase().includes(q))
+
+    return [...matches].sort((a, b) =>
+      sort === 'name' ? a.name.localeCompare(b.name) : b.usage - a.usage
+    )
+  }, [query, sort, skills])
 
   const visible = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE)
+
+  // Share is measured against the most-mentioned skill in the current result
+  // set, so the bar always has a full-width leader to compare against.
+  const maxUsage = Math.max(1, ...filtered.map((skill) => skill.usage))
 
   return (
     <section className="hh-section-space bg-white">
       <div className="page-container">
         <AdminPageHeader
           eyebrow="ADMIN CONSOLE"
-          title="Skills"
-          subtitle="Track how often skills appear across profiles and postings."
+          title="Skills in demand"
+          subtitle="Derived from skills listed on candidate profiles and job postings."
         />
 
-        <div className="hh-tabs hh-tabs--pills hh-mb-3" role="tablist" aria-label="Skill category">
-          {tabs.map(({ key, label, count }) => (
-            <button
-              key={key}
-              type="button"
-              role="tab"
-              aria-selected={tab === key}
-              className={`hh-tab ${tab === key ? 'is-active' : ''}`}
-              onClick={() => {
-                setTab(key)
+        {error ? (
+          <div className="alert alert-danger" role="alert">
+            Could not load skills: {error.message}
+          </div>
+        ) : null}
+
+        <div className="hh-toolbar hh-toolbar-between hh-mb-4">
+          <div className="hh-search-field-lg">
+            <i className="bi bi-search" aria-hidden="true" />
+            <input
+              type="search"
+              className="hh-form-control"
+              placeholder="Search skills…"
+              value={query}
+              onChange={(e) => {
+                setQuery(e.target.value)
                 setPage(1)
               }}
-            >
-              {label} <span className="hh-tab-count">{count}</span>
-            </button>
-          ))}
-        </div>
+              aria-label="Search skills"
+            />
+          </div>
 
-        <div className="hh-search-field-lg hh-mb-4">
-          <i className="bi bi-search" aria-hidden="true" />
-          <input
-            type="search"
-            className="hh-form-control"
-            placeholder="Search skills…"
-            value={query}
-            onChange={(e) => {
-              setQuery(e.target.value)
-              setPage(1)
-            }}
-            aria-label="Search skills"
-          />
+          <div className="hh-tabs hh-tabs--pills" role="tablist" aria-label="Sort skills">
+            {SORTS.map((option) => (
+              <button
+                key={option.key}
+                type="button"
+                role="tab"
+                aria-selected={sort === option.key}
+                className={`hh-tab ${sort === option.key ? 'is-active' : ''}`}
+                onClick={() => {
+                  setSort(option.key)
+                  setPage(1)
+                }}
+              >
+                {option.label}
+              </button>
+            ))}
+          </div>
         </div>
 
         <Card className="hh-card-body hh-p-0 hh-card--table">
@@ -88,60 +96,23 @@ export default function AdminSkillsPage() {
             <DataTable
               zebra
               columns={[
+                { key: 'rank', label: '#', width: 60 },
                 { key: 'skill', label: 'Skill' },
-                { key: 'category', label: 'Category' },
-                { key: 'usage', label: 'Usage', minWidth: 200 },
-                { key: 'trend', label: 'Trend' },
-                { key: 'status', label: 'Status' },
-                { key: 'actions', label: 'Actions', align: 'right' },
+                { key: 'usage', label: 'Mentions', minWidth: 220 },
               ]}
-              rows={visible.map((skill) => {
-                const maxUsage = 400
-                const pct = Math.round((Math.min(skill.usage, maxUsage) / maxUsage) * 100)
-                const trend = TREND_META[skill.trend]
+              rows={visible.map((skill, index) => {
+                const pct = Math.round((skill.usage / maxUsage) * 100)
                 return {
-                  id: skill.id,
+                  id: skill.name,
+                  rank: <span className="text-muted">{page * PAGE_SIZE - PAGE_SIZE + index + 1}</span>,
                   skill: <span className="hh-fw-semibold">{skill.name}</span>,
-                  category: (
-                    <Badge variant={CATEGORY_VARIANT[skill.category]} sm>
-                      {skill.category}
-                    </Badge>
-                  ),
-usage: (
+                  usage: (
                     <>
                       <div className="hh-progress hh-mb-1">
-                        <div
-                          className={`hh-progress-bar ${skill.trend === 'up' ? 'hh-progress-bar--success' : skill.trend === 'down' ? 'hh-progress-bar--accent' : ''}`}
-                          style={{ width: `${pct}%` }}
-                        />
+                        <div className="hh-progress-bar" style={{ width: `${pct}%` }} />
                       </div>
                       <span className="text-muted small">{skill.usage} mentions</span>
                     </>
-                  ),
-                  trend: (
-                    <Badge variant={trend.variant} sm icon={trend.icon}>
-                      {trend.label}
-                    </Badge>
-                  ),
-                  status: (
-                    <Badge variant={skill.status === 'active' ? 'success' : 'secondary'} dot sm>
-                      {skill.status === 'active' ? 'Active' : 'Hidden'}
-                    </Badge>
-                  ),
-                  actions: (
-                    <div className="d-flex justify-content-end gap-2">
-                      <button type="button" className="hh-icon-btn" data-tooltip="Edit skill" aria-label={`Edit ${skill.name}`}>
-                        <i className="bi bi-pencil" aria-hidden="true" />
-                      </button>
-                      <button
-                        type="button"
-                        className={`hh-icon-btn ${skill.status === 'active' ? 'hh-icon-btn-danger' : ''} hh-tip-start`}
-                        data-tooltip={skill.status === 'active' ? 'Hide skill' : 'Show skill'}
-                        aria-label={skill.status === 'active' ? `Hide ${skill.name}` : `Show ${skill.name}`}
-                      >
-                        <i className={`bi ${skill.status === 'active' ? 'bi-eye-slash' : 'bi-eye'}`} aria-hidden="true" />
-                      </button>
-                    </div>
                   ),
                 }
               })}
@@ -149,10 +120,16 @@ usage: (
             />
           ) : (
             <div className="hh-p-5">
-              <EmptyState icon="cpu" title="No skills match" text="Try a different search term or category filter." />
+              <EmptyState
+                icon="cpu"
+                title="No skills match"
+                text="Try a different search term."
+              />
             </div>
           )}
         </Card>
+
+        {loading ? <p className="text-muted small mt-3 mb-0">Refreshing skills…</p> : null}
 
         <TablePagination
           page={page}

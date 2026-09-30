@@ -39,10 +39,22 @@ export function AuthProvider({ children }) {
         localStorage.setItem(USER_KEY, JSON.stringify(next))
         setUser(next)
       })
-      .catch(() => {
+      .catch((err) => {
         if (!active) return
-        clearSession()
-        setUser(null)
+
+        // Only a real 401 means the token is no longer accepted. Everything else
+        // — the API being down, a 500, a 429, the browser being offline — says
+        // nothing about whether this session is still valid, and signing the
+        // user out on a transient failure is exactly how a public page ends up
+        // showing "logged out" while a perfectly good token sits in storage.
+        //
+        // Nothing needs doing here even for a 401: the API client has already
+        // cleared the session and fired `hh:session-expired`, which the listener
+        // below turns into a null user. Leaving the cached user in place keeps
+        // the navbar stable while that round trip finishes.
+        if (err?.status === 401 || err?.status === 419) return
+
+        setUser((current) => current)
       })
       .finally(() => {
         if (active) {
@@ -72,6 +84,20 @@ export function AuthProvider({ children }) {
     }
     clearSession()
     setUser(null)
+  }, [])
+
+  /**
+   * Revoke every token on the account, not just this browser's. This is the
+   * action to take when a device may have been stolen, so it deliberately
+   * leaves the user signed out everywhere including here.
+   */
+  const logoutAll = useCallback(async () => {
+    try {
+      await authApi.logoutAll()
+    } finally {
+      clearSession()
+      setUser(null)
+    }
   }, [])
 
   const setSession = useCallback((payload) => {
@@ -106,10 +132,11 @@ export function AuthProvider({ children }) {
       bootstrapped,
       login,
       logout,
+      logoutAll,
       setSession,
       refresh,
     }),
-    [user, loading, bootstrapped, login, logout, setSession, refresh]
+    [user, loading, bootstrapped, login, logout, logoutAll, setSession, refresh]
   )
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>

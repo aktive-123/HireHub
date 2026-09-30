@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react'
-import { Link, useParams } from 'react-router-dom'
+import { Link, useNavigate, useParams } from 'react-router-dom'
 import { employerApi } from '../../services/api'
 import { useApiData } from '../../hooks/useApiData'
 import { formatSalaryAmount, formatSalaryPeriod, getEmploymentBadge } from '../../utils/jobs'
@@ -11,6 +11,7 @@ import EmptyState from '../../components/ui/EmptyState'
 import TablePagination from '../../components/ui/TablePagination'
 import Card from '../../components/ui/Card'
 import Button from '../../components/ui/Button'
+import Modal from '../../components/ui/Modal'
 import LoadingState from '../../components/ui/LoadingState'
 
 const PAGE_SIZE = 6
@@ -49,9 +50,13 @@ function normalizeJob(job) {
 
 export default function EmployerJobDetailsPage() {
   const { id } = useParams()
+  const navigate = useNavigate()
 
   const [tab, setTab] = useState('all')
   const [page, setPage] = useState(1)
+  const [confirmOpen, setConfirmOpen] = useState(false)
+  const [deleting, setDeleting] = useState(false)
+  const [actionError, setActionError] = useState('')
 
   const jobsFetch = useApiData(() => employerApi.jobs(), [])
   const applicantsFetch = useApiData(() => employerApi.applicants(), [])
@@ -71,6 +76,31 @@ export default function EmployerJobDetailsPage() {
         .map((a) => ({ ...a })),
     [applicantsFetch.data, job, id]
   )
+
+  /**
+   * Close the posting, so it drops out of search and the job board.
+   *
+   * Note this does *not* return the job post slot: the limit counts every
+   * posting the company has made, open or closed, so the allowance is
+   * unchanged here and must not be re-synced as though it were. Deleting the
+   * posting is what frees a slot.
+   */
+  const handleClose = async () => {
+    if (deleting) return
+    setDeleting(true)
+    setActionError('')
+
+    try {
+      await employerApi.updateJobStatus(job.slug, 'closed')
+      setConfirmOpen(false)
+      navigate('/employer/jobs')
+    } catch (err) {
+      setActionError(err?.message || 'We could not close this job. Please try again.')
+      setConfirmOpen(false)
+    } finally {
+      setDeleting(false)
+    }
+  }
 
   if (jobsFetch.loading || applicantsFetch.loading) {
     return (
@@ -111,7 +141,7 @@ export default function EmployerJobDetailsPage() {
         <div className="page-container">
           <EmptyState icon="briefcase" title="Job not found" text="This posting may have been removed or the link is incorrect." />
           <div className="text-center hh-mt-4">
-            <Button to="/employer/jobs" variant="outline-primary">Back to my jobs</Button>
+            <Button to="/employer/jobs" variant="outline">Back to my jobs</Button>
           </div>
         </div>
       </section>
@@ -148,15 +178,22 @@ export default function EmployerJobDetailsPage() {
           subtitle="Manage this posting and review its applicants."
           action={
             <div className="d-flex flex-wrap gap-2">
-              <Link to={`/employer/jobs/${job.slug || job.id}/edit`}>
-                <Button variant="outline-primary" icon="bi-pencil">Edit job</Button>
-              </Link>
-              <Link to={`/jobs/${job.slug || job.id}`}>
-                <Button variant="primary" icon="bi-box-arrow-up-right">View on site</Button>
-              </Link>
+              <Button to={`/employer/jobs/${job.slug || job.id}/edit`} variant="outline" icon="bi-pencil">Edit job</Button>
+              <Button to={`/jobs/${job.slug || job.id}`} variant="primary" icon="bi-box-arrow-up-right">View on site</Button>
+              {job.status === 'open' && (
+                <Button variant="ghost" icon="bi-x-circle" onClick={() => setConfirmOpen(true)} disabled={deleting}>
+                  Close posting
+                </Button>
+              )}
             </div>
           }
         />
+
+        {actionError && (
+          <div className="alert alert-danger py-2 small" role="alert">
+            {actionError}
+          </div>
+        )}
 
         <Reveal>
           <div className="d-flex align-items-center gap-2 flex-wrap hh-mb-4">
@@ -208,9 +245,7 @@ export default function EmployerJobDetailsPage() {
                         </div>
                         <div className="hh-app-action">
                           <StatusBadge status={a.status} />
-                          <Link to={`/employer/applicants/${a.id}`}>
-                            <Button variant="outline-primary" size="sm">Review</Button>
-                          </Link>
+                          <Button to={`/employer/applicants/${a.id}`} variant="outline" size="sm">Review</Button>
                         </div>
                       </div>
                     ))}
@@ -256,6 +291,30 @@ export default function EmployerJobDetailsPage() {
           </div>
         </div>
       </section>
+
+      {/* Confirming first is the point: closing a posting removes it from the
+          board and can be seen by applicants mid-application. */}
+      <Modal
+        isOpen={confirmOpen}
+        onClose={() => setConfirmOpen(false)}
+        title="Close this posting?"
+        size="sm"
+        footer={
+          <>
+            <Button variant="ghost" onClick={() => setConfirmOpen(false)} disabled={deleting}>
+              Keep it open
+            </Button>
+            <Button variant="danger" onClick={handleClose} disabled={deleting}>
+              {deleting ? 'Closing…' : 'Close posting'}
+            </Button>
+          </>
+        }
+      >
+        <p className="mb-0 small text-secondary">
+          <strong>{job.title}</strong> will stop appearing in search and on the job board. Existing
+          applicants keep their application, and the posting can be reopened at any time.
+        </p>
+      </Modal>
     </>
   )
 }

@@ -1,6 +1,8 @@
-import { BrowserRouter, Routes, Route } from 'react-router-dom'
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { AuthProvider } from './context/AuthContext'
 import { SavedJobsProvider } from './context/SavedJobsContext'
+import { PlanUsageProvider } from './context/PlanUsageContext'
+import DevStatusBadge from './components/common/DevStatusBadge'
 
 // Layouts
 import PublicLayout from './layouts/PublicLayout'
@@ -21,6 +23,8 @@ import CareerResourcesPage from './pages/public/CareerResourcesPage'
 import CareerArticlePage from './pages/public/CareerArticlePage'
 import FaqPage from './pages/public/FaqPage'
 import NotFoundPage from './pages/public/NotFoundPage'
+import EmployerLandingPage from './pages/public/EmployerLandingPage'
+import PricingPage from './pages/public/PricingPage'
 
 // Auth Pages
 import LoginPage from './pages/auth/LoginPage'
@@ -38,6 +42,7 @@ import SeekerApplicationsPage from './pages/seeker/SeekerApplicationsPage'
 import SeekerApplicationDetailsPage from './pages/seeker/SeekerApplicationDetailsPage'
 import SeekerSavedJobsPage from './pages/seeker/SeekerSavedJobsPage'
 import SeekerBrowseJobsPage from './pages/seeker/SeekerBrowseJobsPage'
+import SeekerInterviewsPage from './pages/seeker/SeekerInterviewsPage'
 import SeekerResumePage from './pages/seeker/SeekerResumePage'
 import SeekerNotificationsPage from './pages/seeker/SeekerNotificationsPage'
 import SeekerSettingsPage from './pages/seeker/SeekerSettingsPage'
@@ -54,6 +59,8 @@ import EmployerApplicantsPage from './pages/employer/EmployerApplicantsPage'
 import EmployerApplicantDetailsPage from './pages/employer/EmployerApplicantDetailsPage'
 import EmployerTrackingPage from './pages/employer/EmployerTrackingPage'
 import EmployerInterviewsPage from './pages/employer/EmployerInterviewsPage'
+import EmployerBillingPage from './pages/employer/EmployerBillingPage'
+import EmployerAnalyticsPage from './pages/employer/EmployerAnalyticsPage'
 import EmployerNotificationsPage from './pages/employer/EmployerNotificationsPage'
 import EmployerSettingsPage from './pages/employer/EmployerSettingsPage'
 
@@ -66,6 +73,7 @@ import AdminCompaniesPage from './pages/admin/AdminCompaniesPage'
 import AdminJobsPage from './pages/admin/AdminJobsPage'
 import AdminApplicationsPage from './pages/admin/AdminApplicationsPage'
 import AdminReportsPage from './pages/admin/AdminReportsPage'
+import AdminHiringFeesPage from './pages/admin/AdminHiringFeesPage'
 import AdminCategoriesPage from './pages/admin/AdminCategoriesPage'
 import AdminSkillsPage from './pages/admin/AdminSkillsPage'
 import AdminActivityLogsPage from './pages/admin/AdminActivityLogsPage'
@@ -76,80 +84,99 @@ export default function App() {
     <AuthProvider>
       <SavedJobsProvider>
         <BrowserRouter>
-        <Routes>
-          {/* Public Routes */}
-          <Route element={<PublicLayout />}>
-            <Route path="/" element={<HomePage />} />
-            <Route path="/jobs" element={<JobListPage />} />
-            <Route path="/jobs/:id" element={<JobDetailsPage />} />
-          <Route path="/companies" element={<CompaniesPage />} />
-          <Route path="/companies/:id" element={<CompanyDetailsPage />} />
-          <Route path="/about" element={<AboutPage />} />
-          <Route path="/contact" element={<ContactPage />} />
-          <Route path="/resources" element={<CareerResourcesPage />} />
-          <Route path="/resources/:slug" element={<CareerArticlePage />} />
-          <Route path="/faq" element={<FaqPage />} />
-          <Route path="*" element={<NotFoundPage />} />
-        </Route>
+          <Routes>
+            {/* Public Routes */}
+            <Route element={<PublicLayout />}>
+              <Route path="/" element={<HomePage />} />
+              <Route path="/jobs" element={<JobListPage />} />
+              <Route path="/jobs/:id" element={<JobDetailsPage />} />
+              <Route path="/companies" element={<CompaniesPage />} />
+              <Route path="/companies/:id" element={<CompanyDetailsPage />} />
+              <Route path="/for-employers" element={<EmployerLandingPage />} />
+              <Route path="/pricing" element={<PricingPage />} />
+              <Route path="/about" element={<AboutPage />} />
+              <Route path="/contact" element={<ContactPage />} />
+              <Route path="/resources" element={<CareerResourcesPage />} />
+              <Route path="/resources/:slug" element={<CareerArticlePage />} />
+              <Route path="/faq" element={<FaqPage />} />
+              <Route path="*" element={<NotFoundPage />} />
+            </Route>
 
-        {/* Auth Routes */}
-        <Route element={<AuthLayout />}>
-          <Route path="/login" element={<LoginPage />} />
-          <Route path="/register/job-seeker" element={<RegisterJobSeekerPage />} />
-          <Route path="/register/employer" element={<RegisterEmployerPage />} />
-          <Route path="/forgot-password" element={<ForgotPasswordPage />} />
-          <Route path="/reset-password" element={<ResetPasswordPage />} />
-          <Route path="/verify-email" element={<VerifyEmailPage />} />
-        </Route>
+            {/* Auth Routes */}
+            <Route element={<AuthLayout />}>
+              <Route path="/login" element={<LoginPage />} />
+              <Route path="/register/job-seeker" element={<RegisterJobSeekerPage />} />
+              <Route path="/register/employer" element={<RegisterEmployerPage />} />
+              <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+              <Route path="/reset-password" element={<ResetPasswordPage />} />
+              <Route path="/verify-email" element={<VerifyEmailPage />} />
+            </Route>
 
-        {/* Job Seeker Dashboard Routes */}
-        <Route path="/seeker" element={<SeekerLayout />}>
-          <Route index element={<SeekerDashboardPage />} />
-          <Route path="profile" element={<SeekerProfilePage />} />
-          <Route path="profile/edit" element={<SeekerEditProfilePage />} />
-          <Route path="applications" element={<SeekerApplicationsPage />} />
-          <Route path="applications/:id" element={<SeekerApplicationDetailsPage />} />
-          <Route path="saved-jobs" element={<SeekerSavedJobsPage />} />
-          <Route path="browse-jobs" element={<SeekerBrowseJobsPage />} />
-          <Route path="resume" element={<SeekerResumePage />} />
-          <Route path="notifications" element={<SeekerNotificationsPage />} />
-          <Route path="settings" element={<SeekerSettingsPage />} />
-        </Route>
+            {/* Job Seeker Dashboard Routes */}
+            <Route path="/seeker" element={<SeekerLayout />}>
+              <Route index element={<SeekerDashboardPage />} />
+              <Route path="dashboard" element={<Navigate to="/seeker" replace />} />
+              <Route path="profile" element={<SeekerProfilePage />} />
+              <Route path="profile/edit" element={<SeekerEditProfilePage />} />
+              <Route path="applications" element={<SeekerApplicationsPage />} />
+              <Route path="applications/:id" element={<SeekerApplicationDetailsPage />} />
+              <Route path="saved-jobs" element={<SeekerSavedJobsPage />} />
+              <Route path="browse-jobs" element={<SeekerBrowseJobsPage />} />
+              <Route path="interviews" element={<SeekerInterviewsPage />} />
+              <Route path="resume" element={<SeekerResumePage />} />
+              <Route path="notifications" element={<SeekerNotificationsPage />} />
+              <Route path="settings" element={<SeekerSettingsPage />} />
+            </Route>
 
-        {/* Employer Dashboard Routes */}
-        <Route path="/employer" element={<EmployerLayout />}>
-          <Route index element={<EmployerDashboardPage />} />
-          <Route path="company" element={<EmployerCompanyProfilePage />} />
-          <Route path="company/edit" element={<EmployerEditCompanyPage />} />
-          <Route path="jobs" element={<EmployerJobsPage />} />
-          <Route path="jobs/create" element={<EmployerCreateJobPage />} />
-          <Route path="jobs/:id/edit" element={<EmployerEditJobPage />} />
-          <Route path="jobs/:id" element={<EmployerJobDetailsPage />} />
-          <Route path="applicants" element={<EmployerApplicantsPage />} />
-          <Route path="applicants/:id" element={<EmployerApplicantDetailsPage />} />
-          <Route path="tracking" element={<EmployerTrackingPage />} />
-          <Route path="interviews" element={<EmployerInterviewsPage />} />
-          <Route path="notifications" element={<EmployerNotificationsPage />} />
-          <Route path="settings" element={<EmployerSettingsPage />} />
-        </Route>
+            {/* Employer Dashboard Routes */}
+            <Route
+              path="/employer"
+              element={
+                <PlanUsageProvider>
+                  <EmployerLayout />
+                </PlanUsageProvider>
+              }
+            >
+              <Route index element={<EmployerDashboardPage />} />
+              <Route path="dashboard" element={<Navigate to="/employer" replace />} />
+              <Route path="company" element={<EmployerCompanyProfilePage />} />
+              <Route path="company/edit" element={<EmployerEditCompanyPage />} />
+              <Route path="jobs" element={<EmployerJobsPage />} />
+              <Route path="jobs/create" element={<EmployerCreateJobPage />} />
+              <Route path="jobs/:id/edit" element={<EmployerEditJobPage />} />
+              <Route path="jobs/:id" element={<EmployerJobDetailsPage />} />
+              <Route path="applicants" element={<EmployerApplicantsPage />} />
+              <Route path="applicants/:id" element={<EmployerApplicantDetailsPage />} />
+              <Route path="tracking" element={<EmployerTrackingPage />} />
+              <Route path="interviews" element={<EmployerInterviewsPage />} />
+              <Route path="billing" element={<EmployerBillingPage />} />
+              <Route path="analytics" element={<EmployerAnalyticsPage />} />
+              <Route path="notifications" element={<EmployerNotificationsPage />} />
+              <Route path="settings" element={<EmployerSettingsPage />} />
+            </Route>
 
-        {/* Admin Dashboard Routes */}
-        <Route path="/admin" element={<AdminLayout />}>
-          <Route index element={<AdminDashboardPage />} />
-          <Route path="users" element={<AdminUsersPage />} />
-          <Route path="job-seekers" element={<AdminJobSeekersPage />} />
-          <Route path="employers" element={<AdminEmployersPage />} />
-          <Route path="companies" element={<AdminCompaniesPage />} />
-          <Route path="jobs" element={<AdminJobsPage />} />
-          <Route path="applications" element={<AdminApplicationsPage />} />
-          <Route path="categories" element={<AdminCategoriesPage />} />
-          <Route path="skills" element={<AdminSkillsPage />} />
-          <Route path="reports" element={<AdminReportsPage />} />
-          <Route path="activity-logs" element={<AdminActivityLogsPage />} />
-          <Route path="settings" element={<AdminSettingsPage />} />
-        </Route>
-      </Routes>
-      </BrowserRouter>
+            {/* Admin Dashboard Routes */}
+            <Route path="/admin" element={<AdminLayout />}>
+              <Route index element={<AdminDashboardPage />} />
+              <Route path="dashboard" element={<Navigate to="/admin" replace />} />
+              <Route path="users" element={<AdminUsersPage />} />
+              <Route path="job-seekers" element={<AdminJobSeekersPage />} />
+              <Route path="employers" element={<AdminEmployersPage />} />
+              <Route path="companies" element={<AdminCompaniesPage />} />
+              <Route path="jobs" element={<AdminJobsPage />} />
+              <Route path="applications" element={<AdminApplicationsPage />} />
+              <Route path="categories" element={<AdminCategoriesPage />} />
+              <Route path="skills" element={<AdminSkillsPage />} />
+              <Route path="reports" element={<AdminReportsPage />} />
+              <Route path="hiring-fees" element={<AdminHiringFeesPage />} />
+              <Route path="activity-logs" element={<AdminActivityLogsPage />} />
+              <Route path="settings" element={<AdminSettingsPage />} />
+            </Route>
+          </Routes>
+          {/* Dev only — see DevStatusBadge. The guard means this renders nothing
+              and ships nothing in a production build. */}
+          {import.meta.env.DEV && <DevStatusBadge />}
+        </BrowserRouter>
       </SavedJobsProvider>
     </AuthProvider>
   )

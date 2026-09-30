@@ -161,7 +161,7 @@ export default function SeekerApplicationsPage() {
                       <Badge variant={STATUS_VARIANT[status] || 'secondary'}>
                         {status.replace('-', ' ')}
                       </Badge>
-                      <Button to={`/seeker/applications/${id}`} variant="outline-primary" size="sm">
+                      <Button to={`/seeker/applications/${id}`} variant="outline" size="sm">
                         View application
                       </Button>
                     </div>

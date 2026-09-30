@@ -1,6 +1,7 @@
 import { useMemo } from 'react'
 import { Link } from 'react-router-dom'
 import { jobsApi, seekerApi } from '../../services/api'
+import { useAuth } from '../../context/AuthContext'
 import { useApiData } from '../../hooks/useApiData'
 import SectionHeading from '../../components/ui/SectionHeading'
 import Reveal from '../../components/ui/Reveal'
@@ -34,7 +35,16 @@ const STAT_ICONS = {
 }
 
 export default function SeekerDashboardPage() {
+  const { user } = useAuth()
   const { data: dashboard, loading, error, reload } = useApiData(() => seekerApi.dashboard(), [])
+
+  // Was hardcoded to a demo persona, so every signed-in seeker was greeted as
+  // "Sarah" and shown her initials.
+  const firstName = user?.name?.trim()?.split(/\s+/)[0] || 'there'
+  const initials = (user?.name?.trim()?.split(/\s+/).slice(0, 2) || [])
+    .map((part) => part[0] || '')
+    .join('')
+    .toUpperCase() || 'U'
 
   const jobs = useApiData(() => jobsApi.list({ per_page: 50 }), [])
 
@@ -110,11 +120,11 @@ export default function SeekerDashboardPage() {
           <Reveal>
             <div className="hh-toolbar hh-toolbar-between hh-mb-4">
               <div className="hh-welcome-id">
-                <span className="hh-avatar hh-avatar-soft" aria-hidden="true">SO</span>
+                <span className="hh-avatar hh-avatar-soft" aria-hidden="true">{initials}</span>
                 <div>
                   <SectionHeading
                     eyebrow="JOB SEEKER DASHBOARD"
-                    title="Welcome back, Sarah"
+                    title={`Welcome back, ${firstName}`}
                     subtitle="Here's what's happening with your job search."
                   />
                 </div>
@@ -172,7 +182,7 @@ export default function SeekerDashboardPage() {
                           <Badge variant={STATUS_VARIANT[status] || 'secondary'}>
                             {status.replace('-', ' ')}
                           </Badge>
-                          <Button to={`/seeker/applications/${id}`} variant="outline-primary" size="sm">
+                          <Button to={`/seeker/applications/${id}`} variant="outline" size="sm">
                             View
                           </Button>
                         </div>
@@ -201,7 +211,7 @@ export default function SeekerDashboardPage() {
                   <div className="hh-progress hh-mb-4" role="progressbar" aria-valuenow={PROFILE_COMPLETION} aria-valuemin="0" aria-valuemax="100">
                     <div className="hh-progress-bar" style={{ width: `${PROFILE_COMPLETION}%` }} />
                   </div>
-                  <Button to="/seeker/profile/edit" variant="outline-primary" icon="bi-pencil" block pill>
+                  <Button to="/seeker/profile/edit" variant="outline" icon="bi-pencil" block pill>
                     Complete profile
                   </Button>
                 </Card>
@@ -230,7 +240,7 @@ export default function SeekerDashboardPage() {
                 subtitle="Roles matched to your skills and search history."
                 centered={false}
               />
-              <Button to="/seeker/browse-jobs" variant="outline-primary" icon="bi-arrow-right" iconPosition="right" pill>
+              <Button to="/seeker/browse-jobs" variant="outline" icon="bi-arrow-right" iconPosition="right" pill>
                 Explore all jobs
               </Button>
             </div>

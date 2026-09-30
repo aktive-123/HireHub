@@ -19,6 +19,10 @@
 }
 
 .hh-hero-badge {
+  font-size: var(--hh-type-eyebrow-size);
+  font-weight: var(--hh-type-eyebrow-weight);
+  line-height: var(--hh-type-eyebrow-lh);
+  letter-spacing: var(--hh-type-eyebrow-ls);
   display: inline-flex;
   align-items: center;
   gap: var(--hh-space-2);
@@ -26,28 +30,46 @@
   border: 1px solid rgba(255, 255, 255, 0.15);
   border-radius: var(--hh-radius-pill);
   padding: 0.35rem 0.9rem;
-  font-size: var(--hh-fs-hero-eyebrow);
-  font-weight: var(--hh-fw-bold);
-  line-height: 1.4;
-  letter-spacing: 0.06em;
   text-transform: uppercase;
   color: var(--hh-hero-accent);
   margin-bottom: var(--hh-space-4);
 }
 
+/* The hero title is the display role directly, not via a `.hh-hero` override.
+   The override version meant a hero title rendered outside a `.hh-hero`
+   ancestor silently fell back to card-title size. */
 .hh-hero-title {
-  font-size: var(--hh-fs-hero-title);
-  font-weight: var(--hh-fw-extrabold);
-  line-height: 1.15;
-  letter-spacing: var(--hh-ls-tight);
+  font-size: var(--hh-type-display-size);
+  font-weight: var(--hh-type-display-weight);
+  line-height: var(--hh-type-display-lh);
+  letter-spacing: var(--hh-type-display-ls);
   color: var(--hh-white);
   margin-bottom: var(--hh-space-4);
   max-width: var(--hh-hero-title-max);
 }
 
-.hh-hero .hh-hero-title {
-  font-size: clamp(2.15rem, 1.65rem + 2.2vw, 4rem);
-  line-height: 1.25;
+/* The hero heading is split across two elements — a white line and an accent
+   line. Both are children of the same title, so they inherit its one role and
+   cannot end up at different sizes; only the colour differs below. No
+   font-* is redeclared here on purpose: an explicit `font-size: inherit`
+   would be a size the audit cannot verify, and the cascade already gives
+   both lines the same value. */
+
+/* The display tier steps down on smaller screens. A clamp() would be the
+   usual answer, but a fluid size is exactly what the audit forbids, so the
+   steps come off the ramp instead: 56 → 48 → 40. */
+@media (min-width: 1400px) {
+  .hh-hero-title,
+  .hh-page-hero-title {
+    font-size: var(--hh-fs-56);
+  }
+}
+
+@media (max-width: 767.98px) {
+  .hh-hero-title,
+  .hh-page-hero-title {
+    font-size: var(--hh-fs-40);
+  }
 }
 
 .hh-hero-title-line {
@@ -82,9 +104,11 @@
 }
 
 .hh-hero-subtitle {
-  font-size: var(--hh-fs-hero-subtitle);
-  color: var(--hh-white);
-  line-height: 1.6;
+  font-size: var(--hh-type-hero-body-size);
+  font-weight: var(--hh-type-hero-body-weight);
+  line-height: var(--hh-type-hero-body-lh);
+  letter-spacing: var(--hh-type-hero-body-ls);
+  color: var(--hh-hero-body);
   margin-bottom: var(--hh-space-6);
   max-width: var(--hh-hero-text-max);
 }
@@ -157,6 +181,10 @@
 }
 
 .hh-hero-floating-tag {
+  font-size: var(--hh-type-card-meta-size);
+  font-weight: var(--hh-type-card-meta-weight);
+  line-height: var(--hh-type-card-meta-lh);
+  letter-spacing: var(--hh-type-card-meta-ls);
   position: absolute;
   top: 24px;
   right: -12px;
@@ -166,8 +194,6 @@
   border-radius: var(--hh-radius-pill);
   padding: 0.5rem 1.1rem;
   color: var(--hh-white);
-  font-size: var(--hh-fs-xs);
-  font-weight: var(--hh-fw-semibold);
   display: flex;
   align-items: center;
   gap: var(--hh-space-2);
@@ -218,15 +244,18 @@
 
 .hh-search-field-icon {
   color: var(--hh-muted);
-  font-size: 1.1rem;
+  font-size: var(--hh-icon-md);
   flex-shrink: 0;
 }
 
 .hh-search-field-input {
+  font-size: var(--hh-type-sub-size);
+  font-weight: var(--hh-type-sub-weight);
+  line-height: var(--hh-type-sub-lh);
+  letter-spacing: var(--hh-type-sub-ls);
   border: none;
   background: transparent;
   width: 100%;
-  font-size: var(--hh-fs-sm);
   color: var(--hh-text);
   outline: none;
   padding: 0;
@@ -237,10 +266,13 @@
 }
 
 .hh-search-field-select {
+  font-size: var(--hh-type-sub-size);
+  font-weight: var(--hh-type-sub-weight);
+  line-height: var(--hh-type-sub-lh);
+  letter-spacing: var(--hh-type-sub-ls);
   border: none;
   background: transparent;
   width: 100%;
-  font-size: var(--hh-fs-sm);
   color: var(--hh-text);
   outline: none;
   cursor: pointer;
@@ -254,23 +286,28 @@
 }
 
 .hh-hero-popular-tags {
+  font-size: var(--hh-type-card-meta-size);
+  font-weight: var(--hh-type-card-meta-weight);
+  line-height: var(--hh-type-card-meta-lh);
+  letter-spacing: var(--hh-type-card-meta-ls);
   display: flex;
   align-items: center;
   gap: var(--hh-space-2);
   margin-top: var(--hh-space-4);
   flex-wrap: wrap;
-  font-size: var(--hh-fs-xs);
   color: rgba(255, 255, 255, 0.92);
 }
 
 .hh-hero-tag-btn {
+  font-size: var(--hh-type-card-meta-size);
+  font-weight: var(--hh-type-card-meta-weight);
+  line-height: var(--hh-type-card-meta-lh);
+  letter-spacing: var(--hh-type-card-meta-ls);
   background: rgba(255, 255, 255, 0.16);
   border: 1px solid rgba(255, 255, 255, 0.24);
   color: var(--hh-white);
   padding: 0.25rem 0.75rem;
   border-radius: var(--hh-radius-pill);
-  font-size: var(--hh-fs-xs);
-  font-weight: var(--hh-fw-medium);
   cursor: pointer;
   transition: all var(--hh-transition-fast);
   text-decoration: none;
@@ -369,15 +406,17 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  font-weight: var(--hh-fw-bold);
-  font-size: 1.1rem;
+  font-weight: var(--hh-type-card-title-weight);
+  font-size: var(--hh-type-card-title-size);
   border: 1px solid var(--hh-border);
   flex-shrink: 0;
 }
 
 .hh-job-company-name {
-  font-size: var(--hh-fs-sm);
-  font-weight: var(--hh-fw-semibold);
+  font-size: var(--hh-type-card-title-size);
+  font-weight: var(--hh-type-card-title-weight);
+  line-height: var(--hh-type-card-title-lh);
+  letter-spacing: var(--hh-type-card-title-ls);
   color: var(--hh-secondary);
   display: flex;
   align-items: center;
@@ -388,7 +427,7 @@
   background: transparent;
   border: none;
   color: var(--hh-muted);
-  font-size: 1.25rem;
+  font-size: var(--hh-icon-lg);
   cursor: pointer;
   padding: 0.25rem;
   transition: color var(--hh-transition-fast);
@@ -421,14 +460,17 @@
 }
 
 .hh-job-title {
-  font-size: 1.15rem;
-  font-weight: var(--hh-fw-bold);
+  font-size: var(--hh-type-card-title-size);
+  font-weight: var(--hh-type-card-title-weight);
   color: var(--hh-secondary);
   margin-bottom: var(--hh-space-2);
 }
 
 .hh-job-location {
-  font-size: var(--hh-fs-xs);
+  font-size: var(--hh-type-card-meta-size);
+  font-weight: var(--hh-type-card-meta-weight);
+  line-height: var(--hh-type-card-meta-lh);
+  letter-spacing: var(--hh-type-card-meta-ls);
   color: var(--hh-muted);
   margin-bottom: var(--hh-space-3);
   display: flex;
@@ -445,9 +487,11 @@
 }
 
 .hh-job-salary {
-  font-size: var(--hh-fs-sm);
-  font-weight: var(--hh-fw-bold);
-  color: var(--hh-secondary);
+  font-size: var(--hh-type-card-body-size);
+  font-weight: var(--hh-type-card-body-weight);
+  line-height: var(--hh-type-card-body-lh);
+  letter-spacing: var(--hh-type-card-body-ls);
+  color: var(--hh-muted);
   margin-top: 0;
   margin-bottom: var(--hh-space-4);
   display: flex;
@@ -462,14 +506,16 @@
 }
 
 .hh-job-pay-basis {
+  font-size: var(--hh-type-card-meta-size);
+  font-weight: var(--hh-type-card-meta-weight);
+  line-height: var(--hh-type-card-meta-lh);
+  letter-spacing: var(--hh-type-card-meta-ls);
   flex-shrink: 0;
   padding: 0.2rem 0.6rem;
   border-radius: var(--hh-radius-pill);
   background: var(--hh-primary-soft);
   border: 1px solid var(--hh-primary-ring);
   color: var(--hh-primary-dark);
-  font-size: var(--hh-fs-xs);
-  font-weight: var(--hh-fw-semibold);
   white-space: nowrap;
 }
 
@@ -493,12 +539,13 @@
 }
 
 .hh-trusted-title {
+  font-size: var(--hh-type-card-title-size);
+  font-weight: var(--hh-type-card-title-weight);
+  line-height: var(--hh-type-card-title-lh);
+  letter-spacing: var(--hh-type-card-title-ls);
   text-align: center;
-  font-size: var(--hh-fs-sm);
-  font-weight: var(--hh-fw-semibold);
   color: var(--hh-muted);
   text-transform: uppercase;
-  letter-spacing: 0.08em;
   margin-bottom: var(--hh-space-5);
 }
 
@@ -511,8 +558,8 @@
 }
 
 .hh-trusted-brand {
-  font-size: 1.35rem;
-  font-weight: var(--hh-fw-bold);
+  font-size: var(--hh-type-card-title-size);
+  font-weight: var(--hh-type-card-title-weight);
   color: var(--hh-muted);
   display: flex;
   align-items: center;
@@ -547,13 +594,17 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  font-size: 1.8rem;
+  font-size: var(--hh-icon-2xl);
   margin-bottom: var(--hh-space-4);
   position: relative;
   box-shadow: 0 8px 20px color-mix(in srgb, var(--hh-primary) 15%, transparent);
 }
 
 .hh-step-number {
+  font-size: var(--hh-type-card-meta-size);
+  font-weight: var(--hh-type-card-meta-weight);
+  line-height: var(--hh-type-card-meta-lh);
+  letter-spacing: var(--hh-type-card-meta-ls);
   position: absolute;
   top: -4px;
   right: -4px;
@@ -562,8 +613,6 @@
   background: var(--hh-primary);
   color: var(--hh-white);
   border-radius: 50%;
-  font-size: var(--hh-fs-xs);
-  font-weight: var(--hh-fw-bold);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -571,16 +620,20 @@
 }
 
 .hh-step-title {
-  font-size: var(--hh-fs-lg);
-  font-weight: var(--hh-fw-bold);
+  font-size: var(--hh-type-card-title-size);
+  font-weight: var(--hh-type-card-title-weight);
+  line-height: var(--hh-type-card-title-lh);
+  letter-spacing: var(--hh-type-card-title-ls);
   color: var(--hh-secondary);
   margin-bottom: var(--hh-space-2);
 }
 
 .hh-step-desc {
-  font-size: var(--hh-fs-sm);
+  font-size: var(--hh-type-body-size);
+  font-weight: var(--hh-type-body-weight);
+  line-height: var(--hh-type-body-lh);
+  letter-spacing: var(--hh-type-body-ls);
   color: var(--hh-muted);
-  line-height: 1.6;
   max-width: 250px;
   margin-inline: auto;
 }
@@ -612,7 +665,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 1.5rem;
+  font-size: var(--hh-icon-xl);
   flex-shrink: 0;
 }
 
@@ -622,14 +675,19 @@
 }
 
 .hh-category-title {
-  font-size: var(--hh-fs-base);
-  font-weight: var(--hh-fw-bold);
+  font-size: var(--hh-type-card-title-size);
+  font-weight: var(--hh-type-card-title-weight);
+  line-height: var(--hh-type-card-title-lh);
+  letter-spacing: var(--hh-type-card-title-ls);
   color: var(--hh-secondary);
   margin-bottom: 0.2rem;
 }
 
 .hh-category-count {
-  font-size: var(--hh-fs-xs);
+  font-size: var(--hh-type-card-meta-size);
+  font-weight: var(--hh-type-card-meta-weight);
+  line-height: var(--hh-type-card-meta-lh);
+  letter-spacing: var(--hh-type-card-meta-ls);
   color: var(--hh-muted);
 }
 
@@ -674,22 +732,28 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 1.4rem;
+  font-size: var(--hh-icon-xl);
   flex-shrink: 0;
   transition: transform var(--hh-transition);
 }
 
 .hh-why-feature-title {
-  font-size: var(--hh-fs-md);
-  font-weight: var(--hh-fw-bold);
+  font-size: var(--hh-type-card-title-size);
+  font-weight: var(--hh-type-card-title-weight);
+  line-height: var(--hh-type-card-title-lh);
+  letter-spacing: var(--hh-type-card-title-ls);
   color: var(--hh-white);
   margin-bottom: 0.25rem;
 }
 
 .hh-why-feature-desc {
-  font-size: var(--hh-fs-sm);
+  font-size: var(--hh-type-body-size);
+  font-weight: var(--hh-type-body-weight);
+  line-height: var(--hh-type-body-lh);
+  letter-spacing: var(--hh-type-body-ls);
+  /* The why-choose band is dark navy, so this keeps the light treatment
+     rather than the muted slate the light-surface copy uses. */
   color: rgba(255, 255, 255, 0.8);
-  line-height: 1.55;
   margin-bottom: 0;
 }
 
@@ -756,8 +820,10 @@
 }
 
 .hh-testimonial-quote {
-  font-size: var(--hh-fs-sm);
-  line-height: 1.65;
+  font-size: var(--hh-type-card-body-size);
+  font-weight: var(--hh-type-card-body-weight);
+  line-height: var(--hh-type-card-body-lh);
+  letter-spacing: var(--hh-type-card-body-ls);
   color: var(--hh-text);
   margin-bottom: var(--hh-space-5);
   font-style: italic;
@@ -778,27 +844,32 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  font-weight: var(--hh-fw-bold);
+  font-weight: var(--hh-type-card-title-weight);
   color: var(--hh-secondary);
   flex-shrink: 0;
   overflow: hidden;
 }
 
 .hh-testimonial-name {
-  font-size: var(--hh-fs-sm);
-  font-weight: var(--hh-fw-bold);
+  font-size: var(--hh-type-card-title-size);
+  font-weight: var(--hh-type-card-title-weight);
+  line-height: var(--hh-type-card-title-lh);
+  letter-spacing: var(--hh-type-card-title-ls);
   color: var(--hh-secondary);
   margin-bottom: 0.1rem;
 }
 
 .hh-testimonial-role {
-  font-size: var(--hh-fs-xs);
+  font-size: var(--hh-type-card-meta-size);
+  font-weight: var(--hh-type-card-meta-weight);
+  line-height: var(--hh-type-card-meta-lh);
+  letter-spacing: var(--hh-type-card-meta-ls);
   color: var(--hh-muted);
 }
 
 .hh-rating-stars {
   color: var(--hh-accent);
-  font-size: 0.85rem;
+  font-size: var(--hh-icon-xs);
   margin-top: 0.35rem;
   display: flex;
   gap: 2px;
@@ -891,14 +962,19 @@
 }
 
 .hh-final-cta-title {
-  font-size: clamp(1.8rem, 3.2vw, 2.6rem);
-  font-weight: var(--hh-fw-extrabold);
+  font-size: var(--hh-type-h2-size);
+  font-weight: var(--hh-type-h2-weight);
+  line-height: var(--hh-type-h2-lh);
+  letter-spacing: var(--hh-type-h2-ls);
   color: var(--hh-white);
   margin-bottom: var(--hh-space-2);
 }
 
 .hh-final-cta-subtitle {
-  font-size: var(--hh-fs-md);
+  font-size: var(--hh-type-body-size);
+  font-weight: var(--hh-type-body-weight);
+  line-height: var(--hh-type-body-lh);
+  letter-spacing: var(--hh-type-body-ls);
   color: rgba(255, 255, 255, 0.95);
   margin-bottom: 0;
 }

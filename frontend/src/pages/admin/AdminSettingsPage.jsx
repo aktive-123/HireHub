@@ -1,10 +1,13 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import AdminPageHeader from '../../components/admin/AdminPageHeader'
 import Badge from '../../components/ui/Badge'
 import Card from '../../components/ui/Card'
 import Button from '../../components/ui/Button'
 import FormInput from '../../components/ui/FormInput'
 import FormSelect from '../../components/ui/FormSelect'
+import HiringFeeRatesSection from '../../components/admin/HiringFeeRatesSection'
+import { adminApi } from '../../services/api'
+import { useAdminData } from '../../hooks/useAdminData'
 
 function Toggle({ label, desc, checked, disabled, onChange }) {
   return (
@@ -51,6 +54,46 @@ export default function AdminSettingsPage() {
     jobDuration: '30',
   })
 
+  const settings = useAdminData(() => adminApi.settings(), {})
+
+  useEffect(() => {
+    if (!settings || Object.keys(settings).length === 0) return
+    const general = settings.general ?? {}
+    const moderation = settings.moderation ?? {}
+    const features = settings.features ?? {}
+    const maintenanceSettings = settings.maintenance ?? {}
+
+    setValues((prev) => ({
+      ...prev,
+      siteName: general.site_name ?? prev.siteName,
+      supportEmail: general.support_email ?? prev.supportEmail,
+      currency: general.currency ?? prev.currency,
+      defaultLocation: general.default_location ?? prev.defaultLocation,
+      jobDuration: String(general.job_duration ?? prev.jobDuration),
+    }))
+    setModeration((prev) => ({
+      ...prev,
+      autoApprove: moderation.auto_approve_jobs ?? prev.autoApprove,
+      flagPosts: moderation.flag_suspicious_posts ?? prev.flagPosts,
+      verifyCompanies: moderation.review_companies ?? prev.verifyCompanies,
+      requireEmail: moderation.require_email_verification ?? prev.requireEmail,
+    }))
+    setFeatures((prev) => ({
+      ...prev,
+      featuredJobs: features.featured_jobs ?? prev.featuredJobs,
+      salaryTransparency: features.salary_transparency ?? prev.salaryTransparency,
+      resumeParsing: features.resume_parsing ?? prev.resumeParsing,
+      groupHiring: features.group_hiring ?? prev.groupHiring,
+      matching: features.candidate_matching ?? prev.matching,
+    }))
+    setMaintenance(Boolean(
+      general.maintenance_mode ??
+        maintenanceSettings.maintenance_mode ??
+        maintenanceSettings.enabled ??
+        false
+    ))
+  }, [settings])
+
   const setValue = (key) => (event) =>
     setValues((prev) => ({ ...prev, [key]: event.target.value }))
 
@@ -61,8 +104,35 @@ export default function AdminSettingsPage() {
     setFeatures((prev) => ({ ...prev, [key]: value }))
 
   const handleSave = () => {
-    setSaved(true)
-    window.setTimeout(() => setSaved(false), 2500)
+    adminApi
+      .updateSettings({
+        general: {
+          site_name: values.siteName,
+          support_email: values.supportEmail,
+          currency: values.currency,
+          default_location: values.defaultLocation,
+          job_duration: values.jobDuration,
+        },
+        moderation: {
+          auto_approve_jobs: moderation.autoApprove,
+          flag_suspicious_posts: moderation.flagPosts,
+          review_companies: moderation.verifyCompanies,
+          require_email_verification: moderation.requireEmail,
+        },
+        features: {
+          featured_jobs: features.featuredJobs,
+          salary_transparency: features.salaryTransparency,
+          resume_parsing: features.resumeParsing,
+          group_hiring: features.groupHiring,
+          candidate_matching: features.matching,
+        },
+        maintenance: { maintenance_mode: maintenance },
+      })
+      .then(() => {
+        setSaved(true)
+        window.setTimeout(() => setSaved(false), 2500)
+      })
+      .catch(() => {})
   }
 
   return (
@@ -215,6 +285,8 @@ export default function AdminSettingsPage() {
             onChange={setMaintenance}
           />
         </Card>
+
+        <HiringFeeRatesSection />
 
         <div className="hh-danger-zone">
           <div className="hh-danger-zone-title">Danger zone</div>

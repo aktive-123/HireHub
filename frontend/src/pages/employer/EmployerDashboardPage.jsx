@@ -10,6 +10,7 @@ import Card from '../../components/ui/Card'
 import Button from '../../components/ui/Button'
 import LoadingState from '../../components/ui/LoadingState'
 import Reveal from '../../components/ui/Reveal'
+import PlanStatusCard from '../../components/employer/PlanStatusCard'
 
 const PAGE_SIZE = 6
 
@@ -100,9 +101,6 @@ export default function EmployerDashboardPage() {
 
   const activeJobs = publicJobs.filter((j) => j.status === 'open')
   const closedJobs = publicJobs.filter((j) => j.status === 'closed')
-  const totalApplications = publicJobs.reduce((sum, job) => sum + (job.applications_count || 0), 0)
-  const totalCandidates = listApplicants.length
-  const shortlistedCount = listApplicants.filter((a) => a.status === 'shortlisted' || a.status === 'interview').length
   const hasJobs = publicJobs.length > 0
 
   const stats = useMemo(
@@ -243,6 +241,8 @@ export default function EmployerDashboardPage() {
             ))}
           </div>
 
+          <PlanStatusCard />
+
           <div className="hh-tabs hh-mb-4" role="tablist" aria-label="Dashboard sections">
             {[
               ['overview', 'Overview'],
@@ -373,7 +373,7 @@ export default function EmployerDashboardPage() {
                         </div>
                       )}
                       <div className="hh-mt-4">
-                        <Button to="/employer/jobs" variant="outline-primary" icon="bi-arrow-right" iconPosition="right" block pill>
+                        <Button to="/employer/jobs" variant="outline" icon="bi-arrow-right" iconPosition="right" block pill>
                           Manage postings
                         </Button>
                       </div>

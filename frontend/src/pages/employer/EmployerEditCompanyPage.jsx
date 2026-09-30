@@ -1,5 +1,4 @@
 import { useState, useEffect } from 'react'
-import { Link } from 'react-router-dom'
 import { employerApi } from '../../services/api'
 import { useApiData } from '../../hooks/useApiData'
 import PageHeader from '../../components/ui/PageHeader'
@@ -129,9 +128,7 @@ export default function EmployerEditCompanyPage() {
             title="Edit company profile"
             subtitle="Update how your company appears to candidates."
             action={
-              <Link to="/employer/company">
-                <Button variant="outline-primary" icon="bi-eye">Preview profile</Button>
-              </Link>
+              <Button to="/employer/company" variant="outline" icon="bi-eye">Preview profile</Button>
             }
           />
 

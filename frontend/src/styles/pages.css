@@ -80,30 +80,44 @@
 }
 
 .hh-page-hero .hh-section-eyebrow {
+  font-size: var(--hh-type-eyebrow-size);
+  font-weight: var(--hh-type-eyebrow-weight);
+  line-height: var(--hh-type-eyebrow-lh);
+  letter-spacing: var(--hh-type-eyebrow-ls);
   color: var(--hh-hero-accent);
-  font-size: var(--hh-fs-hero-eyebrow);
-  font-weight: var(--hh-fw-bold);
-  line-height: 1.4;
   margin-bottom: var(--hh-space-3);
 }
 
 /* Hero type scale + text block sizing (left-aligned, bounded width) */
 .hh-page-hero-title {
-  font-size: var(--hh-fs-hero-title);
-  font-weight: var(--hh-fw-extrabold);
-  line-height: 1.15;
-  letter-spacing: var(--hh-ls-tight);
+  font-size: var(--hh-type-display-size);
+  font-weight: var(--hh-type-display-weight);
+  line-height: var(--hh-type-display-lh);
+  letter-spacing: var(--hh-type-display-ls);
   color: var(--hh-white);
   margin-bottom: var(--hh-space-3);
   max-width: var(--hh-hero-title-max);
 }
 
 .hh-page-hero-text {
-  font-size: var(--hh-fs-hero-subtitle);
-  line-height: 1.6;
-  color: var(--hh-white);
+  font-size: var(--hh-type-hero-body-size);
+  font-weight: var(--hh-type-hero-body-weight);
+  line-height: var(--hh-type-hero-body-lh);
+  letter-spacing: var(--hh-type-hero-body-ls);
+  color: var(--hh-hero-body);
   max-width: var(--hh-hero-text-max);
   margin-bottom: 0;
+}
+
+/* The article page hero runs one display step below the standard page hero:
+   an article title is a sentence rather than a brand line, so it is set a
+   tier lower to keep a long headline on two comfortable lines. Keyed off the
+   modifier the article page actually passes to <PageHero>. */
+.hh-hero--article .hh-page-hero-title {
+  font-size: var(--hh-type-article-title-size);
+  font-weight: var(--hh-type-article-title-weight);
+  line-height: var(--hh-type-article-title-lh);
+  letter-spacing: var(--hh-type-article-title-ls);
 }
 
 /* Optional extra scrim modifier for heroes whose photo needs more contrast.
@@ -161,13 +175,16 @@
 
 .hh-form-control,
 .hh-form-select {
+  font-size: var(--hh-type-body-size);
+  font-weight: var(--hh-type-body-weight);
+  line-height: var(--hh-type-body-lh);
+  letter-spacing: var(--hh-type-body-ls);
   display: inline-flex;
   align-items: center;
   gap: var(--hh-space-2);
   height: 46px;
   padding: 0 var(--hh-space-4);
   font-family: var(--hh-font-sans);
-  font-size: var(--hh-fs-sm);
   color: var(--hh-text);
   background-color: var(--hh-white);
   border: 1px solid var(--hh-border-strong);
@@ -198,11 +215,13 @@
 }
 
 .hh-check {
+  font-size: var(--hh-type-body-size);
+  font-weight: var(--hh-type-body-weight);
+  line-height: var(--hh-type-body-lh);
+  letter-spacing: var(--hh-type-body-ls);
   display: inline-flex;
   align-items: center;
   gap: var(--hh-space-2);
-  font-size: var(--hh-fs-sm);
-  font-weight: var(--hh-fw-medium);
   color: var(--hh-secondary);
   cursor: pointer;
   user-select: none;
@@ -218,14 +237,19 @@
 }
 
 .hh-result-count {
-  font-size: var(--hh-fs-sm);
-  font-weight: var(--hh-fw-medium);
+  font-size: var(--hh-type-card-meta-size);
+  font-weight: var(--hh-type-card-meta-weight);
+  line-height: var(--hh-type-card-meta-lh);
+  letter-spacing: var(--hh-type-card-meta-ls);
   color: var(--hh-muted);
   margin: 0;
 }
 
 .hh-small {
-  font-size: var(--hh-fs-xs);
+  font-size: var(--hh-type-card-meta-size);
+  font-weight: var(--hh-type-card-meta-weight);
+  line-height: var(--hh-type-card-meta-lh);
+  letter-spacing: var(--hh-type-card-meta-ls);
 }
 
 /* Spacing helpers */
@@ -255,8 +279,10 @@
 }
 
 .hh-filter-group h3 {
-  font-size: var(--hh-fs-sm);
-  font-weight: var(--hh-fw-semibold);
+  font-size: var(--hh-type-h3-size);
+  font-weight: var(--hh-type-h3-weight);
+  line-height: var(--hh-type-h3-lh);
+  letter-spacing: var(--hh-type-h3-ls);
   color: var(--hh-secondary);
   margin-bottom: var(--hh-space-3);
 }
@@ -268,10 +294,13 @@
 }
 
 .hh-filter-option {
+  font-size: var(--hh-type-card-body-size);
+  font-weight: var(--hh-type-card-body-weight);
+  line-height: var(--hh-type-card-body-lh);
+  letter-spacing: var(--hh-type-card-body-ls);
   display: flex;
   align-items: center;
   gap: var(--hh-space-2);
-  font-size: var(--hh-fs-sm);
   color: var(--hh-muted);
   cursor: pointer;
   padding: var(--hh-space-1) 0;
@@ -394,7 +423,10 @@
 }
 
 .hh-job-posted {
-  font-size: var(--hh-fs-xs);
+  font-size: var(--hh-type-card-meta-size);
+  font-weight: var(--hh-type-card-meta-weight);
+  line-height: var(--hh-type-card-meta-lh);
+  letter-spacing: var(--hh-type-card-meta-ls);
   color: var(--hh-muted);
   white-space: nowrap;
 }
@@ -422,8 +454,8 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  font-size: 1.5rem;
-  font-weight: var(--hh-fw-extrabold);
+  font-size: var(--hh-fs-24);
+  font-weight: var(--hh-type-card-title-weight);
   border-radius: var(--hh-radius);
   border: 1px solid var(--hh-border);
 }
@@ -436,23 +468,28 @@
   display: flex;
   align-items: center;
   gap: var(--hh-space-2);
-  font-size: 1.0625rem;
-  font-weight: var(--hh-fw-bold);
+  font-size: var(--hh-type-card-title-size);
+  font-weight: var(--hh-type-card-title-weight);
   color: var(--hh-secondary);
   margin: 0 0 var(--hh-space-1);
 }
 
 .hh-company-meta {
-  font-size: var(--hh-fs-xs);
+  font-size: var(--hh-type-detail-sub-size);
+  font-weight: var(--hh-type-detail-sub-weight);
+  line-height: var(--hh-type-detail-sub-lh);
+  letter-spacing: var(--hh-type-detail-sub-ls);
   color: var(--hh-muted);
   margin: 0;
 }
 
 .hh-company-tagline {
+  font-size: var(--hh-type-sub-size);
+  font-weight: var(--hh-type-sub-weight);
+  line-height: var(--hh-type-sub-lh);
+  letter-spacing: var(--hh-type-sub-ls);
   margin: var(--hh-space-4) 0;
-  font-size: var(--hh-fs-sm);
   color: var(--hh-text);
-  line-height: 1.6;
 }
 
 .hh-company-stats {
@@ -474,22 +511,29 @@
 }
 
 .hh-company-stat-value {
+  font-size: var(--hh-type-stat-size);
+  font-weight: var(--hh-type-stat-weight);
+  line-height: var(--hh-type-stat-lh);
+  letter-spacing: var(--hh-type-stat-ls);
   display: block;
-  font-size: var(--hh-fs-md);
-  font-weight: var(--hh-fw-bold);
   color: var(--hh-secondary);
-  line-height: 1.2;
 }
 
 .hh-company-stat-label {
+  font-size: var(--hh-type-card-meta-size);
+  font-weight: var(--hh-type-card-meta-weight);
+  line-height: var(--hh-type-card-meta-lh);
+  letter-spacing: var(--hh-type-card-meta-ls);
   display: block;
-  font-size: var(--hh-fs-xs);
   color: var(--hh-muted);
 }
 
 .hh-company-stars {
+  font-size: var(--hh-type-card-meta-size);
+  font-weight: var(--hh-type-card-meta-weight);
+  line-height: var(--hh-type-card-meta-lh);
+  letter-spacing: var(--hh-type-card-meta-ls);
   color: var(--hh-accent);
-  font-size: var(--hh-fs-xs);
 }
 
 .hh-company-card-footer {
@@ -527,9 +571,15 @@
   margin-top: var(--hh-space-5);
 }
 
+/* Detail card heading ("About this role", "Responsibilities"). The detail
+   section role, not the site h2: these head a panel inside a page rather than
+   a page section, and binding them to h2 made every panel louder than the
+   section heading that contains it. */
 .hh-detail-card h2 {
-  font-size: var(--hh-fs-lg);
-  font-weight: var(--hh-fw-bold);
+  font-size: var(--hh-type-detail-section-size);
+  font-weight: var(--hh-type-detail-section-weight);
+  line-height: var(--hh-type-detail-section-lh);
+  letter-spacing: var(--hh-type-detail-section-ls);
   color: var(--hh-secondary);
   margin: 0 0 var(--hh-space-4);
 }
@@ -543,15 +593,17 @@
   border-radius: var(--hh-radius-sm);
   background: var(--hh-primary-light);
   color: var(--hh-primary);
-  font-size: 0.95rem;
+  font-size: var(--hh-icon-sm);
   margin-right: var(--hh-space-3);
   vertical-align: middle;
 }
 
 .hh-detail-card p {
-  font-size: var(--hh-fs-sm);
-  color: var(--hh-text);
-  line-height: 1.7;
+  font-size: var(--hh-type-detail-body-size);
+  font-weight: var(--hh-type-detail-body-weight);
+  line-height: var(--hh-type-detail-body-lh);
+  letter-spacing: var(--hh-type-detail-body-ls);
+  color: var(--hh-text-reading);
   margin-bottom: 0;
 }
 
@@ -564,12 +616,17 @@
   gap: var(--hh-space-3);
 }
 
+/* Tick-list items. Shared by the About "Our Approach" card and the article
+   checklists, so one role keeps a bullet list reading as the same voice
+   whether it sits in a card or in a column of long-form copy. */
 .hh-list-checks li {
+  font-size: var(--hh-type-list-body-size);
+  font-weight: var(--hh-type-list-body-weight);
+  line-height: var(--hh-type-list-body-lh);
+  letter-spacing: var(--hh-type-list-body-ls);
   display: flex;
   gap: var(--hh-space-3);
-  font-size: var(--hh-fs-sm);
   color: var(--hh-text);
-  line-height: 1.55;
 }
 
 .hh-list-checks li > i {
@@ -579,14 +636,16 @@
 }
 
 .hh-chip {
+  font-size: var(--hh-type-card-meta-size);
+  font-weight: var(--hh-type-card-meta-weight);
+  line-height: var(--hh-type-card-meta-lh);
+  letter-spacing: var(--hh-type-card-meta-ls);
   display: inline-flex;
   align-items: center;
   padding: 0.375rem 0.85rem;
   background: var(--hh-bg-soft);
   border: 1px solid var(--hh-border);
   border-radius: var(--hh-radius-pill);
-  font-size: var(--hh-fs-xs);
-  font-weight: var(--hh-fw-medium);
   color: var(--hh-secondary);
 }
 
@@ -606,10 +665,13 @@
 }
 
 .hh-benefit-list li {
+  font-size: var(--hh-type-card-body-size);
+  font-weight: var(--hh-type-card-body-weight);
+  line-height: var(--hh-type-card-body-lh);
+  letter-spacing: var(--hh-type-card-body-ls);
   display: flex;
   align-items: center;
   gap: var(--hh-space-3);
-  font-size: var(--hh-fs-sm);
   color: var(--hh-text);
 }
 
@@ -633,8 +695,10 @@
 }
 
 .hh-sidebar-card h3 {
-  font-size: var(--hh-fs-base);
-  font-weight: var(--hh-fw-bold);
+  font-size: var(--hh-type-detail-section-size);
+  font-weight: var(--hh-type-detail-section-weight);
+  line-height: var(--hh-type-detail-section-lh);
+  letter-spacing: var(--hh-type-detail-section-ls);
   color: var(--hh-secondary);
   margin-bottom: var(--hh-space-4);
 }
@@ -649,10 +713,13 @@
 }
 
 .hh-meta-list li {
+  font-size: var(--hh-type-detail-value-size);
+  font-weight: var(--hh-type-detail-value-weight);
+  line-height: var(--hh-type-detail-value-lh);
+  letter-spacing: var(--hh-type-detail-value-ls);
   display: flex;
   align-items: flex-start;
   gap: var(--hh-space-3);
-  font-size: var(--hh-fs-sm);
   color: var(--hh-text);
 }
 
@@ -666,11 +733,17 @@
   border-radius: var(--hh-radius-sm);
   background: var(--hh-primary-light);
   color: var(--hh-primary);
-  font-size: 0.8rem;
+  font-size: var(--hh-icon-xs);
   margin-top: 0.15rem;
 }
 
+/* The label half of a sidebar fact ("Employment:") sits a step under the
+   value it introduces, so the two are scannable as a pair. */
 .hh-meta-list li span {
+  font-size: var(--hh-type-detail-label-size);
+  font-weight: var(--hh-type-detail-label-weight);
+  line-height: var(--hh-type-detail-label-lh);
+  letter-spacing: var(--hh-type-detail-label-ls);
   color: var(--hh-muted);
 }
 
@@ -680,6 +753,19 @@
   gap: var(--hh-space-4);
   flex-wrap: wrap;
   margin-bottom: var(--hh-space-4);
+}
+
+/* Detail page hero title. Its own class rather than .hh-page-hero-title so it
+   does not inherit the display role — a single job listing must not become the
+   largest text on the site. Every two-column detail page (job, company,
+   anything else built from the same template) binds to this one class. */
+.hh-detail-hero-title {
+  font-size: var(--hh-type-detail-title-size);
+  font-weight: var(--hh-type-detail-title-weight);
+  line-height: var(--hh-type-detail-title-lh);
+  letter-spacing: var(--hh-type-detail-title-ls);
+  color: var(--hh-white);
+  margin-bottom: var(--hh-space-2);
 }
 
 .hh-sidebar-card .hh-detail-title-row {
@@ -696,25 +782,28 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  font-size: 2.25rem;
-  font-weight: var(--hh-fw-extrabold);
+  font-size: var(--hh-type-h2-size);
+  font-weight: var(--hh-type-h2-weight);
   border-radius: var(--hh-radius-lg);
   border: 1px solid var(--hh-border);
   background: var(--hh-white);
 }
 
 .hh-company-detail-heading {
-  font-size: clamp(1.6rem, 2.6vw, 2.25rem);
-  font-weight: var(--hh-fw-extrabold);
+  font-size: var(--hh-type-h1-size);
+  font-weight: var(--hh-type-h1-weight);
+  line-height: var(--hh-type-h1-lh);
+  letter-spacing: var(--hh-type-h1-ls);
   color: var(--hh-secondary);
-  letter-spacing: -0.02em;
   margin-bottom: var(--hh-space-2);
 }
 
 .hh-company-detail-tagline {
-  font-size: var(--hh-fs-md);
+  font-size: var(--hh-type-sub-size);
+  font-weight: var(--hh-type-sub-weight);
+  line-height: var(--hh-type-sub-lh);
+  letter-spacing: var(--hh-type-sub-ls);
   color: var(--hh-muted);
-  line-height: 1.6;
   margin-bottom: var(--hh-space-4);
 }
 
@@ -767,26 +856,32 @@
   border-radius: var(--hh-radius);
   background: var(--hh-primary-light);
   color: var(--hh-primary);
-  font-size: 1.15rem;
+  font-size: var(--hh-icon-lg);
 }
 
 .hh-stat-tile-value {
+  font-size: var(--hh-type-stat-lg-size);
+  font-weight: var(--hh-type-stat-lg-weight);
+  line-height: var(--hh-type-stat-lg-lh);
+  letter-spacing: var(--hh-type-stat-lg-ls);
   display: block;
-  font-size: var(--hh-fs-xl);
-  font-weight: var(--hh-fw-extrabold);
   color: var(--hh-secondary);
-  line-height: 1.2;
 }
 
 .hh-stat-tile-label {
+  font-size: var(--hh-type-card-meta-size);
+  font-weight: var(--hh-type-card-meta-weight);
+  line-height: var(--hh-type-card-meta-lh);
+  letter-spacing: var(--hh-type-card-meta-ls);
   display: block;
-  font-size: var(--hh-fs-xs);
   color: var(--hh-muted);
 }
 
 .hh-company-info-card h3 {
-  font-size: var(--hh-fs-base);
-  font-weight: var(--hh-fw-bold);
+  font-size: var(--hh-type-h3-size);
+  font-weight: var(--hh-type-h3-weight);
+  line-height: var(--hh-type-h3-lh);
+  letter-spacing: var(--hh-type-h3-ls);
   color: var(--hh-secondary);
   margin-bottom: var(--hh-space-4);
 }
@@ -808,27 +903,30 @@
 }
 
 .hh-mission-eyebrow {
+  font-size: var(--hh-type-eyebrow-size);
+  font-weight: var(--hh-type-eyebrow-weight);
+  line-height: var(--hh-type-eyebrow-lh);
+  letter-spacing: var(--hh-type-eyebrow-ls);
   color: var(--hh-primary);
-  font-weight: var(--hh-fw-semibold);
   text-transform: uppercase;
-  letter-spacing: 0.08em;
-  font-size: var(--hh-fs-sm);
   margin-bottom: var(--hh-space-3);
 }
 
 .hh-mission-title {
-  font-size: clamp(1.6rem, 2.6vw, 2.25rem);
-  font-weight: var(--hh-fw-extrabold);
+  font-size: var(--hh-type-h2-size);
+  font-weight: var(--hh-type-h2-weight);
+  line-height: var(--hh-type-h2-lh);
+  letter-spacing: var(--hh-type-h2-ls);
   color: var(--hh-secondary);
-  line-height: 1.2;
-  letter-spacing: -0.02em;
   margin-bottom: var(--hh-space-4);
 }
 
 .hh-mission-text {
-  font-size: var(--hh-fs-md);
+  font-size: var(--hh-type-body-size);
+  font-weight: var(--hh-type-body-weight);
+  line-height: var(--hh-type-body-lh);
+  letter-spacing: var(--hh-type-body-ls);
   color: var(--hh-muted);
-  line-height: 1.7;
   margin-bottom: var(--hh-space-5);
 }
 
@@ -882,21 +980,27 @@
   border-radius: var(--hh-radius);
   background: var(--hh-primary-light);
   color: var(--hh-primary);
-  font-size: 1.25rem;
+  font-size: var(--hh-icon-lg);
   margin-bottom: var(--hh-space-4);
 }
 
+/* Values cards carry an argument rather than a listing, so the title sits a
+   step above the shared card title used by job and resource cards. */
 .hh-value-title {
-  font-size: var(--hh-fs-md);
-  font-weight: var(--hh-fw-bold);
+  font-size: var(--hh-type-card-title-lg-size);
+  font-weight: var(--hh-type-card-title-lg-weight);
+  line-height: var(--hh-type-card-title-lg-lh);
+  letter-spacing: var(--hh-type-card-title-lg-ls);
   color: var(--hh-secondary);
   margin-bottom: var(--hh-space-2);
 }
 
 .hh-value-text {
-  font-size: var(--hh-fs-sm);
+  font-size: var(--hh-type-body-size);
+  font-weight: var(--hh-type-body-weight);
+  line-height: var(--hh-type-body-lh);
+  letter-spacing: var(--hh-type-body-ls);
   color: var(--hh-muted);
-  line-height: 1.65;
   margin-bottom: 0;
 }
 
@@ -940,20 +1044,24 @@
   border-radius: var(--hh-radius);
   background: var(--hh-primary-light);
   color: var(--hh-primary);
-  font-size: 1.4rem;
+  font-size: var(--hh-icon-xl);
 }
 
 .hh-contact-option h3 {
-  font-size: var(--hh-fs-md);
-  font-weight: var(--hh-fw-bold);
+  font-size: var(--hh-type-h3-size);
+  font-weight: var(--hh-type-h3-weight);
+  line-height: var(--hh-type-h3-lh);
+  letter-spacing: var(--hh-type-h3-ls);
   color: var(--hh-secondary);
   margin-bottom: 0;
 }
 
 .hh-contact-option p {
-  font-size: var(--hh-fs-sm);
+  font-size: var(--hh-type-card-body-size);
+  font-weight: var(--hh-type-card-body-weight);
+  line-height: var(--hh-type-card-body-lh);
+  letter-spacing: var(--hh-type-card-body-ls);
   color: var(--hh-muted);
-  line-height: 1.65;
   margin-bottom: 0;
 }
 
@@ -978,18 +1086,24 @@
   border-radius: var(--hh-radius);
   background: var(--hh-bg-soft);
   color: var(--hh-primary);
-  font-size: 1.1rem;
+  font-size: var(--hh-icon-md);
 }
 
 .hh-contact-meta-item strong {
+  font-size: var(--hh-type-card-meta-size);
+  font-weight: var(--hh-type-card-meta-weight);
+  line-height: var(--hh-type-card-meta-lh);
+  letter-spacing: var(--hh-type-card-meta-ls);
   display: block;
-  font-size: var(--hh-fs-sm);
   color: var(--hh-secondary);
   margin-bottom: 2px;
 }
 
 .hh-contact-meta-item span {
-  font-size: var(--hh-fs-sm);
+  font-size: var(--hh-type-card-meta-size);
+  font-weight: var(--hh-type-card-meta-weight);
+  line-height: var(--hh-type-card-meta-lh);
+  letter-spacing: var(--hh-type-card-meta-ls);
   color: var(--hh-muted);
 }
 
@@ -1030,18 +1144,24 @@
   border-radius: var(--hh-radius);
   background: var(--hh-primary-light);
   color: var(--hh-primary);
-  font-size: 1.1rem;
+  font-size: var(--hh-icon-md);
 }
 
 .hh-contact-response strong {
+  font-size: var(--hh-type-card-body-size);
+  font-weight: var(--hh-type-card-body-weight);
+  line-height: var(--hh-type-card-body-lh);
+  letter-spacing: var(--hh-type-card-body-ls);
   display: block;
-  font-size: var(--hh-fs-sm);
   color: var(--hh-secondary);
   margin-bottom: 2px;
 }
 
 .hh-contact-response span {
-  font-size: var(--hh-fs-sm);
+  font-size: var(--hh-type-card-meta-size);
+  font-weight: var(--hh-type-card-meta-weight);
+  line-height: var(--hh-type-card-meta-lh);
+  letter-spacing: var(--hh-type-card-meta-ls);
   color: var(--hh-muted);
 }
 
@@ -1053,11 +1173,13 @@
 }
 
 .hh-contact-quick-link {
+  font-size: var(--hh-type-card-title-size);
+  font-weight: var(--hh-type-card-title-weight);
+  line-height: var(--hh-type-card-title-lh);
+  letter-spacing: var(--hh-type-card-title-ls);
   display: inline-flex;
   align-items: center;
   gap: var(--hh-space-2);
-  font-size: var(--hh-fs-xs);
-  font-weight: var(--hh-fw-medium);
   color: var(--hh-primary);
   background: var(--hh-primary-light);
   border: 1px solid transparent;
@@ -1082,10 +1204,11 @@
 }
 
 .hh-contact-socials-label {
-  font-size: var(--hh-fs-xs);
-  font-weight: var(--hh-fw-bold);
+  font-size: var(--hh-type-card-meta-size);
+  font-weight: var(--hh-type-card-meta-weight);
+  line-height: var(--hh-type-card-meta-lh);
+  letter-spacing: var(--hh-type-card-meta-ls);
   text-transform: uppercase;
-  letter-spacing: 0.06em;
   color: var(--hh-secondary);
 }
 
@@ -1103,7 +1226,7 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  font-size: 0.9rem;
+  font-size: var(--hh-icon-sm);
   text-decoration: none;
   transition: all var(--hh-transition-fast);
 }
@@ -1117,9 +1240,12 @@
 /* Contact form fields — match the site's signature .hh-form-control / .hh-form-select style */
 .hh-contact-form .form-control,
 .hh-contact-form .form-select {
+  font-size: var(--hh-type-body-size);
+  font-weight: var(--hh-type-body-weight);
+  line-height: var(--hh-type-body-lh);
+  letter-spacing: var(--hh-type-body-ls);
   height: 46px;
   font-family: var(--hh-font-sans);
-  font-size: var(--hh-fs-sm);
   color: var(--hh-text);
   background-color: var(--hh-white);
   border: 1px solid var(--hh-border-strong);
@@ -1202,9 +1328,10 @@
 }
 
 .hh-hero-popular-label {
-  font-size: var(--hh-fs-xs);
-  font-weight: var(--hh-fw-semibold);
-  letter-spacing: 0.04em;
+  font-size: var(--hh-type-card-meta-size);
+  font-weight: var(--hh-type-card-meta-weight);
+  line-height: var(--hh-type-card-meta-lh);
+  letter-spacing: var(--hh-type-card-meta-ls);
   text-transform: uppercase;
   color: rgba(255, 255, 255, 0.6);
   margin-right: 0.25rem;
@@ -1240,7 +1367,7 @@
   border-radius: 50%;
   background: color-mix(in srgb, var(--hh-primary) 45%, transparent);
   color: var(--hh-blue-tint);
-  font-size: 0.9rem;
+  font-size: var(--hh-icon-sm);
 }
 
 .hh-hero-stat-text {
@@ -1250,23 +1377,25 @@
 }
 
 .hh-hero-stat-value {
-  font-size: var(--hh-fs-md);
-  font-weight: var(--hh-fw-extrabold);
+  font-size: var(--hh-type-stat-size);
+  font-weight: var(--hh-type-stat-weight);
+  line-height: var(--hh-type-stat-lh);
+  letter-spacing: var(--hh-type-stat-ls);
   color: var(--hh-white);
-  line-height: 1.2;
 }
 
 .hh-hero-stat-label {
-  font-size: var(--hh-fs-xs);
+  font-size: var(--hh-type-card-meta-size);
+  font-weight: var(--hh-type-card-meta-weight);
+  line-height: var(--hh-type-card-meta-lh);
+  letter-spacing: var(--hh-type-card-meta-ls);
   color: rgba(255, 255, 255, 0.72);
 }
 
-@media (max-width: 575.98px) {
-  .hh-hero-stat-label {
-    font-size: 0.6875rem;
-  }
-}
-
+/* The mobile override that used to shrink this label to 11px is gone. Making
+   text smaller on a smaller screen is the wrong direction: the label is
+   already at the 12px floor on desktop, and shrinking it further is what
+   forced the floor to be broken in the first place. */
 .hh-jobs-toolbar {
   background: var(--hh-white);
   border: 1px solid var(--hh-border);
@@ -1280,6 +1409,10 @@
 }
 
 .hh-btn-badge {
+  font-size: var(--hh-type-card-meta-size);
+  font-weight: var(--hh-type-card-meta-weight);
+  line-height: var(--hh-type-card-meta-lh);
+  letter-spacing: var(--hh-type-card-meta-ls);
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -1289,9 +1422,6 @@
   border-radius: var(--hh-radius-pill);
   background: var(--hh-accent);
   color: var(--hh-white);
-  font-size: var(--hh-fs-xs);
-  font-weight: var(--hh-fw-bold);
-  line-height: 1;
 }
 
 .hh-filter-chips {
@@ -1323,10 +1453,13 @@
 }
 
 .hh-result-summary {
+  font-size: var(--hh-type-card-meta-size);
+  font-weight: var(--hh-type-card-meta-weight);
+  line-height: var(--hh-type-card-meta-lh);
+  letter-spacing: var(--hh-type-card-meta-ls);
   display: inline-flex;
   align-items: center;
   gap: var(--hh-space-2);
-  font-size: var(--hh-fs-xs);
   color: var(--hh-muted);
 }
 
@@ -1336,6 +1469,10 @@
 }
 
 .hh-filter-chip {
+  font-size: var(--hh-type-card-meta-size);
+  font-weight: var(--hh-type-card-meta-weight);
+  line-height: var(--hh-type-card-meta-lh);
+  letter-spacing: var(--hh-type-card-meta-ls);
   display: inline-flex;
   align-items: center;
   gap: 0.45rem;
@@ -1343,8 +1480,6 @@
   background: var(--hh-primary-light);
   color: var(--hh-primary-dark);
   border-radius: var(--hh-radius-pill);
-  font-size: var(--hh-fs-xs);
-  font-weight: var(--hh-fw-medium);
 }
 
 .hh-filter-chip button {
@@ -1367,11 +1502,13 @@
 }
 
 .hh-filter-clear {
+  font-size: var(--hh-type-card-meta-size);
+  font-weight: var(--hh-type-card-meta-weight);
+  line-height: var(--hh-type-card-meta-lh);
+  letter-spacing: var(--hh-type-card-meta-ls);
   border: none;
   background: transparent;
   color: var(--hh-primary);
-  font-size: var(--hh-fs-xs);
-  font-weight: var(--hh-fw-medium);
   text-decoration: underline;
   text-underline-offset: 3px;
   cursor: pointer;
@@ -1430,18 +1567,22 @@
 }
 
 .hh-filters-head h2 {
-  font-size: var(--hh-fs-md);
-  font-weight: var(--hh-fw-bold);
+  font-size: var(--hh-type-h2-size);
+  font-weight: var(--hh-type-h2-weight);
+  line-height: var(--hh-type-h2-lh);
+  letter-spacing: var(--hh-type-h2-ls);
   color: var(--hh-secondary);
   margin: 0;
 }
 
 .hh-filters-head-clear {
+  font-size: var(--hh-type-card-meta-size);
+  font-weight: var(--hh-type-card-meta-weight);
+  line-height: var(--hh-type-card-meta-lh);
+  letter-spacing: var(--hh-type-card-meta-ls);
   border: none;
   background: transparent;
   color: var(--hh-primary);
-  font-size: var(--hh-fs-xs);
-  font-weight: var(--hh-fw-medium);
   text-decoration: underline;
   text-underline-offset: 3px;
   cursor: pointer;
@@ -1462,14 +1603,16 @@
 }
 
 .hh-filter-count {
+  font-size: var(--hh-type-card-meta-size);
+  font-weight: var(--hh-type-card-meta-weight);
+  line-height: var(--hh-type-card-meta-lh);
+  letter-spacing: var(--hh-type-card-meta-ls);
   flex-shrink: 0;
   min-width: 26px;
   padding: 0.1rem 0.5rem;
   border-radius: var(--hh-radius-pill);
   background: var(--hh-bg-soft);
   color: var(--hh-muted);
-  font-size: var(--hh-fs-xs);
-  font-weight: var(--hh-fw-medium);
   text-align: center;
 }
 
@@ -1501,13 +1644,15 @@
 }
 
 .hh-resource-pill {
+  font-size: var(--hh-type-card-meta-size);
+  font-weight: var(--hh-type-card-meta-weight);
+  line-height: var(--hh-type-card-meta-lh);
+  letter-spacing: var(--hh-type-card-meta-ls);
   display: inline-flex;
   align-items: center;
   gap: 0.45rem;
   padding: 0.5rem 1rem;
   font-family: var(--hh-font-sans);
-  font-size: var(--hh-fs-sm);
-  font-weight: var(--hh-fw-semibold);
   color: var(--hh-secondary);
   background: var(--hh-white);
   border: 1px solid var(--hh-border-strong);
@@ -1522,6 +1667,10 @@
 }
 
 .hh-resource-pill span {
+  font-size: var(--hh-type-card-meta-size);
+  font-weight: var(--hh-type-card-meta-weight);
+  line-height: var(--hh-type-card-meta-lh);
+  letter-spacing: var(--hh-type-card-meta-ls);
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -1531,9 +1680,6 @@
   border-radius: var(--hh-radius-pill);
   background: var(--hh-bg-soft);
   color: var(--hh-muted);
-  font-size: var(--hh-fs-xs);
-  font-weight: var(--hh-fw-bold);
-  line-height: 1;
 }
 
 .hh-resource-pill:hover {
@@ -1568,16 +1714,19 @@
   position: absolute;
   left: var(--hh-space-4);
   color: var(--hh-muted);
-  font-size: 0.9rem;
+  font-size: var(--hh-icon-sm);
   pointer-events: none;
 }
 
 .hh-resource-search-input {
+  font-size: var(--hh-type-body-size);
+  font-weight: var(--hh-type-body-weight);
+  line-height: var(--hh-type-body-lh);
+  letter-spacing: var(--hh-type-body-ls);
   width: 100%;
   height: 44px;
   padding: 0 var(--hh-space-9) 0 2.5rem;
   font-family: var(--hh-font-sans);
-  font-size: var(--hh-fs-sm);
   color: var(--hh-text);
   background: var(--hh-white);
   border: 1px solid var(--hh-border-strong);
@@ -1686,11 +1835,11 @@
 }
 
 .hh-resource-featured-inline-title {
-  font-size: clamp(1.35rem, 2vw, 1.75rem);
-  font-weight: var(--hh-fw-extrabold);
+  font-size: var(--hh-type-card-title-size);
+  font-weight: var(--hh-type-card-title-weight);
+  line-height: var(--hh-type-card-title-lh);
+  letter-spacing: var(--hh-type-card-title-ls);
   color: var(--hh-secondary);
-  line-height: 1.25;
-  letter-spacing: -0.02em;
   margin: 0;
 }
 
@@ -1818,7 +1967,7 @@
   background: rgba(255, 255, 255, 0.12);
   border: 1px solid rgba(255, 255, 255, 0.22);
   color: var(--hh-logo-teal);
-  font-size: 1.75rem;
+  font-size: var(--hh-fs-28);
   box-shadow: 0 10px 30px rgba(3, 10, 24, 0.35);
 }
 
@@ -1858,14 +2007,15 @@
 }
 
 .hh-resource-cover-label {
+  font-size: var(--hh-type-card-meta-size);
+  font-weight: var(--hh-type-card-meta-weight);
+  line-height: var(--hh-type-card-meta-lh);
+  letter-spacing: var(--hh-type-card-meta-ls);
   position: absolute;
   z-index: 1;
   left: var(--hh-space-4);
   bottom: var(--hh-space-4);
   padding: 0.3rem 0.8rem;
-  font-size: var(--hh-fs-xs);
-  font-weight: var(--hh-fw-semibold);
-  letter-spacing: 0.04em;
   text-transform: uppercase;
   color: var(--hh-white);
   background: rgba(3, 10, 24, 0.42);
@@ -1890,16 +2040,20 @@
 }
 
 .hh-resource-read {
-  font-size: var(--hh-fs-xs);
+  font-size: var(--hh-type-card-meta-size);
+  font-weight: var(--hh-type-card-meta-weight);
+  line-height: var(--hh-type-card-meta-lh);
+  letter-spacing: var(--hh-type-card-meta-ls);
   color: var(--hh-muted);
   white-space: nowrap;
 }
 
 .hh-resource-title {
-  font-size: var(--hh-fs-md);
-  font-weight: var(--hh-fw-bold);
+  font-size: var(--hh-type-card-title-size);
+  font-weight: var(--hh-type-card-title-weight);
+  line-height: var(--hh-type-card-title-lh);
+  letter-spacing: var(--hh-type-card-title-ls);
   color: var(--hh-secondary);
-  line-height: 1.35;
   margin: 0;
   /* Reserve two lines so every card body starts at the same row. */
   min-height: calc(2 * 1.35em);
@@ -1916,9 +2070,11 @@
 }
 
 .hh-resource-card:not(.hh-resource-card--featured) .hh-resource-excerpt {
-  font-size: var(--hh-fs-sm);
+  font-size: var(--hh-type-related-excerpt-size);
+  font-weight: var(--hh-type-related-excerpt-weight);
+  line-height: var(--hh-type-related-excerpt-lh);
+  letter-spacing: var(--hh-type-related-excerpt-ls);
   color: var(--hh-muted);
-  line-height: 1.6;
   margin: 0;
   /* Clamp to exactly two lines so excerpts never make one card taller than
      its row siblings; min-height keeps the zone constant even for short text. */
@@ -1932,9 +2088,11 @@
 /* Featured banner intro — same two-line clamp as the standard cards so
    every description truncates identically across the grid. */
 .hh-resource-card.hh-resource-card--featured .hh-resource-excerpt {
-  font-size: var(--hh-fs-md);
+  font-size: var(--hh-type-related-excerpt-size);
+  font-weight: var(--hh-type-related-excerpt-weight);
+  line-height: var(--hh-type-related-excerpt-lh);
+  letter-spacing: var(--hh-type-related-excerpt-ls);
   color: var(--hh-muted);
-  line-height: 1.7;
   margin: 0;
   max-width: 52ch;
   display: -webkit-box;
@@ -1945,11 +2103,13 @@
 }
 
 .hh-resource-author {
+  font-size: var(--hh-type-card-meta-size);
+  font-weight: var(--hh-type-card-meta-weight);
+  line-height: var(--hh-type-card-meta-lh);
+  letter-spacing: var(--hh-type-card-meta-ls);
   display: flex;
   align-items: center;
   gap: var(--hh-space-2);
-  font-size: var(--hh-fs-sm);
-  font-weight: var(--hh-fw-medium);
   color: var(--hh-secondary);
   margin-top: auto;
   padding-top: var(--hh-space-3);
@@ -1963,19 +2123,21 @@
 
 /* Distinct initials avatar per author — same pattern class as company logos. */
 .hh-author-avatar {
+  /* The box scales with its content, but the monogram is a fixed role token,
+     so a 22px avatar renders 12px initials rather than an unreadable 8px. */
+  font-size: var(--hh-type-card-meta-size);
+  font-weight: var(--hh-type-card-title-weight);
+  line-height: var(--hh-type-card-meta-lh);
+  letter-spacing: var(--hh-type-card-title-ls);
   flex-shrink: 0;
-  width: 34px;
-  height: 34px;
+  width: var(--hh-avatar-size, 34px);
+  height: var(--hh-avatar-size, 34px);
   display: inline-flex;
   align-items: center;
   justify-content: center;
   border-radius: 50%;
   border: 1px solid rgba(11, 31, 58, 0.08);
   font-family: var(--hh-font-sans);
-  font-size: var(--hh-fs-xs);
-  font-weight: var(--hh-fw-extrabold);
-  letter-spacing: 0.02em;
-  line-height: 1;
   user-select: none;
 }
 
@@ -1994,10 +2156,13 @@
 }
 
 .hh-article-meta-item {
+  font-size: var(--hh-type-article-meta-size);
+  font-weight: var(--hh-type-article-meta-weight);
+  line-height: var(--hh-type-article-meta-lh);
+  letter-spacing: var(--hh-type-article-meta-ls);
   display: inline-flex;
   align-items: center;
   gap: var(--hh-space-2);
-  font-size: var(--hh-fs-sm);
   color: var(--hh-white);
   background: rgba(255, 255, 255, 0.08);
   border: 1px solid rgba(255, 255, 255, 0.14);
@@ -2014,10 +2179,16 @@
   margin: 0 auto;
 }
 
+/* Article lead / pull-quote. This is the lifted opening line of the piece
+   rather than body copy, so it takes the quote role: a step above the article
+   body size and medium weight, which is what makes it read as a pull-quote
+   instead of a first paragraph that happens to have a rule down its side. */
 .hh-article-intro {
-  font-size: var(--hh-fs-lg);
-  line-height: 1.7;
-  color: var(--hh-secondary);
+  font-size: var(--hh-type-article-quote-size);
+  font-weight: var(--hh-type-article-quote-weight);
+  line-height: var(--hh-type-article-quote-lh);
+  letter-spacing: var(--hh-type-article-quote-ls);
+  color: var(--hh-text-reading);
   border-left: 4px solid var(--hh-primary);
   padding-left: var(--hh-space-5);
   margin-bottom: var(--hh-space-8);
@@ -2027,17 +2198,24 @@
   margin-bottom: var(--hh-space-8);
 }
 
+/* An in-article heading, not a page section: the article subhead role is a
+   tier below h2 so a long-form body keeps a clear heading hierarchy instead
+   of repeating 32px section titles every few paragraphs. */
 .hh-article-block h2 {
-  font-size: var(--hh-fs-xl);
-  font-weight: var(--hh-fw-bold);
+  font-size: var(--hh-type-article-subhead-size);
+  font-weight: var(--hh-type-article-subhead-weight);
+  line-height: var(--hh-type-article-subhead-lh);
+  letter-spacing: var(--hh-type-article-subhead-ls);
   color: var(--hh-secondary);
   margin-bottom: var(--hh-space-3);
 }
 
 .hh-article-block p {
-  font-size: var(--hh-fs-md);
-  color: var(--hh-text);
-  line-height: 1.75;
+  font-size: var(--hh-type-article-body-size);
+  font-weight: var(--hh-type-article-body-weight);
+  line-height: var(--hh-type-article-body-lh);
+  letter-spacing: var(--hh-type-article-body-ls);
+  color: var(--hh-text-reading);
   margin-bottom: var(--hh-space-4);
 }
 
@@ -2055,14 +2233,19 @@
 }
 
 .hh-article-cta h2 {
-  font-size: var(--hh-fs-xl);
-  font-weight: var(--hh-fw-extrabold);
+  font-size: var(--hh-type-callout-title-size);
+  font-weight: var(--hh-type-callout-title-weight);
+  line-height: var(--hh-type-callout-title-lh);
+  letter-spacing: var(--hh-type-callout-title-ls);
   color: var(--hh-secondary);
   margin-bottom: var(--hh-space-2);
 }
 
 .hh-article-cta p {
-  font-size: var(--hh-fs-sm);
+  font-size: var(--hh-type-callout-body-size);
+  font-weight: var(--hh-type-callout-body-weight);
+  line-height: var(--hh-type-callout-body-lh);
+  letter-spacing: var(--hh-type-callout-body-ls);
   color: var(--hh-muted);
   margin-bottom: 0;
 }
@@ -2081,11 +2264,12 @@
 }
 
 .hh-faq-group-head .hh-section-eyebrow {
+  font-size: var(--hh-type-eyebrow-size);
+  font-weight: var(--hh-type-eyebrow-weight);
+  line-height: var(--hh-type-eyebrow-lh);
+  letter-spacing: var(--hh-type-eyebrow-ls);
   color: var(--hh-primary);
-  font-size: var(--hh-fs-sm);
-  font-weight: var(--hh-fw-semibold);
   text-transform: uppercase;
-  letter-spacing: 0.08em;
   margin-bottom: var(--hh-space-2);
 }
 
@@ -2113,6 +2297,10 @@
 }
 
 .hh-faq-question {
+  font-size: var(--hh-type-card-title-size);
+  font-weight: var(--hh-type-card-title-weight);
+  line-height: var(--hh-type-card-title-lh);
+  letter-spacing: var(--hh-type-card-title-ls);
   width: 100%;
   display: flex;
   align-items: center;
@@ -2122,8 +2310,6 @@
   background: transparent;
   border: none;
   font-family: var(--hh-font-sans);
-  font-size: var(--hh-fs-base);
-  font-weight: var(--hh-fw-semibold);
   color: var(--hh-secondary);
   text-align: left;
   cursor: pointer;
@@ -2136,7 +2322,7 @@
 
 .hh-faq-question i {
   flex-shrink: 0;
-  font-size: 1.1rem;
+  font-size: var(--hh-icon-md);
   color: var(--hh-primary);
 }
 
@@ -2153,11 +2339,13 @@
 }
 
 .hh-faq-answer p {
+  font-size: var(--hh-type-card-body-size);
+  font-weight: var(--hh-type-card-body-weight);
+  line-height: var(--hh-type-card-body-lh);
+  letter-spacing: var(--hh-type-card-body-ls);
   margin: 0;
   padding: 0 var(--hh-space-5) var(--hh-space-4);
-  font-size: var(--hh-fs-sm);
   color: var(--hh-muted);
-  line-height: 1.7;
 }
 
 .hh-faq-contact {
@@ -2173,21 +2361,120 @@
 }
 
 .hh-faq-contact h2 {
+  font-size: var(--hh-type-h2-size);
+  font-weight: var(--hh-type-h2-weight);
+  line-height: var(--hh-type-h2-lh);
+  letter-spacing: var(--hh-type-h2-ls);
   color: var(--hh-white);
-  font-size: var(--hh-fs-xl);
-  font-weight: var(--hh-fw-extrabold);
   margin-bottom: var(--hh-space-2);
 }
 
 .hh-faq-contact p {
+  font-size: var(--hh-type-body-size);
+  font-weight: var(--hh-type-body-weight);
+  line-height: var(--hh-type-body-lh);
+  letter-spacing: var(--hh-type-body-ls);
   color: rgba(255, 255, 255, 0.75);
-  font-size: var(--hh-fs-sm);
-  line-height: 1.6;
   margin-bottom: 0;
 }
 
 @media (max-width: 575.98px) {
   .hh-faq-contact {
     padding: var(--hh-space-5);
+  }
+}
+
+/* ==============================================================
+   Wide-screen steps for the page + section title tier.
+
+   The 32px -> 36px step cannot live in a role token, because a media
+   query is not expressible as a custom property. Listing every selector
+   that binds the h2 role is what keeps the requirement "no section
+   title is smaller or lighter than another" literally true: a new
+   section heading that binds --hh-type-h2 and is missing from this list
+   would silently stay at 32px while its siblings step to 36px.
+
+   Lives at the end of pages.css, which index.css imports after
+   base/components/landing — so these win over the 32px defaults at
+   equal specificity. Panel headings that reuse the role for a smaller
+   job (.hh-filters-head h2) are deliberately absent and stay at 32px.
+   ============================================================== */
+@media (min-width: 1400px) {
+  h2.hh-section-title,
+  h1.hh-section-title,
+  .hh-type-h2,
+  .hh-section-title,
+  .hh-final-cta-title,
+  .hh-mission-title,
+  .hh-faq-contact h2 {
+    font-size: var(--hh-fs-36);
+  }
+
+  /* The article hero reaches one display step further up on wide screens. */
+  .hh-hero--article .hh-page-hero-title {
+    font-size: var(--hh-fs-48);
+  }
+}
+
+/* ===================================================================
+   PRICING — employer plan comparison
+   =================================================================== */
+
+/* The featured plan is lifted out of the row rather than merely tinted, so
+   the recommended option is recognisable before any text is read. The lift
+   is a transform, so the three cards stay on one baseline for their
+   footers only via the flex column inside. */
+.hh-plan--featured {
+  border-color: var(--hh-primary);
+  box-shadow: 0 18px 40px -24px var(--hh-primary-ring);
+  transform: translateY(-6px);
+}
+
+.hh-plan-flag {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  align-self: flex-start;
+  margin-bottom: 0.875rem;
+  padding: 0.25rem 0.625rem;
+  border-radius: var(--hh-radius-pill, 999px);
+  background: var(--hh-primary-soft);
+  color: var(--hh-primary-darker);
+  font-size: var(--hh-fs-12);
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.hh-plan-price {
+  font-size: var(--hh-fs-36);
+  font-weight: 700;
+  line-height: 1.1;
+  letter-spacing: -0.02em;
+  color: var(--hh-text);
+}
+
+.hh-plan-features li {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  padding: 0.375rem 0;
+  font-size: var(--hh-fs-14);
+  color: var(--hh-text-reading);
+  line-height: 1.5;
+}
+
+.hh-plan-features i {
+  color: var(--hh-primary);
+  font-size: var(--hh-fs-14);
+  line-height: 1.5;
+  flex-shrink: 0;
+}
+
+/* On small screens the featured card is pulled *down* instead of up, so it
+   never sits above the fold at the cost of clipping the hero. */
+@media (max-width: 991.98px) {
+  .hh-plan--featured {
+    transform: none;
   }
 }

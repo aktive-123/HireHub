@@ -2,6 +2,8 @@
 
 return [
 
+    'enabled' => env('MAIL_ENABLED', false),
+
     /*
     |--------------------------------------------------------------------------
     | Default Mailer
@@ -39,14 +41,29 @@ return [
 
         'smtp' => [
             'transport' => 'smtp',
-            'scheme' => env('MAIL_SCHEME'),
+            'scheme' => env('MAIL_SCHEME') ?: (env('MAIL_ENCRYPTION') === 'ssl' ? 'smtps' : (env('MAIL_ENCRYPTION') === 'tls' ? 'smtp' : null)),
+            'encryption' => env('MAIL_ENCRYPTION'),
+            // A single MAIL_URL of the form smtp://user:pass@host:port overrides
+            // the discrete settings below, which is how every provider
+            // documents its credentials. Keep both paths working so switching
+            // between SendGrid, Mailgun and SES is a one-line env change.
             'url' => env('MAIL_URL'),
             'host' => env('MAIL_HOST', '127.0.0.1'),
-            'port' => env('MAIL_PORT', 2525),
+            'port' => env('MAIL_PORT', 587),
             'username' => env('MAIL_USERNAME'),
             'password' => env('MAIL_PASSWORD'),
             'timeout' => null,
             'local_domain' => env('MAIL_EHLO_DOMAIN', parse_url((string) env('APP_URL', 'http://localhost'), PHP_URL_HOST)),
+        ],
+
+        'mailgun' => [
+            'transport' => 'mailgun',
+            // Mailgun's own API rather than its SMTP endpoint: it returns a
+            // delivery id, so a webhook can later confirm the inbox hand-off.
+            'domain' => env('MAIL_MAILGUN_DOMAIN'),
+            'secret' => env('MAIL_MAILGUN_SECRET'),
+            'endpoint' => env('MAIL_MAILGUN_ENDPOINT', 'api.mailgun.net'),
+            'scheme' => 'https',
         ],
 
         'ses' => [
@@ -81,10 +98,15 @@ return [
 
         'failover' => [
             'transport' => 'failover',
-            'mailers' => [
-                'smtp',
-                'log',
-            ],
+            // Deliberately does NOT include the log mailer. A failover chain
+            // that ends at `log` reports success while the one-time password
+            // is never actually delivered, which is worse than an outright
+            // failure: the user waits ten minutes for a code that was never
+            // sent. Add a real second transport here if you want redundancy.
+            'mailers' => array_values(array_filter(array_map(
+                'trim',
+                explode(',', (string) env('MAIL_FAILOVER_MAILERS', 'smtp'))
+            ))),
             'retry_after' => 60,
         ],
 
@@ -114,5 +136,36 @@ return [
         'address' => env('MAIL_FROM_ADDRESS', 'hello@example.com'),
         'name' => env('MAIL_FROM_NAME', env('APP_NAME', 'Laravel')),
     ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Public origin used for absolute links in emails
+    |--------------------------------------------------------------------------
+    |
+    | Mail clients resolve relative paths against nothing, so a template cannot
+    | reference the bundled logo relatively. This is the origin that remote
+    | images and support links in transactional mail are built from; it must be
+    | publicly reachable, which means it is usually NOT FRONTEND_URL (that is
+    | often a private Vite dev server) but the deployed site.
+    |
+    */
+
+    'from_assets_url' => env('MAIL_ASSETS_URL', env('APP_URL', 'http://localhost')),
+
+    /*
+    |--------------------------------------------------------------------------
+    | Logo used in transactional mail
+    |--------------------------------------------------------------------------
+    |
+    | Absolute URL of the brand logo, because mail clients resolve relative
+    | paths against nothing. Defaults to the site origin plus `/build/logo.png`,
+    | which is where Vite copies `frontend/public/logo.png` — the served root
+    | has no `/logo.png`, so guessing the bare filename shipped a broken image
+    | in every code email. Override with MAIL_LOGO_URL when the logo lives
+    | somewhere else, such as a CDN.
+    |
+    */
+
+    'logo_url' => env('MAIL_LOGO_URL') ?: rtrim((string) env('MAIL_ASSETS_URL', env('APP_URL', 'http://localhost')), '/').'/build/logo.png',
 
 ];

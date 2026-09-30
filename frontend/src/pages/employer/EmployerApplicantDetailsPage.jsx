@@ -12,6 +12,7 @@ import Button from '../../components/ui/Button'
 import FormSelect from '../../components/ui/FormSelect'
 import Alert from '../../components/ui/Alert'
 import LoadingState from '../../components/ui/LoadingState'
+import HiringFeeModal from '../../components/employer/HiringFeeModal'
 
 const MOVE_OPTIONS = [
   { value: 'new', label: 'Applied' },
@@ -27,10 +28,43 @@ export default function EmployerApplicantDetailsPage() {
   const [nextStatus, setNextStatus] = useState('new')
   const [updated, setUpdated] = useState(false)
   const [updateError, setUpdateError] = useState(false)
+  const [downloading, setDownloading] = useState(false)
+  const [cvError, setCvError] = useState(null)
+  // Populated only from a `hiring_fee_required` refusal, so the modal's figures
+  // are the server's own quote rather than anything computed in the browser.
+  const [feeQuote, setFeeQuote] = useState(null)
+  const [feeOpen, setFeeOpen] = useState(false)
 
   useEffect(() => {
     if (candidate?.status) setNextStatus(candidate.status)
   }, [candidate?.status])
+
+  // The modal also polls on its own while open, but an employer who paid in
+  // another tab should still see the page catch up when they come back here.
+  // Above the early returns, like every other hook: the loading and error
+  // branches below return before the page body renders, and a hook called
+  // after them would run a different number of times depending on the request.
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search)
+    if (params.get('fee_return') !== '1' || !candidate?.id) return
+    setFeeQuote(null)
+    setFeeOpen(true)
+  }, [candidate?.id])
+
+  const downloadCv = async () => {
+    setDownloading(true)
+    setCvError(null)
+    try {
+      await employerApi.downloadCv(id)
+    } catch (err) {
+      // The endpoint answers 404 with a message when the candidate never
+      // uploaded a CV, so surface the server's wording rather than a generic
+      // "download failed".
+      setCvError(err?.message || 'This candidate has not uploaded a CV.')
+    } finally {
+      setDownloading(false)
+    }
+  }
 
   if (loading) {
     return (
@@ -71,7 +105,7 @@ export default function EmployerApplicantDetailsPage() {
         <div className="page-container">
           <EmptyState icon="person-x" title="Candidate not found" text="This application may have been removed or the link is incorrect." />
           <div className="text-center hh-mt-4">
-            <Button to="/employer/applicants" variant="outline-primary">Back to applicants</Button>
+            <Button to="/employer/applicants" variant="outline">Back to applicants</Button>
           </div>
         </div>
       </section>
@@ -86,9 +120,27 @@ export default function EmployerApplicantDetailsPage() {
       setUpdated(true)
       window.scrollTo({ top: 0, behavior: 'smooth' })
       await reload()
-    } catch {
+    } catch (err) {
+      // A hire costs money. The API refuses one that has not been paid for and
+      // hands back the price; that refusal is the signal to open the fee modal,
+      // not a generic failure banner. The page cannot skip this step — the
+      // server would reject the request anyway.
+      if (err?.code === 'hiring_fee_required') {
+        setFeeQuote(err.payload?.data?.hiring_fee ?? null)
+        setFeeOpen(true)
+        return
+      }
       setUpdateError(true)
     }
+  }
+
+  // Runs once the gateway has confirmed the charge. The transition was already
+  // made server-side, so this only has to redraw what the page is showing.
+  const handleFeePaid = async () => {
+    setUpdated(true)
+    setNextStatus('hired')
+    window.scrollTo({ top: 0, behavior: 'smooth' })
+    await reload()
   }
 
   return (
@@ -138,9 +190,38 @@ export default function EmployerApplicantDetailsPage() {
                   <p className="hh-settings-desc hh-mt-2">Applied to <strong>{candidate.job}</strong> on {candidate.applied}. Notice: {candidate.notice}.</p>
                 </div>
                 <div className="hh-profile-head-actions">
-                  <Button variant="outline-primary" icon="bi-download">Download CV</Button>
-                  <Button variant="primary" icon="bi-chat-dots">Contact candidate</Button>
+                  <Button
+                    variant="outline"
+                    icon="bi-download"
+                    onClick={downloadCv}
+                    disabled={downloading}
+                  >
+                    {downloading ? 'Preparing…' : 'Download CV'}
+                  </Button>
+                  {candidate.email ? (
+                    <Button
+                      variant="primary"
+                      icon="bi-chat-dots"
+                      href={`mailto:${encodeURIComponent(candidate.email)}?subject=${encodeURIComponent(`Re: your application for ${candidate.job ?? 'a role'}`)}`}
+                    >
+                      Contact candidate
+                    </Button>
+                  ) : (
+                    <Button
+                      variant="primary"
+                      icon="bi-chat-dots"
+                      disabled
+                      data-tooltip="This candidate has not published an email address"
+                    >
+                      Contact candidate
+                    </Button>
+                  )}
                 </div>
+                {cvError ? (
+                  <p className="text-danger small hh-mt-2 hh-mb-0" role="alert">
+                    {cvError}
+                  </p>
+                ) : null}
               </div>
             </Card>
           </Reveal>
@@ -265,12 +346,40 @@ export default function EmployerApplicantDetailsPage() {
                       Move candidate
                     </Button>
                   </form>
+
+                  {candidate.status !== 'hired' && (
+                    <>
+                      <p className="small text-secondary hh-mt-3 hh-mb-2">
+                        Marking a candidate as hired requires the one-off placement fee to be paid first.
+                      </p>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        icon="bi-cash-coin"
+                        block
+                        onClick={() => {
+                          setFeeQuote(null)
+                          setFeeOpen(true)
+                        }}
+                      >
+                        Pay hiring fee
+                      </Button>
+                    </>
+                  )}
                 </Card>
               </Reveal>
             </div>
           </div>
         </div>
       </section>
+
+      <HiringFeeModal
+        isOpen={feeOpen}
+        applicationId={candidate.id}
+        quote={feeQuote}
+        onClose={() => setFeeOpen(false)}
+        onPaid={handleFeePaid}
+      />
     </>
   )
 }

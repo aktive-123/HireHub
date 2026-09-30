@@ -4,6 +4,9 @@ import Card from '../../components/ui/Card'
 import EmptyState from '../../components/ui/EmptyState'
 import TablePagination from '../../components/ui/TablePagination'
 import { activityLogs } from '../../data/admin'
+import { adminApi } from '../../services/api'
+import { adaptActivityLogs } from '../../services/api/adminAdapters'
+import { useAdminList } from '../../hooks/useAdminData'
 
 const PAGE_SIZE = 8
 
@@ -19,17 +22,22 @@ export default function AdminActivityLogsPage() {
   const [query, setQuery] = useState('')
   const [page, setPage] = useState(1)
 
+  const { items: logs } = useAdminList(
+    () => adminApi.activityLogs({}).then(adaptActivityLogs),
+    activityLogs
+  )
+
   const types = ['all', 'success', 'info', 'warning', 'danger']
 
   const tabs = types.map((type) => ({
     key: type,
     label: type === 'all' ? 'All' : type.charAt(0).toUpperCase() + type.slice(1),
-    count: type === 'all' ? activityLogs.length : activityLogs.filter((log) => log.type === type).length,
+    count: type === 'all' ? logs.length : logs.filter((log) => log.type === type).length,
   }))
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase()
-    return activityLogs.filter((log) => {
+    return logs.filter((log) => {
       const matchesTab = tab === 'all' || log.type === tab
       const matchesQuery =
         !q ||
@@ -38,7 +46,7 @@ export default function AdminActivityLogsPage() {
         (log.target || '').toLowerCase().includes(q)
       return matchesTab && matchesQuery
     })
-  }, [tab, query])
+  }, [tab, query, logs])
 
   const visible = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE)
 

@@ -85,7 +85,7 @@ export default function EmployerEditJobPage() {
             text="This job posting may have been removed or the link is incorrect."
           />
           <div className="text-center hh-mt-4">
-            <Button to="/employer/jobs" variant="outline-primary">
+            <Button to="/employer/jobs" variant="outline">
               Back to my jobs
             </Button>
           </div>

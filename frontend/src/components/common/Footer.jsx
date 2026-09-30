@@ -1,9 +1,42 @@
+import { useState } from 'react'
 import { Link } from 'react-router-dom'
+import { publicApi } from '../../services/api'
 import logoImg from '../../assets/white logo.png'
 
+// Real destinations. These were href="#linkedin" and friends, which jumped the
+// page to the top and went nowhere.
+const SOCIALS = [
+  { key: 'linkedin', label: 'LinkedIn', icon: 'linkedin', href: 'https://www.linkedin.com/company/hirehub' },
+  { key: 'x', label: 'X / Twitter', icon: 'twitter-x', href: 'https://x.com/hirehub' },
+  { key: 'facebook', label: 'Facebook', icon: 'facebook', href: 'https://www.facebook.com/hirehub' },
+  { key: 'instagram', label: 'Instagram', icon: 'instagram', href: 'https://www.instagram.com/hirehub' },
+  { key: 'youtube', label: 'YouTube', icon: 'youtube', href: 'https://www.youtube.com/@hirehub' },
+]
+
 export default function Footer() {
-  const handleSubmitNewsletter = (e) => {
+  const [email, setEmail] = useState('')
+  const [state, setState] = useState('idle') // idle | submitting | done | error
+  const [message, setMessage] = useState('')
+
+  const handleSubmitNewsletter = async (e) => {
     e.preventDefault()
+    if (state === 'submitting') return
+
+    setState('submitting')
+    setMessage('')
+
+    try {
+      const res = await publicApi.subscribeToNewsletter(email, 'footer')
+      setMessage(res?.message || 'Check your inbox to confirm your subscription.')
+      setState('done')
+      // Clearing the field signals the submission was accepted; the message
+      // below carries the "confirm your email" instruction.
+      setEmail('')
+    } catch (err) {
+      const field = err?.payload?.errors?.email?.[0]
+      setMessage(field || err?.message || 'We could not sign you up just now. Please try again.')
+      setState('error')
+    }
   }
 
   return (
@@ -22,21 +55,18 @@ export default function Footer() {
               Connecting talent with opportunity.
             </p>
             <div className="hh-footer-socials">
-              <a href="#linkedin" className="hh-footer-social-btn" aria-label="LinkedIn">
-                <i className="bi bi-linkedin" />
-              </a>
-              <a href="#twitter" className="hh-footer-social-btn" aria-label="X / Twitter">
-                <i className="bi bi-twitter-x" />
-              </a>
-              <a href="#facebook" className="hh-footer-social-btn" aria-label="Facebook">
-                <i className="bi bi-facebook" />
-              </a>
-              <a href="#instagram" className="hh-footer-social-btn" aria-label="Instagram">
-                <i className="bi bi-instagram" />
-              </a>
-              <a href="#youtube" className="hh-footer-social-btn" aria-label="YouTube">
-                <i className="bi bi-youtube" />
-              </a>
+              {SOCIALS.map((social) => (
+                <a
+                  key={social.key}
+                  href={social.href}
+                  className="hh-footer-social-btn"
+                  aria-label={social.label}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  <i className={`bi bi-${social.icon}`} />
+                </a>
+              ))}
             </div>
           </div>
 
@@ -76,24 +106,62 @@ export default function Footer() {
             <p className="hh-text-muted fs-6 mb-3">
               Get the latest jobs and career tips.
             </p>
-            <form onSubmit={handleSubmitNewsletter}>
+            <form onSubmit={handleSubmitNewsletter} noValidate>
               <div className="input-group">
+                <label htmlFor="newsletter-email" className="visually-hidden">
+                  Email address for newsletter
+                </label>
                 <input
+                  id="newsletter-email"
                   type="email"
                   className="form-control"
                   placeholder="Enter your email address"
+                  value={email}
+                  onChange={(e) => {
+                    setEmail(e.target.value)
+                    // Clear a previous verdict as soon as they retype, so the
+                    // old error does not sit under a corrected address.
+                    if (state === 'error' || state === 'done') {
+                      setState('idle')
+                      setMessage('')
+                    }
+                  }}
+                  disabled={state === 'submitting'}
                   aria-label="Email address for newsletter"
+                  aria-describedby={message ? 'newsletter-status' : undefined}
+                  aria-invalid={state === 'error' || undefined}
                   required
                 />
                 <button
                   type="submit"
                   className="hh-btn hh-btn-primary"
                   aria-label="Subscribe to newsletter"
+                  disabled={state === 'submitting'}
                 >
-                  <i className="bi bi-arrow-right" />
+                  {state === 'submitting' ? (
+                    <span className="spinner-border spinner-border-sm" aria-hidden="true" />
+                  ) : (
+                    <i className="bi bi-arrow-right" />
+                  )}
                 </button>
               </div>
             </form>
+
+            {/*
+              role="status" so the outcome is announced to a screen reader.
+              Without it the form appears to do nothing at all, which is exactly
+              the bug this replaced.
+            */}
+            <p
+              id="newsletter-status"
+              role="status"
+              aria-live="polite"
+              className={`small mt-2 mb-0 ${
+                state === 'error' ? 'text-danger' : state === 'done' ? 'text-success' : ''
+              }`}
+            >
+              {message || (state === 'done' ? 'Almost there — check your inbox to confirm.' : '')}
+            </p>
           </div>
         </div>
 

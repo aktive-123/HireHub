@@ -11,7 +11,7 @@ export function useApiData(loader, deps = [], { initial = null, enabled = true }
   }, [loader])
 
   const reload = useCallback(async () => {
-    if (!loaderRef.current) return
+    if (!loaderRef.current) return undefined
     setLoading(true)
     setError(null)
     try {
@@ -19,8 +19,13 @@ export function useApiData(loader, deps = [], { initial = null, enabled = true }
       setData(result)
       return result
     } catch (err) {
+      // Recorded in state for the error branch to render, but deliberately not
+      // re-thrown: most callers wire this straight to onClick, where a
+      // rejection becomes an unhandled promise, and the ones that do await it
+      // sit inside a try/catch for the primary action and would otherwise
+      // report a failed refresh as a failed save.
       setError(err)
-      throw err
+      return undefined
     } finally {
       setLoading(false)
     }

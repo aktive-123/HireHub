@@ -169,7 +169,7 @@ export default function JobDetailsPage() {
                   />
                 )}
               </div>
-              <h1 className="hh-page-hero-title hh-mb-2">{job.title}</h1>
+              <h1 className="hh-detail-hero-title">{job.title}</h1>
               <div className="hh-toolbar">
                 <Badge variant={badge.variant} dot>
                   {badge.label}

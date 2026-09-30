@@ -27,8 +27,16 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: var(--hh-space-4);
   width: 100%;
   position: relative;
+  /* Three groups share one row: brand, links, actions. Logging in swaps two
+     buttons for an avatar, a name and a Log Out button, so the row can outgrow
+     a narrower desktop. Wrapping is the safety net — the actions group drops to
+     a second row instead of colliding with the links, which is exactly what the
+     old absolutely-positioned centred nav did. */
+  flex-wrap: wrap;
+  row-gap: var(--hh-space-2);
 }
 
 .hh-navbar-brand {
@@ -53,17 +61,22 @@
 .hh-navbar-nav-collapse {
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  justify-content: flex-end;
   flex: 1 1 auto;
+  min-width: 0;
+  gap: var(--hh-space-4);
 }
 
 .hh-navbar-nav {
-  position: absolute;
-  left: 50%;
-  transform: translateX(-50%);
   display: flex;
   align-items: center;
+  justify-content: center;
   gap: var(--hh-space-6);
+  /* In normal flow and centred in whatever space is left over. Never narrower
+     than the links themselves need, so when the row runs out of room the
+     actions wrap to the next line rather than overlapping "Contact". */
+  flex: 1 1 auto;
+  min-width: max-content;
   list-style: none;
   margin: 0;
   padding: 0;
@@ -72,8 +85,10 @@
 
 .hh-navbar-link {
   color: var(--hh-secondary);
-  font-size: 0.9375rem;
-  font-weight: var(--hh-fw-medium);
+  font-size: var(--hh-type-body-size);
+  font-weight: var(--hh-type-body-weight);
+  line-height: var(--hh-type-body-lh);
+  letter-spacing: var(--hh-type-body-ls);
   text-decoration: none;
   transition: color var(--hh-transition-fast);
   padding: var(--hh-space-1) 0;
@@ -103,15 +118,17 @@
   align-items: center;
   gap: var(--hh-space-3);
   margin-left: auto;
+  flex: 0 0 auto;
   flex-shrink: 0;
   white-space: nowrap;
+  justify-content: flex-end;
 }
 
 .hh-navbar-search-btn {
   background: transparent;
   border: none;
   color: var(--hh-secondary);
-  font-size: 1.15rem;
+  font-size: var(--hh-icon-lg);
   width: 38px;
   height: 38px;
   cursor: pointer;
@@ -119,6 +136,10 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  /* The search icon keeps its 38px box at every width; it used to be allowed to
+     shrink, which is how it ended up sitting on top of "Contact". */
+  flex: 0 0 auto;
+  flex-shrink: 0;
   transition: all var(--hh-transition-fast);
   text-decoration: none;
 }
@@ -128,13 +149,116 @@
   background-color: var(--hh-bg-soft);
 }
 
+/* Avatar + name group in the public navbar. */
+.hh-navbar-user-chip {
+  flex: 0 1 auto;
+  flex-shrink: 0;
+  min-width: 0;
+  max-width: 170px;
+  text-decoration: none;
+  border-radius: var(--hh-radius-pill);
+  transition: opacity var(--hh-transition-fast);
+}
+
+/* The name is the only unbounded width in the row: a long first name grew the
+   chip until the actions wrapped to a second line. Cap it so the row width is
+   predictable, and let the name ellipsize — the full name is still the link's
+   tooltip and accessible name. */
+.hh-navbar-user-chip .hh-user-name {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.hh-navbar-user-chip:hover {
+  opacity: 0.85;
+}
+
+/* -------------------------------------------------------------
+   Desktop fit for the logged-in navbar
+   Logged out the row is brand + links + search + "Log In"/"Sign Up",
+   which needs ~1060px. Logged in it is brand + links + search +
+   avatar + name + "Log Out", and for employers a fourth action,
+   "Post a Job", which needs ~1230px with a short name. The steps
+   below spend the savings in order of least visual cost: button
+   padding, then link spacing, then logo height, then the name.
+------------------------------------------------------------- */
+
+/* Two navbar buttons at 24px inline padding each is 48px of chrome per
+   button; 16px reads the same and buys a whole action slot back. */
+@media (max-width: 1359.98px) {
+  .hh-navbar-actions .hh-btn {
+    padding-inline: var(--hh-space-4);
+  }
+}
+
+/* 1160-1359: link spacing only. */
+@media (min-width: 992px) and (max-width: 1359.98px) {
+  .hh-navbar-nav {
+    gap: var(--hh-space-5);
+  }
+}
+
+/* 1100-1159: also a shorter logo and a tighter row gap. */
+@media (min-width: 992px) and (max-width: 1159.98px) {
+  .hh-navbar-row {
+    gap: var(--hh-space-3);
+  }
+
+  .hh-navbar-brand-logo {
+    height: 30px;
+  }
+}
+
+/* 992-1279: the name goes. The container caps at 1280px, so a named chip only
+   fits comfortably at the full container width. The name stays in the DOM — it
+   is still the link's accessible name and its tooltip — it just stops competing
+   for width, and the divider that separated it from the avatar goes with it. */
+@media (min-width: 992px) and (max-width: 1279.98px) {
+  .hh-navbar-user-chip {
+    padding-left: 0;
+    border-left: 0;
+  }
+
+  .hh-navbar-user-chip .hh-user-name {
+    display: none;
+  }
+}
+
+/* Employers carry a fourth action item ("Post a Job"). At the 1280px container
+   cap, links + search + a named chip + two buttons overflow at every desktop
+   width, so the employer chip is avatar-only on desktop and keeps its name in
+   the collapsed mobile menu, where the actions wrap onto their own row anyway. */
+@media (min-width: 992px) {
+  .hh-navbar--employer .hh-navbar-user-chip {
+    padding-left: 0;
+    border-left: 0;
+  }
+
+  .hh-navbar--employer .hh-navbar-user-chip .hh-user-name {
+    display: none;
+  }
+}
+
+/* 992-1159: tighter link gaps, and tightest for the employer row. */
+@media (min-width: 992px) and (max-width: 1159.98px) {
+  .hh-navbar-nav {
+    gap: var(--hh-space-4);
+  }
+
+  .hh-navbar--employer .hh-navbar-nav {
+    gap: var(--hh-space-2);
+  }
+}
+
 /* Mobile Navigation Toggle */
 .hh-nav-toggle {
   display: none;
   background: transparent;
   border: none;
   color: var(--hh-secondary);
-  font-size: 1.5rem;
+  font-size: var(--hh-icon-xl);
   cursor: pointer;
   padding: var(--hh-space-1);
 }
@@ -169,7 +293,12 @@
     transform: none;
     flex-direction: column;
     align-items: flex-start;
+    justify-content: flex-start;
     gap: var(--hh-space-3);
+    /* Stacked links have no horizontal minimum to honour, and must not inherit
+       the desktop max-content floor that keeps them from overlapping. */
+    flex: 0 0 auto;
+    min-width: 0;
     width: 100%;
     margin: 0;
   }
@@ -178,10 +307,14 @@
     width: 100%;
     flex-direction: row;
     align-items: center;
+    justify-content: flex-start;
     gap: var(--hh-space-3);
     padding-top: var(--hh-space-3);
     border-top: 1px solid var(--hh-border);
     margin-left: 0;
+    /* An employer row carries search + avatar + Log Out + "Post a Job", which is
+       more than a 360px phone is wide. Wrap to a second line instead. */
+    flex-wrap: wrap;
   }
 }
 
@@ -195,9 +328,11 @@
 }
 
 .hh-footer-title {
+  font-size: var(--hh-type-card-title-size);
+  font-weight: var(--hh-type-card-title-weight);
+  line-height: var(--hh-type-card-title-lh);
+  letter-spacing: var(--hh-type-card-title-ls);
   color: var(--hh-white);
-  font-size: var(--hh-fs-base);
-  font-weight: var(--hh-fw-semibold);
   margin-bottom: var(--hh-space-4);
 }
 
@@ -212,10 +347,13 @@
 }
 
 .hh-footer-link {
+  font-size: var(--hh-type-card-body-size);
+  font-weight: var(--hh-type-card-body-weight);
+  line-height: var(--hh-type-card-body-lh);
+  letter-spacing: var(--hh-type-card-body-ls);
   display: block;
   color: rgba(255, 255, 255, 0.65);
   text-decoration: none;
-  font-size: var(--hh-fs-sm);
   padding: var(--hh-space-1) 0;
   transition: color var(--hh-transition-fast);
 }
@@ -226,6 +364,10 @@
 }
 
 .hh-footer-bottom {
+  font-size: var(--hh-type-card-meta-size);
+  font-weight: var(--hh-type-card-meta-weight);
+  line-height: var(--hh-type-card-meta-lh);
+  letter-spacing: var(--hh-type-card-meta-ls);
   margin-top: var(--hh-space-8);
   padding-top: var(--hh-space-6);
   border-top: 1px solid rgba(255, 255, 255, 0.08);
@@ -234,7 +376,6 @@
   justify-content: space-between;
   flex-wrap: wrap;
   gap: var(--hh-space-4);
-  font-size: var(--hh-fs-xs);
 }
 
 .hh-footer-socials {
@@ -252,7 +393,7 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  font-size: 0.9rem;
+  font-size: var(--hh-icon-sm);
   text-decoration: none;
   transition: all var(--hh-transition-fast);
 }
@@ -303,6 +444,12 @@
 }
 
 .hh-dashboard-nav-link {
+  /* 18px, matching the console page copy: a 15px menu beside an 18px page read
+     as a secondary element. */
+  font-size: var(--hh-type-console-nav-size);
+  font-weight: var(--hh-type-card-body-weight);
+  line-height: var(--hh-type-card-body-lh);
+  letter-spacing: var(--hh-type-card-body-ls);
   position: relative;
   display: flex;
   align-items: center;
@@ -310,22 +457,22 @@
   padding: var(--hh-space-3) var(--hh-space-4);
   color: rgba(255, 255, 255, 0.72);
   font-family: var(--hh-font-sans);
-  font-size: var(--hh-fs-sm);
-  font-weight: var(--hh-fw-medium);
   border-radius: var(--hh-radius);
   text-decoration: none;
   transition: background-color var(--hh-transition-fast), color var(--hh-transition-fast), box-shadow var(--hh-transition-fast);
 }
 
 .hh-dashboard-nav-link i {
-  width: 24px;
-  height: 24px;
+  width: 26px;
+  height: 26px;
   flex-shrink: 0;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   border-radius: 7px;
-  font-size: 1.05rem;
+  /* 18px glyph in a 26px box: the previous 14px icon next to an 18px label left
+     the icon looking like punctuation rather than a menu marker. */
+  font-size: var(--hh-icon-md);
   color: inherit;
   background: rgba(255, 255, 255, 0.08);
   transition: background-color var(--hh-transition-fast), color var(--hh-transition-fast), transform var(--hh-transition-fast);

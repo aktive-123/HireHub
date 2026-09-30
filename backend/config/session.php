@@ -47,7 +47,7 @@ return [
     |
     */
 
-    'encrypt' => env('SESSION_ENCRYPT', false),
+    'encrypt' => env('SESSION_ENCRYPT', true),
 
     /*
     |--------------------------------------------------------------------------
@@ -169,7 +169,11 @@ return [
     |
     */
 
-    'secure' => env('SESSION_SECURE_COOKIE'),
+    // The session cookie is only ever sent over TLS. The explicit null default
+    // made the framework fall back to inspecting the current request, so a
+    // single missed proxy header silently downgraded the cookie to plain HTTP.
+    // Now only `local` opts out, because XAMPP serves the dev site over http.
+    'secure' => env('SESSION_SECURE_COOKIE', env('APP_ENV', 'production') === 'local' ? false : true),
 
     /*
     |--------------------------------------------------------------------------

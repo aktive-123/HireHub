@@ -17,6 +17,11 @@ class DatabaseSeeder extends Seeder
             ApplicationSeeder::class,
             ActivityLogSeeder::class,
             SettingSeeder::class,
+            PlanSeeder::class,
+            // Rates before fees: a seeded fee records which rate priced it, so
+            // the tier has to exist first.
+            HiringFeeRateSeeder::class,
+            HiringFeeSeeder::class,
         ]);
     }
 }

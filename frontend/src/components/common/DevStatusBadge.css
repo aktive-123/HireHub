@@ -1,0 +1,85 @@
+/* Development-only connection badge (see DevStatusBadge.jsx).
+   Not imported by index.css — it is injected from the component itself, so
+   these rules only exist in a dev build and cannot affect production. */
+
+/* `all: revert` resets the page's inherited typography without needing to
+   restate every property, keeping the badge readable whatever the host page
+   styles. */
+.dev-status {
+  position: fixed;
+  z-index: 9999;
+  right: 12px;
+  bottom: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 8px 10px;
+  border-radius: 8px;
+  background: #0f172a;
+  color: var(--hh-gray-200);
+  box-shadow: 0 6px 20px rgb(15 23 42 / 32%);
+  font-family: var(--hh-font-sans);
+  font-size: var(--hh-fs-12);
+  line-height: 1.5;
+  letter-spacing: 0;
+  text-transform: none;
+  pointer-events: none;
+  user-select: text;
+}
+
+.dev-status__row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  white-space: nowrap;
+}
+
+.dev-status__label {
+  font-weight: 600;
+}
+
+.dev-status__key {
+  color: var(--hh-gray-400);
+}
+
+.dev-status__value {
+  color: var(--hh-gray-200);
+}
+
+.dev-status__dot {
+  display: inline-block;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  flex: 0 0 7px;
+}
+
+.dev-status__dot--checking {
+  background: #f59e0b;
+  animation: dev-status-pulse 1.2s ease-in-out infinite;
+}
+
+.dev-status__dot--up {
+  background: #22c55e;
+}
+
+.dev-status__dot--down {
+  background: #ef4444;
+}
+
+@keyframes dev-status-pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+
+  50% {
+    opacity: 0.3;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dev-status__dot--checking {
+    animation: none;
+  }
+}

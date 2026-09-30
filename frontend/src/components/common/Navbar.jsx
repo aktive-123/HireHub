@@ -20,7 +20,7 @@ export default function Navbar() {
   const dashboardPath = role === 'seeker' ? '/seeker' : role === 'employer' ? '/employer' : '/admin'
 
   return (
-    <header className="hh-navbar">
+    <header className={`hh-navbar ${role === 'employer' ? 'hh-navbar--employer' : ''}`}>
       <div className="page-container">
         <div className="hh-navbar-row">
           <Link to="/" className="hh-navbar-brand">
@@ -109,7 +109,12 @@ export default function Navbar() {
               </Link>
               {isAuthenticated ? (
                 <>
-                  <Link to={dashboardPath} className="hh-user-chip hh-navbar-user-chip">
+                  <Link
+                    to={dashboardPath}
+                    className="hh-user-chip hh-navbar-user-chip"
+                    title={user?.name || undefined}
+                    aria-label={user?.name || undefined}
+                  >
                     <span className="hh-avatar hh-avatar-sm hh-avatar-soft" aria-hidden="true">
                       {user?.name ? user.name.charAt(0).toUpperCase() : user?.email?.charAt(0).toUpperCase()}
                     </span>

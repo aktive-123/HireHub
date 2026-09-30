@@ -1,0 +1,1963 @@
+parameters:
+	ignoreErrors:
+		-
+			message: '#^Cannot access property \$value on string\.$#'
+			identifier: property.nonObject
+			count: 1
+			path: app/Billing/Entitlement.php
+
+		-
+			message: '#^Offset string on string\|null on left side of \?\? does not exist\.$#'
+			identifier: nullCoalesce.offset
+			count: 1
+			path: app/Billing/Entitlement.php
+
+		-
+			message: '#^Cannot call method toIso8601String\(\) on string\.$#'
+			identifier: method.nonObject
+			count: 2
+			path: app/Billing/PlanEntitlements.php
+
+		-
+			message: '#^Parameter \$plan of class App\\Billing\\Entitlement constructor expects App\\Models\\Plan, Illuminate\\Database\\Eloquent\\Model given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Billing/PlanEntitlements.php
+
+		-
+			message: '#^Anonymous function has an unused use \$planName\.$#'
+			identifier: closure.unusedUse
+			count: 1
+			path: app/Console/Commands/ReconcileSubscriptions.php
+
+		-
+			message: '#^Anonymous function has an unused use \$user\.$#'
+			identifier: closure.unusedUse
+			count: 1
+			path: app/Console/Commands/ReconcileSubscriptions.php
+
+		-
+			message: '#^Cannot call method copy\(\) on string\.$#'
+			identifier: method.nonObject
+			count: 1
+			path: app/Console/Commands/ReconcileSubscriptions.php
+
+		-
+			message: '#^Cannot call method isFuture\(\) on string\.$#'
+			identifier: method.nonObject
+			count: 1
+			path: app/Console/Commands/ReconcileSubscriptions.php
+
+		-
+			message: '#^Cannot call method toFormattedDateString\(\) on string\.$#'
+			identifier: method.nonObject
+			count: 1
+			path: app/Console/Commands/ReconcileSubscriptions.php
+
+		-
+			message: '#^Parameter \#1 \$user of static method App\\Support\\Notifier\:\:send\(\) expects App\\Models\\User\|null, Illuminate\\Database\\Eloquent\\Model\|null given\.$#'
+			identifier: argument.type
+			count: 2
+			path: app/Console/Commands/ReconcileSubscriptions.php
+
+		-
+			message: '#^Using nullsafe property access "\?\-\>name" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 1
+			path: app/Console/Commands/ReconcileSubscriptions.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\Application\:\:\$day\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/Api/V1/AdminController.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\Application\:\:\$total\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/Api/V1/AdminController.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\HiringFee\:\:\$aggregate\.$#'
+			identifier: property.notFound
+			count: 4
+			path: app/Http/Controllers/Api/V1/AdminController.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\HiringFee\:\:\$average\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/Api/V1/AdminController.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\HiringFee\:\:\$day\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/Api/V1/AdminController.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\HiringFee\:\:\$hires\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/Api/V1/AdminController.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\HiringFee\:\:\$total\.$#'
+			identifier: property.notFound
+			count: 7
+			path: app/Http/Controllers/Api/V1/AdminController.php
+
+		-
+			message: '#^Cannot access property \$value on string\.$#'
+			identifier: property.nonObject
+			count: 8
+			path: app/Http/Controllers/Api/V1/AdminController.php
+
+		-
+			message: '#^Cannot call method label\(\) on string\.$#'
+			identifier: method.nonObject
+			count: 8
+			path: app/Http/Controllers/Api/V1/AdminController.php
+
+		-
+			message: '#^Method App\\Http\\Controllers\\Api\\V1\\AdminController\:\:assertCompanyOwner\(\) never returns int so it can be removed from the return type\.$#'
+			identifier: return.unusedType
+			count: 1
+			path: app/Http/Controllers/Api/V1/AdminController.php
+
+		-
+			message: '#^Parameter \#1 \$callback of method Illuminate\\Database\\Eloquent\\Collection\<int,App\\Models\\ActivityLog\>\:\:map\(\) contains unresolvable type\.$#'
+			identifier: argument.unresolvableType
+			count: 1
+			path: app/Http/Controllers/Api/V1/AdminController.php
+
+		-
+			message: '#^Parameter \#1 \$callback of method Illuminate\\Database\\Eloquent\\Collection\<int,App\\Models\\Application\>\:\:map\(\) contains unresolvable type\.$#'
+			identifier: argument.unresolvableType
+			count: 1
+			path: app/Http/Controllers/Api/V1/AdminController.php
+
+		-
+			message: '#^Parameter \#1 \$callback of method Illuminate\\Database\\Eloquent\\Collection\<int,App\\Models\\HiringFee\>\:\:map\(\) contains unresolvable type\.$#'
+			identifier: argument.unresolvableType
+			count: 3
+			path: app/Http/Controllers/Api/V1/AdminController.php
+
+		-
+			message: '#^Parameter \#1 \$callback of method Illuminate\\Support\\Collection\<int,App\\Models\\ActivityLog\>\:\:map\(\) contains unresolvable type\.$#'
+			identifier: argument.unresolvableType
+			count: 1
+			path: app/Http/Controllers/Api/V1/AdminController.php
+
+		-
+			message: '#^Parameter \#1 \$user of static method App\\Support\\Notifier\:\:send\(\) expects App\\Models\\User\|null, Illuminate\\Database\\Eloquent\\Model\|null given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Http/Controllers/Api/V1/AdminController.php
+
+		-
+			message: '#^Parameter \#3 \$target of static method App\\Models\\ActivityLog\:\:record\(\) expects Illuminate\\Database\\Eloquent\\Model\|null, string given\.$#'
+			identifier: argument.type
+			count: 2
+			path: app/Http/Controllers/Api/V1/AdminController.php
+
+		-
+			message: '#^Result of \|\| is always true\.$#'
+			identifier: booleanOr.alwaysTrue
+			count: 1
+			path: app/Http/Controllers/Api/V1/AdminController.php
+
+		-
+			message: '#^Unreachable statement \- code above always terminates\.$#'
+			identifier: deadCode.unreachable
+			count: 1
+			path: app/Http/Controllers/Api/V1/AdminController.php
+
+		-
+			message: '#^Using nullsafe method call on non\-nullable type string\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 5
+			path: app/Http/Controllers/Api/V1/AdminController.php
+
+		-
+			message: '#^Using nullsafe property access "\?\-\>headline" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 1
+			path: app/Http/Controllers/Api/V1/AdminController.php
+
+		-
+			message: '#^Using nullsafe property access "\?\-\>id" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 1
+			path: app/Http/Controllers/Api/V1/AdminController.php
+
+		-
+			message: '#^Using nullsafe property access "\?\-\>location" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 1
+			path: app/Http/Controllers/Api/V1/AdminController.php
+
+		-
+			message: '#^Using nullsafe property access "\?\-\>name" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 3
+			path: app/Http/Controllers/Api/V1/AdminController.php
+
+		-
+			message: '#^Using nullsafe property access "\?\-\>skills" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 1
+			path: app/Http/Controllers/Api/V1/AdminController.php
+
+		-
+			message: '#^Using nullsafe property access "\?\-\>title" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 3
+			path: app/Http/Controllers/Api/V1/AdminController.php
+
+		-
+			message: '#^Using nullsafe property access on non\-nullable type string\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 2
+			path: app/Http/Controllers/Api/V1/AdminController.php
+
+		-
+			message: '#^Cannot access property \$value on string\.$#'
+			identifier: property.nonObject
+			count: 1
+			path: app/Http/Controllers/Api/V1/AuthController.php
+
+		-
+			message: '#^Using nullsafe method call on non\-nullable type Laravel\\Sanctum\\PersonalAccessToken\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 1
+			path: app/Http/Controllers/Api/V1/AuthController.php
+
+		-
+			message: '#^Using nullsafe property access "\?\-\>password" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 1
+			path: app/Http/Controllers/Api/V1/AuthController.php
+
+		-
+			message: '#^Cannot access property \$value on string\.$#'
+			identifier: property.nonObject
+			count: 2
+			path: app/Http/Controllers/Api/V1/EmployerController.php
+
+		-
+			message: '#^Cannot call method diffInDays\(\) on string\.$#'
+			identifier: method.nonObject
+			count: 1
+			path: app/Http/Controllers/Api/V1/EmployerController.php
+
+		-
+			message: '#^Cannot call method label\(\) on string\.$#'
+			identifier: method.nonObject
+			count: 1
+			path: app/Http/Controllers/Api/V1/EmployerController.php
+
+		-
+			message: '#^Method App\\Http\\Controllers\\Api\\V1\\EmployerController\:\:companyOrFail\(\) should return App\\Models\\Company but returns Illuminate\\Database\\Eloquent\\Model\.$#'
+			identifier: return.type
+			count: 1
+			path: app/Http/Controllers/Api/V1/EmployerController.php
+
+		-
+			message: '#^Parameter \#1 \$fee of method App\\Services\\HiringFeeService\:\:reconcile\(\) expects App\\Models\\HiringFee, Illuminate\\Database\\Eloquent\\Model given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Http/Controllers/Api/V1/EmployerController.php
+
+		-
+			message: '#^Parameter \#1 \$user of static method App\\Support\\Notifier\:\:send\(\) expects App\\Models\\User\|null, Illuminate\\Database\\Eloquent\\Model\|null given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Http/Controllers/Api/V1/EmployerController.php
+
+		-
+			message: '#^Using nullsafe method call on non\-nullable type string\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 1
+			path: app/Http/Controllers/Api/V1/EmployerController.php
+
+		-
+			message: '#^Using nullsafe property access "\?\-\>name" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 1
+			path: app/Http/Controllers/Api/V1/EmployerController.php
+
+		-
+			message: '#^Using nullsafe property access on non\-nullable type string\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 2
+			path: app/Http/Controllers/Api/V1/EmployerController.php
+
+		-
+			message: '#^Cannot call method format\(\) on string\.$#'
+			identifier: method.nonObject
+			count: 1
+			path: app/Http/Controllers/Api/V1/InterviewController.php
+
+		-
+			message: '#^Parameter \#1 \$user of static method App\\Support\\Notifier\:\:send\(\) expects App\\Models\\User\|null, Illuminate\\Database\\Eloquent\\Model\|null given\.$#'
+			identifier: argument.type
+			count: 2
+			path: app/Http/Controllers/Api/V1/InterviewController.php
+
+		-
+			message: '#^Using nullsafe property access "\?\-\>title" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 4
+			path: app/Http/Controllers/Api/V1/InterviewController.php
+
+		-
+			message: '#^Call to function abort_if\(\) with true and 404 will always evaluate to true\.$#'
+			identifier: function.alreadyNarrowedType
+			count: 1
+			path: app/Http/Controllers/Api/V1/JobController.php
+
+		-
+			message: '#^Cannot call method toFormattedDateString\(\) on string\.$#'
+			identifier: method.nonObject
+			count: 1
+			path: app/Http/Controllers/Api/V1/PaymentController.php
+
+		-
+			message: '#^Method App\\Http\\Controllers\\Api\\V1\\PaymentController\:\:companyOrFail\(\) should return App\\Models\\Company but returns Illuminate\\Database\\Eloquent\\Model\.$#'
+			identifier: return.type
+			count: 1
+			path: app/Http/Controllers/Api/V1/PaymentController.php
+
+		-
+			message: '#^Parameter \#1 \$boolean of function abort_unless expects bool, App\\Models\\Subscription\|null given\.$#'
+			identifier: argument.type
+			count: 2
+			path: app/Http/Controllers/Api/V1/PaymentController.php
+
+		-
+			message: '#^Parameter \#1 \$boolean of function abort_unless expects bool, Illuminate\\Database\\Eloquent\\Model\|null given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Http/Controllers/Api/V1/PaymentController.php
+
+		-
+			message: '#^Parameter \#2 \$plan of method App\\Payments\\PaymentService\:\:initialize\(\) expects App\\Models\\Plan, Illuminate\\Database\\Eloquent\\Model\|null given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Http/Controllers/Api/V1/PaymentController.php
+
+		-
+			message: '#^Cannot call method toIso8601String\(\) on string\.$#'
+			identifier: method.nonObject
+			count: 2
+			path: app/Http/Controllers/Api/V1/SeekerController.php
+
+		-
+			message: '#^Unreachable statement \- code above always terminates\.$#'
+			identifier: deadCode.unreachable
+			count: 1
+			path: app/Http/Controllers/Api/V1/SeekerController.php
+
+		-
+			message: '#^Using nullsafe property access "\?\-\>certifications" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 1
+			path: app/Http/Controllers/Api/V1/SeekerController.php
+
+		-
+			message: '#^Using nullsafe property access "\?\-\>portfolio" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 1
+			path: app/Http/Controllers/Api/V1/SeekerController.php
+
+		-
+			message: '#^Using nullsafe property access "\?\-\>skills" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 1
+			path: app/Http/Controllers/Api/V1/SeekerController.php
+
+		-
+			message: '#^Unreachable statement \- code above always terminates\.$#'
+			identifier: deadCode.unreachable
+			count: 1
+			path: app/Http/Controllers/Api/V1/SettingsController.php
+
+		-
+			message: '#^Using nullsafe property access on non\-nullable type Laravel\\Sanctum\\PersonalAccessToken\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 1
+			path: app/Http/Controllers/Api/V1/SettingsController.php
+
+		-
+			message: '#^Cannot access property \$value on string\.$#'
+			identifier: property.nonObject
+			count: 1
+			path: app/Http/Middleware/EnsureRole.php
+
+		-
+			message: '#^Offset string on string\|null on left side of \?\? does not exist\.$#'
+			identifier: nullCoalesce.offset
+			count: 1
+			path: app/Http/Middleware/RequiresPlanFeature.php
+
+		-
+			message: '#^Parameter \#1 \$company of method App\\Billing\\PlanEntitlements\:\:forCompany\(\) expects App\\Models\\Company\|null, Illuminate\\Database\\Eloquent\\Model given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Http/Middleware/RequiresPlanFeature.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\V1\\ActivityLogResource\:\:\$action\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/V1/ActivityLogResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\V1\\ActivityLogResource\:\:\$actor_name\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/V1/ActivityLogResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\V1\\ActivityLogResource\:\:\$created_at\.$#'
+			identifier: property.notFound
+			count: 2
+			path: app/Http/Resources/V1/ActivityLogResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\V1\\ActivityLogResource\:\:\$id\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/V1/ActivityLogResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\V1\\ActivityLogResource\:\:\$level\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/V1/ActivityLogResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\V1\\ActivityLogResource\:\:\$target_name\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/V1/ActivityLogResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\V1\\AdminHiringFeeResource\:\:\$amount\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/V1/AdminHiringFeeResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\V1\\AdminHiringFeeResource\:\:\$application\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/V1/AdminHiringFeeResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\V1\\AdminHiringFeeResource\:\:\$application_id\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/V1/AdminHiringFeeResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\V1\\AdminHiringFeeResource\:\:\$company\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/V1/AdminHiringFeeResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\V1\\AdminHiringFeeResource\:\:\$created_at\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/V1/AdminHiringFeeResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\V1\\AdminHiringFeeResource\:\:\$currency\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/V1/AdminHiringFeeResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\V1\\AdminHiringFeeResource\:\:\$employer\.$#'
+			identifier: property.notFound
+			count: 2
+			path: app/Http/Resources/V1/AdminHiringFeeResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\V1\\AdminHiringFeeResource\:\:\$id\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/V1/AdminHiringFeeResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\V1\\AdminHiringFeeResource\:\:\$job\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/V1/AdminHiringFeeResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\V1\\AdminHiringFeeResource\:\:\$job_id\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/V1/AdminHiringFeeResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\V1\\AdminHiringFeeResource\:\:\$level\.$#'
+			identifier: property.notFound
+			count: 2
+			path: app/Http/Resources/V1/AdminHiringFeeResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\V1\\AdminHiringFeeResource\:\:\$paid_at\.$#'
+			identifier: property.notFound
+			count: 2
+			path: app/Http/Resources/V1/AdminHiringFeeResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\V1\\AdminHiringFeeResource\:\:\$percentage_applied\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/V1/AdminHiringFeeResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\V1\\AdminHiringFeeResource\:\:\$reference\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/V1/AdminHiringFeeResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\V1\\AdminHiringFeeResource\:\:\$status\.$#'
+			identifier: property.notFound
+			count: 2
+			path: app/Http/Resources/V1/AdminHiringFeeResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\V1\\AdminJobResource\:\:\$applications_count\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/V1/AdminJobResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\V1\\AdminJobResource\:\:\$category\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/V1/AdminJobResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\V1\\AdminJobResource\:\:\$company\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/V1/AdminJobResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\V1\\AdminJobResource\:\:\$company_id\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/V1/AdminJobResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\V1\\AdminJobResource\:\:\$created_at\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/V1/AdminJobResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\V1\\AdminJobResource\:\:\$employment_type\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/V1/AdminJobResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\V1\\AdminJobResource\:\:\$expires_at\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/V1/AdminJobResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\V1\\AdminJobResource\:\:\$id\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/V1/AdminJobResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\V1\\AdminJobResource\:\:\$is_featured\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/V1/AdminJobResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\V1\\AdminJobResource\:\:\$is_verified\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/V1/AdminJobResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\V1\\AdminJobResource\:\:\$location\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/V1/AdminJobResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\V1\\AdminJobResource\:\:\$posted_at\.$#'
+			identifier: property.notFound
+			count: 2
+			path: app/Http/Resources/V1/AdminJobResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\V1\\AdminJobResource\:\:\$slug\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/V1/AdminJobResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\V1\\AdminJobResource\:\:\$status\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/V1/AdminJobResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\V1\\AdminJobResource\:\:\$title\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/V1/AdminJobResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\V1\\AdminJobResource\:\:\$view_count\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/V1/AdminJobResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\V1\\ApplicationResource\:\:\$applied_at\.$#'
+			identifier: property.notFound
+			count: 2
+			path: app/Http/Resources/V1/ApplicationResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\V1\\ApplicationResource\:\:\$id\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/V1/ApplicationResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\V1\\ApplicationResource\:\:\$job\.$#'
+			identifier: property.notFound
+			count: 3
+			path: app/Http/Resources/V1/ApplicationResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\V1\\ApplicationResource\:\:\$job_id\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/V1/ApplicationResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\V1\\ApplicationResource\:\:\$match_score\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/V1/ApplicationResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\V1\\ApplicationResource\:\:\$seeker\.$#'
+			identifier: property.notFound
+			count: 5
+			path: app/Http/Resources/V1/ApplicationResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\V1\\ApplicationResource\:\:\$seeker_id\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/V1/ApplicationResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\V1\\ApplicationResource\:\:\$status\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/V1/ApplicationResource.php
+
+		-
+			message: '#^Using nullsafe property access "\?\-\>certifications" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 1
+			path: app/Http/Resources/V1/ApplicationResource.php
+
+		-
+			message: '#^Using nullsafe property access "\?\-\>portfolio" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 1
+			path: app/Http/Resources/V1/ApplicationResource.php
+
+		-
+			message: '#^Using nullsafe property access "\?\-\>skills" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 1
+			path: app/Http/Resources/V1/ApplicationResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\V1\\CategoryResource\:\:\$description\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/V1/CategoryResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\V1\\CategoryResource\:\:\$icon\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/V1/CategoryResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\V1\\CategoryResource\:\:\$jobs\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/V1/CategoryResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\V1\\CategoryResource\:\:\$name\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/V1/CategoryResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\V1\\CategoryResource\:\:\$slug\.$#'
+			identifier: property.notFound
+			count: 2
+			path: app/Http/Resources/V1/CategoryResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\V1\\CompanyResource\:\:\$description\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/V1/CompanyResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\V1\\CompanyResource\:\:\$founded\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/V1/CompanyResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\V1\\CompanyResource\:\:\$id\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/V1/CompanyResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\V1\\CompanyResource\:\:\$industry\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/V1/CompanyResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\V1\\CompanyResource\:\:\$is_featured\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/V1/CompanyResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\V1\\CompanyResource\:\:\$is_verified\.$#'
+			identifier: property.notFound
+			count: 2
+			path: app/Http/Resources/V1/CompanyResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\V1\\CompanyResource\:\:\$jobs\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/V1/CompanyResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\V1\\CompanyResource\:\:\$location\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/V1/CompanyResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\V1\\CompanyResource\:\:\$logo_bg\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/V1/CompanyResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\V1\\CompanyResource\:\:\$logo_color\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/V1/CompanyResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\V1\\CompanyResource\:\:\$logo_text\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/V1/CompanyResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\V1\\CompanyResource\:\:\$name\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/V1/CompanyResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\V1\\CompanyResource\:\:\$open_jobs_count\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/V1/CompanyResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\V1\\CompanyResource\:\:\$rating\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/V1/CompanyResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\V1\\CompanyResource\:\:\$reviews_count\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/V1/CompanyResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\V1\\CompanyResource\:\:\$size\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/V1/CompanyResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\V1\\CompanyResource\:\:\$slug\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/V1/CompanyResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\V1\\CompanyResource\:\:\$tagline\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/V1/CompanyResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\V1\\CompanyResource\:\:\$website\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/V1/CompanyResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\V1\\EmployerResource\:\:\$created_at\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/V1/EmployerResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\V1\\EmployerResource\:\:\$id\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/V1/EmployerResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\V1\\EmployerResource\:\:\$industry\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/V1/EmployerResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\V1\\EmployerResource\:\:\$is_verified\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/V1/EmployerResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\V1\\EmployerResource\:\:\$location\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/V1/EmployerResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\V1\\EmployerResource\:\:\$logo_bg\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/V1/EmployerResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\V1\\EmployerResource\:\:\$logo_color\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/V1/EmployerResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\V1\\EmployerResource\:\:\$logo_text\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/V1/EmployerResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\V1\\EmployerResource\:\:\$name\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/V1/EmployerResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\V1\\EmployerResource\:\:\$rating\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/V1/EmployerResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\V1\\EmployerResource\:\:\$size\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/V1/EmployerResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\V1\\EmployerResource\:\:\$status\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/V1/EmployerResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\V1\\EmployerResource\:\:\$updated_at\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/V1/EmployerResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\V1\\EmployerResource\:\:\$user\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/V1/EmployerResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\V1\\HiringFeeResource\:\:\$amount\.$#'
+			identifier: property.notFound
+			count: 2
+			path: app/Http/Resources/V1/HiringFeeResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\V1\\HiringFeeResource\:\:\$application\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/V1/HiringFeeResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\V1\\HiringFeeResource\:\:\$application_id\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/V1/HiringFeeResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\V1\\HiringFeeResource\:\:\$created_at\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/V1/HiringFeeResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\V1\\HiringFeeResource\:\:\$currency\.$#'
+			identifier: property.notFound
+			count: 2
+			path: app/Http/Resources/V1/HiringFeeResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\V1\\HiringFeeResource\:\:\$id\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/V1/HiringFeeResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\V1\\HiringFeeResource\:\:\$job\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/V1/HiringFeeResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\V1\\HiringFeeResource\:\:\$job_id\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/V1/HiringFeeResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\V1\\HiringFeeResource\:\:\$level\.$#'
+			identifier: property.notFound
+			count: 2
+			path: app/Http/Resources/V1/HiringFeeResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\V1\\HiringFeeResource\:\:\$paid_at\.$#'
+			identifier: property.notFound
+			count: 2
+			path: app/Http/Resources/V1/HiringFeeResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\V1\\HiringFeeResource\:\:\$payment\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/V1/HiringFeeResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\V1\\HiringFeeResource\:\:\$reference\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/V1/HiringFeeResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\V1\\HiringFeeResource\:\:\$status\.$#'
+			identifier: property.notFound
+			count: 2
+			path: app/Http/Resources/V1/HiringFeeResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\V1\\InterviewResource\:\:\$application_id\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/V1/InterviewResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\V1\\InterviewResource\:\:\$created_at\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/V1/InterviewResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\V1\\InterviewResource\:\:\$duration_minutes\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/V1/InterviewResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\V1\\InterviewResource\:\:\$id\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/V1/InterviewResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\V1\\InterviewResource\:\:\$job\.$#'
+			identifier: property.notFound
+			count: 3
+			path: app/Http/Resources/V1/InterviewResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\V1\\InterviewResource\:\:\$job_id\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/V1/InterviewResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\V1\\InterviewResource\:\:\$link\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/V1/InterviewResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\V1\\InterviewResource\:\:\$location\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/V1/InterviewResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\V1\\InterviewResource\:\:\$mode\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/V1/InterviewResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\V1\\InterviewResource\:\:\$notes\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/V1/InterviewResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\V1\\InterviewResource\:\:\$scheduled_at\.$#'
+			identifier: property.notFound
+			count: 2
+			path: app/Http/Resources/V1/InterviewResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\V1\\InterviewResource\:\:\$seeker\.$#'
+			identifier: property.notFound
+			count: 4
+			path: app/Http/Resources/V1/InterviewResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\V1\\InterviewResource\:\:\$seeker_id\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/V1/InterviewResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\V1\\InterviewResource\:\:\$status\.$#'
+			identifier: property.notFound
+			count: 2
+			path: app/Http/Resources/V1/InterviewResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\V1\\JobResource\:\:\$applications_count\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/V1/JobResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\V1\\JobResource\:\:\$category\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/V1/JobResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\V1\\JobResource\:\:\$company\.$#'
+			identifier: property.notFound
+			count: 7
+			path: app/Http/Resources/V1/JobResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\V1\\JobResource\:\:\$created_at\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/V1/JobResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\V1\\JobResource\:\:\$description\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/V1/JobResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\V1\\JobResource\:\:\$employment_type\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/V1/JobResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\V1\\JobResource\:\:\$expires_at\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/V1/JobResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\V1\\JobResource\:\:\$id\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/V1/JobResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\V1\\JobResource\:\:\$is_featured\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/V1/JobResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\V1\\JobResource\:\:\$is_verified\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/V1/JobResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\V1\\JobResource\:\:\$level\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/V1/JobResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\V1\\JobResource\:\:\$location\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/V1/JobResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\V1\\JobResource\:\:\$posted_at\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/V1/JobResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\V1\\JobResource\:\:\$salary_currency\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/V1/JobResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\V1\\JobResource\:\:\$salary_max\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/V1/JobResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\V1\\JobResource\:\:\$salary_min\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/V1/JobResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\V1\\JobResource\:\:\$salary_period\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/V1/JobResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\V1\\JobResource\:\:\$slug\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/V1/JobResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\V1\\JobResource\:\:\$status\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/V1/JobResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\V1\\JobResource\:\:\$title\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/V1/JobResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\V1\\JobResource\:\:\$updated_at\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/V1/JobResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\V1\\JobResource\:\:\$view_count\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/V1/JobResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\V1\\JobResource\:\:\$workplace\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/V1/JobResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\V1\\NotificationResource\:\:\$created_at\.$#'
+			identifier: property.notFound
+			count: 2
+			path: app/Http/Resources/V1/NotificationResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\V1\\NotificationResource\:\:\$data\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/V1/NotificationResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\V1\\NotificationResource\:\:\$id\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/V1/NotificationResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\V1\\NotificationResource\:\:\$read_at\.$#'
+			identifier: property.notFound
+			count: 2
+			path: app/Http/Resources/V1/NotificationResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\V1\\PaymentResource\:\:\$amount\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/V1/PaymentResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\V1\\PaymentResource\:\:\$checkout_url\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/V1/PaymentResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\V1\\PaymentResource\:\:\$created_at\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/V1/PaymentResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\V1\\PaymentResource\:\:\$currency\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/V1/PaymentResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\V1\\PaymentResource\:\:\$expires_at\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/V1/PaymentResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\V1\\PaymentResource\:\:\$gateway\.$#'
+			identifier: property.notFound
+			count: 2
+			path: app/Http/Resources/V1/PaymentResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\V1\\PaymentResource\:\:\$id\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/V1/PaymentResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\V1\\PaymentResource\:\:\$paid_at\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/V1/PaymentResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\V1\\PaymentResource\:\:\$plan\.$#'
+			identifier: property.notFound
+			count: 2
+			path: app/Http/Resources/V1/PaymentResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\V1\\PaymentResource\:\:\$reference\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/V1/PaymentResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\V1\\PaymentResource\:\:\$status\.$#'
+			identifier: property.notFound
+			count: 3
+			path: app/Http/Resources/V1/PaymentResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\V1\\PlanResource\:\:\$billing_period\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/V1/PlanResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\V1\\PlanResource\:\:\$currency\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/V1/PlanResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\V1\\PlanResource\:\:\$cv_view_limit\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/V1/PlanResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\V1\\PlanResource\:\:\$featured_job_limit\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/V1/PlanResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\V1\\PlanResource\:\:\$id\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/V1/PlanResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\V1\\PlanResource\:\:\$is_featured\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/V1/PlanResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\V1\\PlanResource\:\:\$job_post_limit\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/V1/PlanResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\V1\\PlanResource\:\:\$name\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/V1/PlanResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\V1\\PlanResource\:\:\$price\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/V1/PlanResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\V1\\PlanResource\:\:\$slug\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/V1/PlanResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\V1\\PlanResource\:\:\$tagline\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/V1/PlanResource.php
+
+		-
+			message: '#^Call to an undefined method App\\Http\\Resources\\V1\\PlanResource\:\:formattedPrice\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: app/Http/Resources/V1/PlanResource.php
+
+		-
+			message: '#^Call to an undefined method App\\Http\\Resources\\V1\\PlanResource\:\:isFree\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: app/Http/Resources/V1/PlanResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\V1\\SavedJobResource\:\:\$id\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/V1/SavedJobResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\V1\\SavedJobResource\:\:\$job\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/V1/SavedJobResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\V1\\SavedJobResource\:\:\$saved_at\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/V1/SavedJobResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\V1\\SeekerResource\:\:\$created_at\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/V1/SeekerResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\V1\\SeekerResource\:\:\$email\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/V1/SeekerResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\V1\\SeekerResource\:\:\$headline\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/V1/SeekerResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\V1\\SeekerResource\:\:\$id\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/V1/SeekerResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\V1\\SeekerResource\:\:\$name\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/V1/SeekerResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\V1\\SeekerResource\:\:\$phone\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/V1/SeekerResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\V1\\SeekerResource\:\:\$profile\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/V1/SeekerResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\V1\\SeekerResource\:\:\$status\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/V1/SeekerResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\V1\\SeekerResource\:\:\$updated_at\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/V1/SeekerResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\V1\\SubscriptionResource\:\:\$cancelled_at\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/V1/SubscriptionResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\V1\\SubscriptionResource\:\:\$current_period_end\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/V1/SubscriptionResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\V1\\SubscriptionResource\:\:\$gateway\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/V1/SubscriptionResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\V1\\SubscriptionResource\:\:\$id\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/V1/SubscriptionResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\V1\\SubscriptionResource\:\:\$plan\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/V1/SubscriptionResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\V1\\SubscriptionResource\:\:\$starts_at\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/V1/SubscriptionResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\V1\\SubscriptionResource\:\:\$status\.$#'
+			identifier: property.notFound
+			count: 2
+			path: app/Http/Resources/V1/SubscriptionResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\V1\\SubscriptionResource\:\:\$trial_ends_at\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/V1/SubscriptionResource.php
+
+		-
+			message: '#^Call to an undefined method App\\Http\\Resources\\V1\\SubscriptionResource\:\:grantsAccess\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: app/Http/Resources/V1/SubscriptionResource.php
+
+		-
+			message: '#^Call to an undefined method App\\Http\\Resources\\V1\\SubscriptionResource\:\:onGracePeriod\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: app/Http/Resources/V1/SubscriptionResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\V1\\UserResource\:\:\$avatar_url\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/V1/UserResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\V1\\UserResource\:\:\$created_at\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/V1/UserResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\V1\\UserResource\:\:\$email\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/V1/UserResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\V1\\UserResource\:\:\$email_verified_at\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/V1/UserResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\V1\\UserResource\:\:\$headline\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/V1/UserResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\V1\\UserResource\:\:\$id\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/V1/UserResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\V1\\UserResource\:\:\$name\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/V1/UserResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\V1\\UserResource\:\:\$phone\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/V1/UserResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\V1\\UserResource\:\:\$role\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/V1/UserResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\V1\\UserResource\:\:\$status\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/V1/UserResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\V1\\UserResource\:\:\$updated_at\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/V1/UserResource.php
+
+		-
+			message: '#^Using nullsafe method call on non\-nullable type Illuminate\\Http\\Request\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 2
+			path: app/Models/ActivityLog.php
+
+		-
+			message: '#^Using nullsafe property access "\?\-\>name" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 2
+			path: app/Models/ActivityLog.php
+
+		-
+			message: '#^Strict comparison using \!\=\= between string and null will always evaluate to true\.$#'
+			identifier: notIdentical.alwaysTrue
+			count: 1
+			path: app/Models/Application.php
+
+		-
+			message: '#^Cannot call method isPast\(\) on string\.$#'
+			identifier: method.nonObject
+			count: 1
+			path: app/Models/OtpCode.php
+
+		-
+			message: '#^Method App\\Models\\Payment\:\:hiringFee\(\) has invalid return type App\\Models\\HasOne\.$#'
+			identifier: class.notFound
+			count: 1
+			path: app/Models/Payment.php
+
+		-
+			message: '#^Method App\\Models\\Payment\:\:hiringFee\(\) should return App\\Models\\HasOne but returns Illuminate\\Database\\Eloquent\\Relations\\HasOne\<App\\Models\\HiringFee, \$this\(App\\Models\\Payment\)\>\.$#'
+			identifier: return.type
+			count: 1
+			path: app/Models/Payment.php
+
+		-
+			message: '#^Cannot call method grantsAccess\(\) on string\.$#'
+			identifier: method.nonObject
+			count: 1
+			path: app/Models/Subscription.php
+
+		-
+			message: '#^Cannot call method isFuture\(\) on string\.$#'
+			identifier: method.nonObject
+			count: 1
+			path: app/Models/Subscription.php
+
+		-
+			message: '#^Cannot call method isPast\(\) on string\.$#'
+			identifier: method.nonObject
+			count: 1
+			path: app/Models/Subscription.php
+
+		-
+			message: '#^Result of && is always false\.$#'
+			identifier: booleanAnd.alwaysFalse
+			count: 1
+			path: app/Models/Subscription.php
+
+		-
+			message: '#^Cannot access property \$value on string\.$#'
+			identifier: property.nonObject
+			count: 1
+			path: app/Models/User.php
+
+		-
+			message: '#^Using nullsafe property access "\?\-\>id" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 1
+			path: app/Payments/Gateways/StripeGateway.php
+
+		-
+			message: '#^Parameter \#1 \$array \(array\{0\?\: string\}\) of array_values is already a list, call has no effect\.$#'
+			identifier: arrayValues.list
+			count: 1
+			path: app/Payments/PaymentManager.php
+
+		-
+			message: '#^Cannot access property \$value on string\.$#'
+			identifier: property.nonObject
+			count: 1
+			path: app/Payments/PaymentService.php
+
+		-
+			message: '#^Cannot call method isFinal\(\) on string\.$#'
+			identifier: method.nonObject
+			count: 1
+			path: app/Payments/PaymentService.php
+
+		-
+			message: '#^Parameter \#1 \$user of static method App\\Support\\Notifier\:\:send\(\) expects App\\Models\\User\|null, Illuminate\\Database\\Eloquent\\Model\|null given\.$#'
+			identifier: argument.type
+			count: 2
+			path: app/Payments/PaymentService.php
+
+		-
+			message: '#^Parameter \#4 \$company of method App\\Payments\\Contracts\\PaymentGateway\:\:createCheckout\(\) expects App\\Models\\Company\|null, Illuminate\\Database\\Eloquent\\Model given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Payments/PaymentService.php
+
+		-
+			message: '#^Anonymous function has an unused use \$fee\.$#'
+			identifier: closure.unusedUse
+			count: 1
+			path: app/Services/HiringFeeService.php
+
+		-
+			message: '#^Method App\\Services\\HiringFeeService\:\:parseFlutterwaveVerification\(\) is unused\.$#'
+			identifier: method.unused
+			count: 1
+			path: app/Services/HiringFeeService.php
+
+		-
+			message: '#^Method App\\Services\\HiringFeeService\:\:parseFlutterwaveVerification\(\) never returns null so it can be removed from the return type\.$#'
+			identifier: return.unusedType
+			count: 1
+			path: app/Services/HiringFeeService.php
+
+		-
+			message: '#^Method App\\Services\\HiringFeeService\:\:parsePaystackVerification\(\) is unused\.$#'
+			identifier: method.unused
+			count: 1
+			path: app/Services/HiringFeeService.php
+
+		-
+			message: '#^Method App\\Services\\HiringFeeService\:\:parsePaystackVerification\(\) never returns null so it can be removed from the return type\.$#'
+			identifier: return.unusedType
+			count: 1
+			path: app/Services/HiringFeeService.php
+
+		-
+			message: '#^Method App\\Services\\HiringFeeService\:\:parseStripeVerification\(\) is unused\.$#'
+			identifier: method.unused
+			count: 1
+			path: app/Services/HiringFeeService.php
+
+		-
+			message: '#^Method App\\Services\\HiringFeeService\:\:parseStripeVerification\(\) never returns null so it can be removed from the return type\.$#'
+			identifier: return.unusedType
+			count: 1
+			path: app/Services/HiringFeeService.php
+
+		-
+			message: '#^Negated boolean expression is always true\.$#'
+			identifier: booleanNot.alwaysTrue
+			count: 1
+			path: app/Services/HiringFeeService.php
+
+		-
+			message: '#^Parameter \#1 \$application of method App\\Services\\HiringFeeService\:\:confirmHire\(\) expects App\\Models\\Application\|null, Illuminate\\Database\\Eloquent\\Model\|null given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Services/HiringFeeService.php
+
+		-
+			message: '#^Parameter \#1 \$job of method App\\Services\\HiringFeeService\:\:quote\(\) expects App\\Models\\Job, Illuminate\\Database\\Eloquent\\Model given\.$#'
+			identifier: argument.type
+			count: 2
+			path: app/Services/HiringFeeService.php
+
+		-
+			message: '#^Parameter \#1 \$payment of method App\\Services\\HiringFeeService\:\:settleForPayment\(\) expects App\\Models\\Payment, Illuminate\\Database\\Eloquent\\Model given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Services/HiringFeeService.php
+
+		-
+			message: '#^Parameter \#1 \$payment of method App\\Services\\HiringFeeService\:\:verifyWithGateway\(\) expects App\\Models\\Payment, Illuminate\\Database\\Eloquent\\Model given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Services/HiringFeeService.php
+
+		-
+			message: '#^Parameter \#1 \$user of static method App\\Support\\Notifier\:\:send\(\) expects App\\Models\\User\|null, Illuminate\\Database\\Eloquent\\Model\|null given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Services/HiringFeeService.php
+
+		-
+			message: '#^Unreachable statement \- code above always terminates\.$#'
+			identifier: deadCode.unreachable
+			count: 1
+			path: app/Services/HiringFeeService.php
+
+		-
+			message: '#^Using nullsafe property access "\?\-\>currency" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 1
+			path: app/Services/HiringFeeService.php
+
+		-
+			message: '#^Using nullsafe property access "\?\-\>name" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 2
+			path: app/Services/HiringFeeService.php
+
+		-
+			message: '#^Method App\\Support\\LoginThrottle\:\:keys\(\) should return array\<string, int\> but returns array\<string, string\>\.$#'
+			identifier: return.type
+			count: 1
+			path: app/Support/LoginThrottle.php
+
+		-
+			message: '#^Parameter \#1 \$key of method Illuminate\\Cache\\RateLimiter\:\:availableIn\(\) expects string, int given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Support/LoginThrottle.php
+
+		-
+			message: '#^Parameter \#1 \$key of method Illuminate\\Cache\\RateLimiter\:\:clear\(\) expects string, int given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Support/LoginThrottle.php
+
+		-
+			message: '#^Parameter \#1 \$key of method Illuminate\\Cache\\RateLimiter\:\:hit\(\) expects string, int given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Support/LoginThrottle.php
+
+		-
+			message: '#^Parameter \#1 \$key of method Illuminate\\Cache\\RateLimiter\:\:tooManyAttempts\(\) expects string, int given\.$#'
+			identifier: argument.type
+			count: 2
+			path: app/Support/LoginThrottle.php
+
+		-
+			message: '#^Using nullsafe property access "\?\-\>id" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 1
+			path: database/seeders/ActivityLogSeeder.php
+
+		-
+			message: '#^Called ''env'' outside of the config directory which returns null when the config is cached, use ''config''\.$#'
+			identifier: larastan.noEnvCallsOutsideOfConfig
+			count: 1
+			path: database/seeders/AdminSeeder.php
+
+		-
+			message: '#^Using nullsafe method call on non\-nullable type Illuminate\\Console\\Command\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 2
+			path: database/seeders/AdminSeeder.php
+
+		-
+			message: '#^Called ''env'' outside of the config directory which returns null when the config is cached, use ''config''\.$#'
+			identifier: larastan.noEnvCallsOutsideOfConfig
+			count: 1
+			path: database/seeders/DemoPassword.php
+
+		-
+			message: '#^Using nullsafe property access "\?\-\>flat_amount" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 1
+			path: database/seeders/HiringFeeSeeder.php
+
+		-
+			message: '#^Cannot access property \$value on string\.$#'
+			identifier: property.nonObject
+			count: 1
+			path: tests/ApiTestCase.php
+
+		-
+			message: '#^Cannot access property \$value on string\.$#'
+			identifier: property.nonObject
+			count: 3
+			path: tests/Feature/AdminTest.php
+
+		-
+			message: '#^Parameter \#1 \$company of method Tests\\ApiTestCase\:\:makeJob\(\) expects App\\Models\\Company, Illuminate\\Database\\Eloquent\\Model\|null given\.$#'
+			identifier: argument.type
+			count: 5
+			path: tests/Feature/AdminTest.php
+
+		-
+			message: '#^Parameter \#1 \$company of method Tests\\ApiTestCase\:\:makeJob\(\) expects App\\Models\\Company, Illuminate\\Database\\Eloquent\\Model\|null given\.$#'
+			identifier: argument.type
+			count: 8
+			path: tests/Feature/AuthorizationTest.php
+
+		-
+			message: '#^Parameter \#1 \$company of method Tests\\ApiTestCase\:\:makeJob\(\) expects App\\Models\\Company, Illuminate\\Database\\Eloquent\\Model\|null given\.$#'
+			identifier: argument.type
+			count: 8
+			path: tests/Feature/EmployerTest.php
+
+		-
+			message: '#^Cannot access property \$value on string\.$#'
+			identifier: property.nonObject
+			count: 13
+			path: tests/Feature/HiringFeeTest.php
+
+		-
+			message: '#^Parameter \#1 \$company of method Tests\\ApiTestCase\:\:makeJob\(\) expects App\\Models\\Company, Illuminate\\Database\\Eloquent\\Model\|null given\.$#'
+			identifier: argument.type
+			count: 25
+			path: tests/Feature/HiringFeeTest.php
+
+		-
+			message: '#^Parameter \#1 \$company of method Tests\\ApiTestCase\:\:makeJob\(\) expects App\\Models\\Company, Illuminate\\Database\\Eloquent\\Model\|null given\.$#'
+			identifier: argument.type
+			count: 4
+			path: tests/Feature/InterviewTest.php
+
+		-
+			message: '#^Call to an undefined static method Illuminate\\Support\\Facades\\Log\:\:shouldHaveReceived\(\)\.$#'
+			identifier: staticMethod.notFound
+			count: 1
+			path: tests/Feature/NewsletterTest.php
+
+		-
+			message: '#^Parameter \#1 \$company of method Tests\\ApiTestCase\:\:makeJob\(\) expects App\\Models\\Company, Illuminate\\Database\\Eloquent\\Model\|null given\.$#'
+			identifier: argument.type
+			count: 4
+			path: tests/Feature/PublicApiTest.php
+
+		-
+			message: '#^Parameter \#1 \$company of method Tests\\ApiTestCase\:\:makeJob\(\) expects App\\Models\\Company, Illuminate\\Database\\Eloquent\\Model\|null given\.$#'
+			identifier: argument.type
+			count: 1
+			path: tests/Feature/SecurityTest.php
+
+		-
+			message: '#^Parameter \#1 \$company of method Tests\\ApiTestCase\:\:makeJob\(\) expects App\\Models\\Company, Illuminate\\Database\\Eloquent\\Model\|null given\.$#'
+			identifier: argument.type
+			count: 6
+			path: tests/Feature/SeekerTest.php
+
+		-
+			message: '#^Cannot access property \$value on string\.$#'
+			identifier: property.nonObject
+			count: 3
+			path: tests/Feature/SettingsTest.php
+
+		-
+			message: '#^Call to method PHPUnit\\Framework\\Assert\:\:assertSame\(\) with 2 and 2 will always evaluate to true\.$#'
+			identifier: method.alreadyNarrowedType
+			count: 1
+			path: tests/Feature/SubscriptionTest.php
+
+		-
+			message: '#^Cannot access property \$value on string\.$#'
+			identifier: property.nonObject
+			count: 1
+			path: tests/Feature/SubscriptionTest.php
+
+		-
+			message: '#^Cannot call method isFuture\(\) on string\.$#'
+			identifier: method.nonObject
+			count: 1
+			path: tests/Feature/SubscriptionTest.php
+
+		-
+			message: '#^Cannot call method toIso8601String\(\) on string\.$#'
+			identifier: method.nonObject
+			count: 2
+			path: tests/Feature/SubscriptionTest.php
+
+		-
+			message: '#^Parameter \#1 \$company of method Tests\\ApiTestCase\:\:makeJob\(\) expects App\\Models\\Company, Illuminate\\Database\\Eloquent\\Model\|null given\.$#'
+			identifier: argument.type
+			count: 12
+			path: tests/Feature/SubscriptionTest.php
+
+		-
+			message: '#^Call to method PHPUnit\\Framework\\Assert\:\:assertTrue\(\) with true will always evaluate to true\.$#'
+			identifier: method.alreadyNarrowedType
+			count: 1
+			path: tests/Unit/ExampleTest.php

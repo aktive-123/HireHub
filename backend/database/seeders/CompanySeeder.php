@@ -92,7 +92,7 @@ class CompanySeeder extends Seeder
                 'name' => $company['contact'],
                 'role' => UserRole::Employer,
                 'status' => AccountStatus::Active,
-                'password' => 'password',
+                'password' => DemoPassword::hash(),
                 'email_verified_at' => now(),
             ]);
 

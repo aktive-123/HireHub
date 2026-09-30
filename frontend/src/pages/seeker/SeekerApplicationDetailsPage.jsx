@@ -205,7 +205,7 @@ export default function SeekerApplicationDetailsPage() {
                         Respond to offer
                       </Button>
                     )}
-                    <Button to={`/jobs/${job.job_slug || job.job_id}`} variant="outline-primary" icon="bi-eye" block pill>
+                    <Button to={`/jobs/${job.job_slug || job.job_id}`} variant="outline" icon="bi-eye" block pill>
                       View job posting
                     </Button>
                   </div>

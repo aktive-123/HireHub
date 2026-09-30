@@ -170,7 +170,7 @@ class SeekerSeeder extends Seeder
                 'name' => $seeker['name'],
                 'role' => UserRole::Seeker,
                 'status' => AccountStatus::Active,
-                'password' => 'password',
+                'password' => DemoPassword::hash(),
                 'phone' => $seeker['phone'],
                 'headline' => $seeker['role_title'],
                 'email_verified_at' => now(),

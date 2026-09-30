@@ -8,11 +8,17 @@ use App\Http\Controllers\Api\ApiController;
 use App\Http\Resources\V1\ApplicationResource;
 use App\Http\Resources\V1\NotificationResource;
 use App\Http\Resources\V1\SavedJobResource;
+use App\Models\ActivityLog;
 use App\Models\Application;
 use App\Models\Job;
 use App\Models\Profile;
 use App\Models\SavedJob;
+use App\Support\Notifier;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
+use Illuminate\Validation\ValidationException;
 
 class SeekerController extends ApiController
 {
@@ -92,16 +98,31 @@ class SeekerController extends ApiController
             $match = (int) round($hits->count() / $tags->count() * 100);
         }
 
-        $application = Application::create([
-            'job_id' => $job->id,
-            'seeker_id' => $user->id,
-            'status' => ApplicationStatus::New,
-            'match_score' => min(100, max(0, $match)),
-            'cover_letter' => $validated['cover_letter'] ?? null,
-            'applied_at' => now(),
-        ]);
+        $application = DB::transaction(function () use ($job, $user, $profile, $match, $validated) {
+            $application = Application::create([
+                'job_id' => $job->id,
+                'seeker_id' => $user->id,
+                'status' => ApplicationStatus::New,
+                'match_score' => min(100, max(0, $match)),
+                'cover_letter' => $validated['cover_letter'] ?? null,
+                'cv_path' => $profile?->cv_path ?? null,
+                'applied_at' => now(),
+            ]);
 
-        $job->increment('applications_count');
+            $job->increment('applications_count');
+
+            return $application;
+        });
+
+        Notifier::send($job->company?->user, [
+            'category' => 'applications',
+            'type' => 'application',
+            'icon' => 'bi-person-badge',
+            'text' => 'You have a new applicant for '.$job->title.'.',
+            'action' => 'View applicant',
+            'link' => '/employer/applicants',
+            'subject' => 'New applicant — '.$job->title,
+        ]);
 
         return $this->success(
             new ApplicationResource($application->load([
@@ -201,18 +222,154 @@ class SeekerController extends ApiController
         return $this->success(null, 'Profile updated.');
     }
 
-    public function notifications(Request $request)
+    public function cv(Request $request)
     {
-        $notifications = $request->user()
-            ->notifications()
-            ->orderByDesc('created_at')
-            ->limit(50)
-            ->get();
+        $profile = Profile::firstOrCreate(['user_id' => $request->user()->id]);
+
+        if (! $profile->cv_path) {
+            return $this->success(null, 'No CV uploaded.');
+        }
 
         return $this->success([
-            'notifications' => NotificationResource::collection($notifications),
-            'unread_count' => $request->user()->unreadNotifications()->count(),
-        ], 'Notifications retrieved.');
+            'has_cv' => true,
+            'name' => $profile->cv_name,
+            'size' => Storage::disk('local')->size($profile->cv_path),
+            'uploaded_at' => $profile->cv_updated_at?->toIso8601String(),
+            'can_download' => true,
+        ], 'CV retrieved.');
+    }
+
+    public function uploadCv(Request $request)
+    {
+        $config = config('security.uploads');
+
+        $validated = $request->validate([
+            'cv' => [
+                'required',
+                'file',
+                // Extension and size are only what the client claims. The
+                // detected MIME type below is the check that actually holds.
+                'mimes:'.implode(',', $config['cv_extensions']),
+                'max:'.$config['cv_max_kb'],
+            ],
+        ]);
+
+        $file = $validated['cv'];
+
+        // mimes: compares the client-supplied extension against guessed types.
+        // Re-checking the bytes against an explicit allowlist closes the gap
+        // where a .doc that is really an .exe, or a polyglot PDF/HTML, walks
+        // straight through. `finfo` reads the file's own content, not a header
+        // the caller controls. Compared lowercased because finfo is not
+        // consistent about casing (it reports application/CDFV2 as written).
+        $detected = strtolower((string) (mime_content_type($file->getRealPath()) ?: ''));
+        $allowed = array_map('strtolower', $config['cv_mimetypes']);
+
+        if (! in_array($detected, $allowed, true)) {
+            throw ValidationException::withMessages([
+                'cv' => ['That file type is not supported. Upload a PDF or Word document.'],
+            ]);
+        }
+
+        $user = $request->user();
+        $profile = Profile::firstOrCreate(['user_id' => $user->id]);
+
+        // The stored name is fully random and the original filename is only
+        // ever kept as a display label. Nothing user-controlled ever becomes
+        // a path, so there is no traversal and no executable name on disk.
+        $storedName = Str::random(40).'.'.strtolower($file->getClientOriginalExtension());
+        $path = $file->storeAs('cv/'.$user->id, $storedName, 'local');
+
+        if ($profile->cv_path) {
+            Storage::disk('local')->delete($profile->cv_path);
+        }
+
+        $profile->update([
+            'cv_path' => $path,
+            'cv_name' => $this->safeDisplayName($file->getClientOriginalName()),
+            'cv_updated_at' => now(),
+        ]);
+
+        ActivityLog::record($user, 'cv.uploaded', $profile);
+
+        return $this->success([
+            'has_cv' => true,
+            'name' => $profile->cv_name,
+            'uploaded_at' => $profile->cv_updated_at?->toIso8601String(),
+        ], 'CV uploaded.', 201);
+    }
+
+    public function deleteCv(Request $request)
+    {
+        $profile = Profile::firstOrCreate(['user_id' => $request->user()->id]);
+
+        if (! $profile->cv_path) {
+            return $this->error('No CV to delete.', 404);
+        }
+
+        Storage::disk('local')->delete($profile->cv_path);
+        $profile->update(['cv_path' => null, 'cv_name' => null, 'cv_updated_at' => null]);
+
+        ActivityLog::record($request->user(), 'cv.deleted', $profile);
+
+        return $this->success(null, 'CV deleted.');
+    }
+
+    public function downloadCv(Request $request)
+    {
+        $profile = Profile::firstOrCreate(['user_id' => $request->user()->id]);
+
+        if (! $profile->cv_path || ! Storage::disk('local')->exists($profile->cv_path)) {
+            return $this->error('No CV uploaded.', 404);
+        }
+
+        // The `local` disk lives outside the web root and this response is
+        // forced to download with a neutral filename, so a malicious document
+        // can never be rendered inline on the API's own origin.
+        return Storage::disk('local')->download(
+            $profile->cv_path,
+            $this->safeDisplayName($profile->cv_name ?? 'cv'),
+            ['Content-Type' => 'application/octet-stream', 'X-Content-Type-Options' => 'nosniff'],
+        );
+    }
+
+    /**
+     * Strip directory components, control characters and length from a
+     * user-supplied filename. It is only ever used as a download label and as
+     * text in the UI, but a name like `../../config/app.php` or one carrying a
+     * quote must never reach a response header.
+     */
+    private function safeDisplayName(?string $name): string
+    {
+        $base = basename(str_replace('\\', '/', (string) $name));
+        $clean = preg_replace('/[\x00-\x1F\x7F"\\\\\/]+/', '', $base) ?? '';
+        $clean = trim($clean);
+
+        return substr($clean === '' ? 'cv' : $clean, 0, 120);
+    }
+
+    public function notifications(Request $request)
+    {
+        $perPage = min(50, max(1, (int) $request->input('per_page', 20)));
+        $user = $request->user();
+
+        // The unread count is a separate query because it must reflect every
+        // unread notification, not just the ones on the current page.
+        $paginator = $user->notifications()
+            ->when($request->filled('category'), fn ($q) => $q->where('data->category', $request->input('category')))
+            ->when($request->boolean('unread'), fn ($q) => $q->unread())
+            ->orderByDesc('created_at')
+            ->paginate($perPage);
+
+        return $this->success([
+            'notifications' => NotificationResource::collection($paginator->items()),
+            'unread_count' => $user->unreadNotifications()->count(),
+        ], 'Notifications retrieved.', 200, [
+            'current_page' => $paginator->currentPage(),
+            'per_page' => $paginator->perPage(),
+            'last_page' => $paginator->lastPage(),
+            'total' => $paginator->total(),
+        ]);
     }
 
     public function markNotificationRead(Request $request, $id)
@@ -221,5 +378,14 @@ class SeekerController extends ApiController
         $notification->markAsRead();
 
         return $this->success(null, 'Notification marked as read.');
+    }
+
+    public function markAllNotificationsRead(Request $request)
+    {
+        // Scoped to the caller's own unread notifications, so this can never
+        // touch another account's rows.
+        $count = $request->user()->unreadNotifications()->update(['read_at' => now()]);
+
+        return $this->success(['marked' => $count], 'All notifications marked as read.');
     }
 }

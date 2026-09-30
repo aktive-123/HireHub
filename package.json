@@ -1,0 +1,14 @@
+{
+  "name": "hirehub",
+  "version": "1.0.0",
+  "private": true,
+  "description": "HireHub — job recruitment platform (React SPA + Laravel API).",
+  "type": "module",
+  "scripts": {
+    "build": "npm --prefix frontend run build",
+    "build:watch": "npm --prefix frontend run build -- --watch",
+    "dev": "node scripts/dev.mjs",
+    "dev:no-open": "node scripts/dev.mjs --no-open",
+    "ports": "node scripts/dev.mjs --check"
+  }
+}

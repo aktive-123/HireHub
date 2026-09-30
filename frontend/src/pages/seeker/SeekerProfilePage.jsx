@@ -11,10 +11,23 @@ import LoadingState from '../../components/ui/LoadingState'
 import { initials } from '../../utils/format'
 
 const SOCIALS = [
-  { platform: 'LinkedIn', value: 'linkedin.com/in/sarahobi', icon: 'linkedin' },
-  { platform: 'Twitter', value: '@sarahobi', icon: 'twitter-x' },
-  { platform: 'GitHub', value: 'github.com/sarah-obi', icon: 'github' },
+  { platform: 'LinkedIn', value: 'linkedin.com/in/sarahobi', icon: 'linkedin', base: 'https://www.linkedin.com/in/' },
+  { platform: 'Twitter', value: '@sarahobi', icon: 'twitter-x', base: 'https://x.com/' },
+  { platform: 'GitHub', value: 'github.com/sarah-obi', icon: 'github', base: 'https://github.com/' },
 ]
+
+/**
+ * Resolves a stored social value to a real outbound link.
+ * Values arrive in whatever shape the candidate typed them — a bare handle
+ * ("@sarahobi"), a host-qualified path ("github.com/sarah-obi") or a full URL —
+ * so normalise all three instead of emitting a dead "#" href.
+ */
+function socialHref(item) {
+  const raw = String(item.value ?? '').trim()
+  if (!raw) return null
+  if (/^https?:\/\//i.test(raw)) return raw
+  return item.base + raw.replace(/^@/, '').replace(/^www\./i, '').replace(/^https?:\/\//i, '')
+}
 
 const EXPERIENCE = [
   { role: 'Frontend Developer', org: 'Paystack — Lagos, Nigeria', period: '2022 – Present' },
@@ -85,7 +98,7 @@ export default function SeekerProfilePage() {
               subtitle="Show employers the value you bring at a glance."
             />
             <div className="d-flex gap-2">
-              <Button to="/seeker/profile/edit" variant="outline-primary" icon="bi-pencil" pill>
+              <Button to="/seeker/profile/edit" variant="outline" icon="bi-pencil" pill>
                 Edit profile
               </Button>
               <Button to="/" variant="primary" icon="bi-eye" pill>
@@ -106,12 +119,12 @@ export default function SeekerProfilePage() {
                   </div>
                   <div className="hh-app-meta">
                     <span><i className="bi bi-geo-alt hh-me-1" aria-hidden="true" />{location}</span>
-                    <span><i className="bi bi-clock hh-me-1" aria-hidden="true" />{years ? `${years} years experience` : 'Experience'}</span>
+                    <span><i className="bi bi-clock hh-me-1" aria-hidden="true" />{years ? `${years} year${Number(years) === 1 ? '' : 's'} of experience` : 'Experience'}</span>
                     <span><i className="bi bi-briefcase hh-me-1" aria-hidden="true" />12 applications</span>
                   </div>
                 </div>
                 <div className="hh-profile-head-actions">
-                  <Button to="/seeker/resume" variant="outline-primary" icon="bi-download" size="sm">Download CV</Button>
+                  <Button to="/seeker/resume" variant="outline" icon="bi-download" size="sm">Download CV</Button>
                 </div>
               </div>
             </Card>
@@ -193,7 +206,7 @@ export default function SeekerProfilePage() {
                   </div>
                   <ul className="hh-vert-list">
                     {portfolio.map((url) => (
-                      <li key={url}><a href="#"><i className="bi bi-box-arrow-up-right hh-me-2" aria-hidden="true" />{url}</a></li>
+                      <li key={url}><a href={url} target="_blank" rel="noopener noreferrer"><i className="bi bi-box-arrow-up-right hh-me-2" aria-hidden="true" />{url}</a></li>
                     ))}
                   </ul>
                 </Card>
@@ -207,7 +220,7 @@ export default function SeekerProfilePage() {
                   <ul className="hh-vert-list">
                     {SOCIALS.map((item) => (
                       <li key={item.platform}>
-                        <a href="#"><i className={`bi bi-${item.icon} hh-me-2`} aria-hidden="true" />{item.platform} — {item.value}</a>
+                        <a href={socialHref(item)} target="_blank" rel="noopener noreferrer"><i className={`bi bi-${item.icon} hh-me-2`} aria-hidden="true" />{item.platform} — {item.value}</a>
                       </li>
                     ))}
                   </ul>
@@ -226,7 +239,7 @@ export default function SeekerProfilePage() {
                       <span className="hh-file-size">246 KB · Updated September 2026</span>
                     </div>
                     <div className="hh-app-action">
-                      <Button to="/seeker/resume" variant="outline-primary" size="sm">Manage CV</Button>
+                      <Button to="/seeker/resume" variant="outline" size="sm">Manage CV</Button>
                     </div>
                   </div>
                 </Card>

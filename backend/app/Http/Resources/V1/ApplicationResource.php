@@ -37,6 +37,7 @@ class ApplicationResource extends JsonResource
             'applied_at' => $this->applied_at?->toIso8601String(),
             'match' => $this->match_score,
             'status' => $this->status?->value,
+            'has_cv' => (bool) ($this->cv_path ?? $this->seeker?->profile?->cv_path),
             'email' => $this->seeker?->email,
             'phone' => $this->seeker?->phone,
             'location' => $profile?->location,

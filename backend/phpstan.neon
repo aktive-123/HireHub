@@ -1,0 +1,26 @@
+includes:
+    - vendor/larastan/larastan/extension.neon
+    - stan-baseline.neon
+
+parameters:
+    paths:
+        - app
+        - database
+        - routes
+        - tests
+
+    level: 5
+
+    # Eloquent attributes backed by a PHP enum are inferred by larastan as their
+    # raw string, so every `match ($model->status)` and `$model->status ===
+    # SomeEnum::Case` reads as "always false". The casts are real — see the
+    # `casts()` methods on the models — and a baseline entry per site would be
+    # noise that hides genuine dead code, so the whole category is ignored.
+    ignoreErrors:
+        - '#Match arm comparison between string and App\\Enums\\[A-Za-z]+::[A-Za-z]+ is always false#'
+        - '#Strict comparison using [!=]== between string and App\\Enums\\[A-Za-z]+::[A-Za-z]+ will always evaluate to (true|false)#'
+        - '#Instanceof between string and App\\Enums\\[A-Za-z]+ will always evaluate to false#'
+        - '#Call to an undefined method Illuminate\\Database\\Eloquent\\(Model|Builder|Relations\\HasMany|Relations\\HasOne)(<[^>]*>)?::[A-Za-z_]+\(\)#'
+        - '#Access to an undefined property Illuminate\\Database\\Eloquent\\Model::#'
+
+    reportUnmatchedIgnoredErrors: false

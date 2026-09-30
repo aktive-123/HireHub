@@ -39,6 +39,20 @@ export default function LoginPage() {
       else if (user?.role === 'admin') navigate('/admin')
       else navigate('/seeker')
     } catch (err) {
+      // Correct password but an unproven address: the API answers 403 with a
+      // flag rather than a token, and has just re-sent the code. Routing to the
+      // code screen is the only useful thing to do — showing "permission
+      // denied" here would send the user looking for a support ticket.
+      if (err.status === 403 && err.payload?.data?.requires_verification) {
+        navigate(
+          `/verify-email?email=${encodeURIComponent(
+            err.payload.data.email || email,
+          )}&cooldown=${err.payload.data.resend_cooldown_seconds ?? 60}`,
+          { replace: true },
+        )
+        return
+      }
+
       setError(apiErrorMessage(err))
     } finally {
       setLoading(false)

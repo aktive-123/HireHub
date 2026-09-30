@@ -6,13 +6,21 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="description" content="HireHub - Find your next career or the perfect hire. Verified companies, trusted talent, powerful recruitment tools." />
     <meta name="theme-color" content="#0B1F3A" />
-    <title>HireHub — Find Jobs & Hire Talent</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <!--
+      Preload the one text font. It is the largest paint-blocking asset on a
+      typical page, so fetching it in parallel with the CSS avoids a flash of
+      fallback text. `crossorigin` is required even for a same-origin font
+      because the fetch is made in CORS mode, and without it the browser
+      downloads the file twice.
+    -->
     <link
-      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"
-      rel="stylesheet"
+      rel="preload"
+      href="/fonts/InterVariable.woff2"
+      as="font"
+      type="font/woff2"
+      crossorigin
     />
+    <title>HireHub — Find Jobs & Hire Talent</title>
   </head>
   <body>
     <div id="root"></div>

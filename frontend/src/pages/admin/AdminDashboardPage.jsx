@@ -17,6 +17,9 @@ import {
   activityLogs,
   MODERATION_LABELS,
 } from '../../data/admin'
+import { adminApi } from '../../services/api'
+import { adaptApplications, adaptJobs } from '../../services/api/adminAdapters'
+import { useAdminData, useAdminList } from '../../hooks/useAdminData'
 
 const TYPE_ICONS = {
   success: 'check2-circle',
@@ -34,9 +37,35 @@ const QUICK_LINKS = [
 ]
 
 export default function AdminDashboardPage() {
-  const queue = adminJobs.filter((job) => job.status !== 'published')
-  const recentApps = adminApplications.slice(0, 5)
-  const recentActivity = activityLogs.slice(0, 5)
+  const dashboard = useAdminData(
+    () => adminApi.dashboard(),
+    { stats: adminStats, recent_activity: activityLogs }
+  )
+  const { items: recentApps } = useAdminList(
+    () => adminApi.applications({ per_page: 5 }).then(adaptApplications),
+    adminApplications.slice(0, 5)
+  )
+  const { items: jobs } = useAdminList(() => adminApi.jobs({}).then(adaptJobs), adminJobs)
+  const queue = jobs.filter((job) => job.status !== 'published')
+
+  const apiStats = Object.fromEntries((dashboard.stats ?? []).map((stat) => [stat.key, stat.value]))
+  const stats = adminStats.map((stat) => {
+    let value = stat.value
+    if (stat.key === 'seekers') value = apiStats.seekers ?? apiStats.users ?? value
+    else if (stat.key === 'employers') value = apiStats.employers ?? value
+    else if (stat.key === 'companies') value = apiStats.companies ?? value
+    else if (stat.key === 'jobs') value = apiStats.active_jobs ?? apiStats.jobs ?? value
+    else if (stat.key === 'applications') value = apiStats.applications ?? value
+    return { ...stat, value }
+  })
+
+  const recentActivity = (dashboard.recent_activity ?? activityLogs)
+    .slice(0, 5)
+    .map((log, index) => ({
+      ...log,
+      id: log.id ?? `act-${index}`,
+      type: log.type ?? (log.level === 'danger' ? 'danger' : log.level === 'success' ? 'success' : log.level === 'warning' ? 'warning' : 'info'),
+    }))
 
   return (
     <section className="hh-section-space bg-white">
@@ -51,7 +80,7 @@ export default function AdminDashboardPage() {
           tagline="Great People. Build Great Companies."
         />
 
-        <AdminStatGrid stats={adminStats} cols={4} />
+        <AdminStatGrid stats={stats} cols={4} />
 
         <div className="row g-4 hh-mb-4">
           <div className="col-12 col-lg-8">

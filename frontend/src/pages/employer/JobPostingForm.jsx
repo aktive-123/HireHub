@@ -311,7 +311,7 @@ export default function JobPostingForm({ job, submitLabel = 'Publish job', onSav
             Save draft
           </Button>
           <div className="d-flex flex-wrap gap-2">
-            <Button type="button" variant="outline-primary" icon="bi-eye" onClick={() => onSave({ ...values, action: 'preview' })}>
+            <Button type="button" variant="outline" icon="bi-eye" onClick={() => onSave({ ...values, action: 'preview' })}>
               Preview job
             </Button>
             <Button type="submit" variant="primary" icon="bi-send" pill>

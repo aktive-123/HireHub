@@ -1,32 +1,75 @@
 import { useState, useMemo } from 'react'
 import AdminPageHeader from '../../components/admin/AdminPageHeader'
 import UserCell from '../../components/admin/UserCell'
+import RowDetailModal from '../../components/admin/RowDetailModal'
 import Badge from '../../components/ui/Badge'
 import StatusBadge from '../../components/ui/StatusBadge'
 import DataTable from '../../components/ui/DataTable'
 import TablePagination from '../../components/ui/TablePagination'
 import Card from '../../components/ui/Card'
 import EmptyState from '../../components/ui/EmptyState'
+import Alert from '../../components/ui/Alert'
 import {
   adminUsers,
   ROLE_LABELS,
   ROLE_VARIANT,
   ACCOUNT_LABELS,
 } from '../../data/admin'
+import { adminApi } from '../../services/api'
+import { adaptUsers } from '../../services/api/adminAdapters'
+import { useAdminList } from '../../hooks/useAdminData'
 
 const PAGE_SIZE = 8
-
-function countByRole(role) {
-  return adminUsers.filter((user) => user.role === role).length
-}
 
 export default function AdminUsersPage() {
   const [tab, setTab] = useState('all')
   const [query, setQuery] = useState('')
   const [page, setPage] = useState(1)
+  const [reloadTick, setReloadTick] = useState(0)
+  const [viewing, setViewing] = useState(null)
+  const [notice, setNotice] = useState(null)
+  const [pendingId, setPendingId] = useState(null)
+
+  const { items: users } = useAdminList(
+    () => adminApi.users({}).then(adaptUsers),
+    adminUsers,
+    [reloadTick]
+  )
+
+  const countByRole = (role) => users.filter((user) => user.role === role).length
+
+  // Suspend is destructive and reversible, so it is confirmed, reports
+  // failures instead of swallowing them, and flips to a reactivate action
+  // once the account is already suspended.
+  const toggleStatus = async (user) => {
+    if (user.role === 'admin') return
+    const suspending = user.status !== 'suspended'
+    const verb = suspending ? 'Suspend' : 'Reactivate'
+    const detail = suspending
+      ? 'They will not be able to sign in until reactivated.'
+      : 'They will be able to sign in again immediately.'
+
+    if (!window.confirm(`${verb} ${user.name}?\n\n${detail}`)) return
+
+    setPendingId(user.id)
+    setNotice(null)
+    try {
+      const res = await adminApi.updateUserStatus(
+        user.id,
+        suspending ? 'suspended' : 'active'
+      )
+      setNotice({ type: 'success', message: res?.message || `${user.name} was ${suspending ? 'suspended' : 'reactivated'}.` })
+      setReloadTick((tick) => tick + 1)
+      setViewing((current) => (current?.id === user.id ? { ...current, status: suspending ? 'suspended' : 'active' } : current))
+    } catch (err) {
+      setNotice({ type: 'danger', message: err?.message || `Could not ${verb.toLowerCase()} ${user.name}.` })
+    } finally {
+      setPendingId(null)
+    }
+  }
 
   const tabs = [
-    { key: 'all', label: 'All', count: adminUsers.length },
+    { key: 'all', label: 'All', count: users.length },
     { key: 'seeker', label: 'Job Seekers', count: countByRole('seeker') },
     { key: 'employer', label: 'Employers', count: countByRole('employer') },
     { key: 'admin', label: 'Admins', count: countByRole('admin') },
@@ -35,13 +78,13 @@ export default function AdminUsersPage() {
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase()
-    return adminUsers.filter((user) => {
+    return users.filter((user) => {
       const matchesTab = tab === 'all' || user.role === tab
       const matchesQuery =
         !q || user.name.toLowerCase().includes(q) || user.email.toLowerCase().includes(q)
       return matchesTab && matchesQuery
     })
-  }, [tab, query])
+  }, [tab, query, users])
 
   const visible = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE)
 
@@ -112,17 +155,27 @@ export default function AdminUsersPage() {
                 last_active: user.last_active,
                 actions: (
                   <div className="d-flex justify-content-end gap-2">
-                    <button type="button" className="hh-icon-btn" data-tooltip="View user" aria-label={`View ${user.name}`}>
+                    <button
+                      type="button"
+                      className="hh-icon-btn"
+                      data-tooltip="View user"
+                      aria-label={`View ${user.name}`}
+                      onClick={() => setViewing(user)}
+                    >
                       <i className="bi bi-eye" aria-hidden="true" />
                     </button>
                     <button
                       type="button"
-                      className="hh-icon-btn hh-icon-btn-danger hh-tip-start"
-                      data-tooltip="Suspend user"
-                      aria-label={`Suspend ${user.name}`}
-                      disabled={user.role === 'admin'}
+                      className={`hh-icon-btn hh-tip-start ${user.status === 'suspended' ? 'hh-icon-btn-success' : 'hh-icon-btn-danger'}`}
+                      data-tooltip={user.status === 'suspended' ? 'Reactivate user' : 'Suspend user'}
+                      aria-label={`${user.status === 'suspended' ? 'Reactivate' : 'Suspend'} ${user.name}`}
+                      disabled={user.role === 'admin' || pendingId === user.id}
+                      onClick={() => toggleStatus(user)}
                     >
-                      <i className="bi bi-person-x" aria-hidden="true" />
+                      <i
+                        className={`bi bi-${user.status === 'suspended' ? 'person-check' : 'person-x'}`}
+                        aria-hidden="true"
+                      />
                     </button>
                   </div>
                 ),
@@ -142,6 +195,32 @@ export default function AdminUsersPage() {
           total={filtered.length}
           onPageChange={setPage}
         />
+
+        <RowDetailModal
+          isOpen={Boolean(viewing)}
+          onClose={() => setViewing(null)}
+          title={viewing?.name}
+          subtitle={ROLE_LABELS[viewing?.role]}
+          status={viewing ? { value: viewing.status, label: ACCOUNT_LABELS[viewing.status], verified: viewing.verified } : null}
+          fields={[
+            { label: 'Email', value: viewing?.email },
+            { label: 'Phone', value: viewing?.phone },
+            { label: 'Headline', value: viewing?.headline },
+            { label: 'Location', value: viewing?.location },
+            { label: 'Company', value: viewing?.role === 'employer' ? viewing?.company : undefined },
+            { label: 'Joined', value: viewing?.joined },
+            { label: 'Last active', value: viewing?.last_active },
+            { label: 'User ID', value: viewing?.id != null ? `#${viewing.id}` : undefined, muted: true },
+          ]}
+        />
+
+        {notice ? (
+          <div className="hh-mt-4">
+            <Alert variant={notice.type} dismissible onDismiss={() => setNotice(null)}>
+              {notice.message}
+            </Alert>
+          </div>
+        ) : null}
       </div>
     </section>
   )

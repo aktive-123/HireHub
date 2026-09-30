@@ -1,3 +1,29 @@
+/*
+ * Inter — self-hosted variable font (SIL Open Font License 1.1).
+ *
+ * Bundled from the official distribution rather than a CDN so the site makes no
+ * third-party font request and renders identically offline. The variable axes
+ * cover the whole 100-900 weight range the type ramp uses, so a single ~344 KB
+ * file replaces a family of static weights. Licence text ships alongside the
+ * font in /public/fonts/Inter-LICENSE.txt.
+ *
+ * This is the only place a family name is written literally: --hh-font-sans
+ * below is the single stack every rule consumes.
+ */
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 100 900;
+  font-display: swap;
+  src: url('/fonts/InterVariable.woff2') format('woff2');
+  /*
+   * No unicode-range here on purpose. The file is the complete variable font,
+   * so a range would restrict nothing useful, and the CSS minifier rewrites
+   * `U+0000-00FF` into the invalid `U+??` — a malformed descriptor makes the
+   * browser drop this whole @font-face and silently fall back to system-ui.
+   */
+}
+
 *,
 *::before,
 *::after {
@@ -12,15 +38,27 @@ html {
 body {
   margin: 0;
   font-family: var(--hh-font-sans);
-  font-size: var(--hh-fs-base);
-  font-weight: var(--hh-fw-regular);
-  line-height: 1.6;
+  font-size: var(--hh-type-body-size);
+  font-weight: var(--hh-type-body-weight);
+  line-height: var(--hh-type-body-lh);
+  letter-spacing: var(--hh-type-body-ls);
   color: var(--hh-text);
   background-color: var(--hh-bg);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
 
+/* -------------------------------------------------------------------------
+   The type scale, bound to the elements.
+
+   Bootstrap ships its own heading scale (h1 2.5rem, h2 2rem, h3 1.75rem …)
+   and its own body size, so an unstated h1 would inherit 2.5rem and quietly
+   break the scale. Every heading size is therefore set explicitly here from
+   the role tokens rather than left to cascade.
+
+   This block is the only place element-level type is declared; every other
+   stylesheet sets a role token on a class and nothing else.
+   ------------------------------------------------------------------------- */
 h1,
 h2,
 h3,
@@ -28,17 +66,62 @@ h4,
 h5,
 h6 {
   color: var(--hh-secondary);
-  font-weight: var(--hh-fw-semibold);
-  line-height: 1.25;
+  font-family: inherit;
   margin-top: 0;
+  letter-spacing: 0;
+  text-wrap: balance;
 }
 
 h1 {
-  font-weight: var(--hh-fw-extrabold);
+  font-size: var(--hh-type-h1-size);
+  font-weight: var(--hh-type-h1-weight);
+  line-height: var(--hh-type-h1-lh);
+  letter-spacing: var(--hh-type-h1-ls);
+}
+
+/* h5 and h6 have no step of their own on the scale, so they step down to
+   h4 rather than inventing sizes the ramp does not contain. */
+h5,
+h6 {
+  font-size: var(--hh-type-h4-size);
+  font-weight: var(--hh-type-h4-weight);
+  line-height: var(--hh-type-h4-lh);
+}
+
+h2 {
+  font-size: var(--hh-type-h2-size);
+  font-weight: var(--hh-type-h2-weight);
+  line-height: var(--hh-type-h2-lh);
+  letter-spacing: var(--hh-type-h2-ls);
+}
+
+h3 {
+  font-size: var(--hh-type-h3-size);
+  font-weight: var(--hh-type-h3-weight);
+  line-height: var(--hh-type-h3-lh);
+  letter-spacing: var(--hh-type-h3-ls);
+}
+
+h4 {
+  font-size: var(--hh-type-h4-size);
+  font-weight: var(--hh-type-h4-weight);
+  line-height: var(--hh-type-h4-lh);
+  letter-spacing: var(--hh-type-h4-ls);
 }
 
 p {
   margin-top: 0;
+  font-size: var(--hh-type-body-size);
+  font-weight: var(--hh-type-body-weight);
+  line-height: var(--hh-type-body-lh);
+}
+
+/* Body copy must never be bold. 700+ is reserved for headings and KPI
+   figures, and this caps it for the most common way it leaks in — a bold
+   run inside an otherwise normal paragraph. */
+p strong,
+p b {
+  font-weight: var(--hh-fw-semibold);
 }
 
 a {
@@ -91,7 +174,6 @@ hr {
 input,
 textarea,
 select {
-  font: inherit;
   color: var(--hh-text);
 }
 
@@ -100,10 +182,34 @@ textarea::placeholder {
   color: var(--hh-muted);
 }
 
+/* Form labels are caption/label role: 500 weight, 12px, wide tracking. They
+   are UI chrome rather than prose, so they sit at the small end of the scale
+   and never bold. */
 .form-label {
-  font-weight: var(--hh-fw-medium);
+  font-family: inherit;
+  font-size: var(--hh-type-caption-size);
+  font-weight: var(--hh-type-caption-weight);
+  line-height: var(--hh-type-caption-lh);
+  letter-spacing: var(--hh-type-caption-ls);
   color: var(--hh-secondary);
   margin-bottom: var(--hh-space-2);
+}
+
+/* Inputs inherit body copy: 15px, 400. Anything smaller makes a filled form
+   harder to read than the marketing pages it is supposed to match.
+   `input` is listed explicitly because it no longer gets `font: inherit` from
+   the browser-default reset above, and a bare <input> outside .form-control
+   would otherwise fall back to the UA font. */
+input,
+.form-control,
+.form-select,
+.input-group-text,
+textarea,
+select {
+  font-family: inherit;
+  font-size: var(--hh-type-body-size);
+  font-weight: var(--hh-type-body-weight);
+  line-height: var(--hh-type-body-lh);
 }
 
 .form-control,
@@ -141,6 +247,116 @@ textarea::placeholder {
 
 .hh-text-muted {
   color: var(--hh-muted);
+}
+
+/* -------------------------------------------------------------------------
+   Role utilities.
+
+   The one place a whole typographic role can be applied from markup, for the
+   cases where a component needs the role but cannot add a class of its own
+   (a heading rendered by a third-party widget, text inside a portal, and so
+   on). Prefer a component class in the stylesheets — these exist so the scale
+   is reachable, not so it gets bypassed.
+   ------------------------------------------------------------------------- */
+.hh-type-h1,
+.hh-type-h2,
+.hh-type-h3,
+.hh-type-h4,
+.hh-type-body,
+.hh-type-sub,
+.hh-type-caption,
+.hh-type-card-title,
+.hh-type-card-body,
+.hh-type-card-meta,
+.hh-type-stat {
+  font-family: inherit;
+}
+
+/* --- h1 ------------------------------------------------------------------ */
+.hh-type-h1 {
+  font-size: var(--hh-type-h1-size);
+  font-weight: var(--hh-type-h1-weight);
+  line-height: var(--hh-type-h1-lh);
+  letter-spacing: var(--hh-type-h1-ls);
+}
+
+/* --- h2 ------------------------------------------------------------------ */
+.hh-type-h2 {
+  font-size: var(--hh-type-h2-size);
+  font-weight: var(--hh-type-h2-weight);
+  line-height: var(--hh-type-h2-lh);
+  letter-spacing: var(--hh-type-h2-ls);
+}
+
+/* --- h3 ------------------------------------------------------------------ */
+.hh-type-h3 {
+  font-size: var(--hh-type-h3-size);
+  font-weight: var(--hh-type-h3-weight);
+  line-height: var(--hh-type-h3-lh);
+  letter-spacing: var(--hh-type-h3-ls);
+}
+
+/* --- h4 ------------------------------------------------------------------ */
+.hh-type-h4 {
+  font-size: var(--hh-type-h4-size);
+  font-weight: var(--hh-type-h4-weight);
+  line-height: var(--hh-type-h4-lh);
+  letter-spacing: var(--hh-type-h4-ls);
+}
+
+/* --- body ---------------------------------------------------------------- */
+.hh-type-body {
+  font-size: var(--hh-type-body-size);
+  font-weight: var(--hh-type-body-weight);
+  line-height: var(--hh-type-body-lh);
+}
+
+/* --- sub-text ------------------------------------------------------------ */
+.hh-type-sub {
+  font-size: var(--hh-type-sub-size);
+  font-weight: var(--hh-type-sub-weight);
+  line-height: var(--hh-type-sub-lh);
+  color: var(--hh-text-muted);
+}
+
+/* --- caption / label ----------------------------------------------------- */
+.hh-type-caption {
+  font-size: var(--hh-type-caption-size);
+  font-weight: var(--hh-type-caption-weight);
+  line-height: var(--hh-type-caption-lh);
+  letter-spacing: var(--hh-type-caption-ls);
+  color: var(--hh-text-muted);
+}
+
+/* --- card ---------------------------------------------------------------- */
+.hh-type-card-title {
+  font-size: var(--hh-type-card-title-size);
+  font-weight: var(--hh-type-card-title-weight);
+  line-height: var(--hh-type-card-title-lh);
+  letter-spacing: var(--hh-type-card-title-ls);
+}
+
+.hh-type-card-body {
+  font-size: var(--hh-type-card-body-size);
+  font-weight: var(--hh-type-card-body-weight);
+  line-height: var(--hh-type-card-body-lh);
+  letter-spacing: var(--hh-type-card-body-ls);
+}
+
+.hh-type-card-meta {
+  font-size: var(--hh-type-card-meta-size);
+  font-weight: var(--hh-type-card-meta-weight);
+  line-height: var(--hh-type-card-meta-lh);
+  letter-spacing: var(--hh-type-card-meta-ls);
+  color: var(--hh-text-muted);
+}
+
+/* --- stat ---------------------------------------------------------------- */
+.hh-type-stat {
+  font-size: var(--hh-type-stat-size);
+  font-weight: var(--hh-type-stat-weight);
+  line-height: var(--hh-type-stat-lh);
+  letter-spacing: var(--hh-type-stat-ls);
 }
 
 .hh-text-white {

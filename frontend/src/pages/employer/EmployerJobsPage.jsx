@@ -10,6 +10,7 @@ import EmptyState from '../../components/ui/EmptyState'
 import Card from '../../components/ui/Card'
 import LoadingState from '../../components/ui/LoadingState'
 import Reveal from '../../components/ui/Reveal'
+import { usePlanUsage } from '../../context/PlanUsageContext'
 
 const PAGE_SIZE = 8
 const STATUS_TABS = [
@@ -23,6 +24,10 @@ export default function EmployerJobsPage() {
   const [query, setQuery] = useState('')
   const [page, setPage] = useState(1)
   const [reopening, setReopening] = useState(false)
+  const [featuringSlug, setFeaturingSlug] = useState(null)
+  const [rowError, setRowError] = useState('')
+  const { applyServerPlan, showPaywall, plan } = usePlanUsage()
+  const featuredRemaining = plan?.usage?.featured?.remaining ?? 0
 
   const { data, loading, error, reload } = useApiData(
     () => employerApi.jobs(tab === 'all' ? {} : { status: tab }),
@@ -48,6 +53,32 @@ export default function EmployerJobsPage() {
       return
     } finally {
       setReopening(false)
+    }
+  }
+
+  /**
+   * Spend or release a featured slot.
+   *
+   * Optimism is deliberately avoided here. Featuring is a metered action, so
+   * showing the star as on before the API agrees would briefly claim a credit
+   * the plan may not have, and the user would watch a toggle they never earned.
+   * The button is marked busy instead, and the row is only repainted once the
+   * server has committed the change.
+   */
+  const toggleFeatured = async (job) => {
+    if (featuringSlug) return
+    setFeaturingSlug(job.slug)
+    try {
+      const result = await employerApi.setJobFeatured(job.slug, !job.is_featured)
+      applyServerPlan(result?.usage)
+      await reload()
+    } catch (error) {
+      // Spent featured credits come back as 403 `plan_limit_reached`; the
+      // paywall names the allowance that ran out. Nothing is changed locally.
+      if (showPaywall(error, { resource: 'featured_job' })) return
+      setRowError(error?.message || 'We could not update the featured status.')
+    } finally {
+      setFeaturingSlug(null)
     }
   }
 
@@ -144,6 +175,11 @@ export default function EmployerJobsPage() {
         </div>
 
         <Card className="hh-card-body hh-p-0 hh-card--table">
+          {rowError && (
+            <div className="alert alert-danger rounded-0 border-0 border-bottom mb-0 py-2 small" role="alert">
+              {rowError}
+            </div>
+          )}
           {visible.length > 0 ? (
             <DataTable
               columns={[
@@ -151,10 +187,17 @@ export default function EmployerJobsPage() {
                 { key: 'applicants', label: 'Applicants' },
                 { key: 'views', label: 'View counts' },
                 { key: 'status', label: 'Status' },
+                { key: 'featured', label: 'Featured' },
                 { key: 'action', label: 'Action', align: 'right' },
               ]}
               rows={visible.map((job) => {
                 const isOpen = job.status === 'open'
+                const isFeatured = Boolean(job.is_featured)
+                const busy = featuringSlug === job.slug
+                // Free plans have no featured slots at all, so the control is
+                // shown disabled with the reason attached rather than hidden:
+                // an absent control would read as "nothing to do here".
+                const noCredits = !isFeatured && featuredRemaining <= 0
                 return {
                   id: job.id,
                   title: <span className="hh-fw-semibold">{job.title}</span>,
@@ -164,6 +207,30 @@ export default function EmployerJobsPage() {
                     <StatusBadge status="open" />
                   ) : (
                     <StatusBadge status={job.status} />
+                  ),
+                  featured: (
+                    <button
+                      type="button"
+                      className={`btn btn-sm ${isFeatured ? 'btn-warning' : 'btn-outline-warning'}`}
+                      onClick={() => toggleFeatured(job)}
+                      disabled={Boolean(featuringSlug) || noCredits}
+                      aria-pressed={isFeatured}
+                      aria-busy={busy}
+                      title={
+                        noCredits
+                          ? 'Your plan has no featured slots left — upgrade to feature more jobs'
+                          : isFeatured
+                            ? 'Remove this job from the featured list'
+                            : 'Feature this job'
+                      }
+                    >
+                      {busy ? (
+                        <span className="spinner-border spinner-border-sm" aria-hidden="true" />
+                      ) : (
+                        <i className={`bi ${isFeatured ? 'bi-star-fill' : 'bi-star'} me-1`} aria-hidden="true" />
+                      )}
+                      <span className="small">{isFeatured ? 'Featured' : 'Feature'}</span>
+                    </button>
                   ),
                   action: isOpen ? (
                     <Link to={`/employer/jobs/${job.slug || job.id}`} className="hh-btn hh-btn-outline-primary hh-btn-sm">

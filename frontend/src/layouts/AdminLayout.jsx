@@ -1,8 +1,23 @@
-import { Link, NavLink, Outlet } from 'react-router-dom'
+import { Link, NavLink, Navigate, Outlet } from 'react-router-dom'
 import whiteLogo from '../assets/white logo.png'
 import AdminNotificationBell from '../components/admin/AdminNotificationBell'
+import ErrorBoundary from '../components/common/ErrorBoundary'
+import SessionGate from '../components/common/SessionGate'
+import { useAuth } from '../context/AuthContext'
 
 export default function AdminLayout() {
+  const { user, role, bootstrapped } = useAuth()
+
+  // Without this the whole admin area rendered for anonymous visitors and then
+  // filled with 401 error panels, because nothing checked the session first.
+  if (bootstrapped && !user) return <Navigate to="/login" replace state={{ from: '/admin' }} />
+  // Signed in, but not as an admin. Send them to their own dashboard rather
+  // than a login screen they are already authenticated for.
+  if (bootstrapped && role && role !== 'admin') {
+    return <Navigate to={role === 'employer' ? '/employer' : '/seeker'} replace />
+  }
+  if (!bootstrapped) return <SessionGate />
+
   return (
     <div className="hh-dashboard-layout">
       <aside className="hh-dashboard-sidebar">
@@ -96,6 +111,14 @@ export default function AdminLayout() {
             <i className="bi bi-graph-up" /> Reports
           </NavLink>
           <NavLink
+            to="/admin/hiring-fees"
+            className={({ isActive }) =>
+              `hh-dashboard-nav-link ${isActive ? 'hh-dashboard-nav-link--active' : ''}`
+            }
+          >
+            <i className="bi bi-cash-coin" /> Hiring Fees
+          </NavLink>
+          <NavLink
             to="/admin/activity-logs"
             className={({ isActive }) =>
               `hh-dashboard-nav-link ${isActive ? 'hh-dashboard-nav-link--active' : ''}`
@@ -142,7 +165,9 @@ export default function AdminLayout() {
         </header>
 
         <main className="hh-dashboard-body" id="main-content">
-          <Outlet />
+          <ErrorBoundary>
+            <Outlet />
+          </ErrorBoundary>
         </main>
       </div>
     </div>

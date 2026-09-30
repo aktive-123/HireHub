@@ -5,6 +5,7 @@ import PageHeader from '../../components/ui/PageHeader'
 import Reveal from '../../components/ui/Reveal'
 import Alert from '../../components/ui/Alert'
 import JobPostingForm, { buildJobPayload } from './JobPostingForm'
+import { usePlanUsage } from '../../context/PlanUsageContext'
 
 const ACTION_MESSAGES = {
   draft: 'Draft saved. Your job posting will stay unpublished until you publish it.',
@@ -13,6 +14,7 @@ const ACTION_MESSAGES = {
 
 export default function EmployerCreateJobPage() {
   const navigate = useNavigate()
+  const { applyServerPlan, showPaywall } = usePlanUsage()
   const [result, setResult] = useState(null)
   const [submitError, setSubmitError] = useState(false)
 
@@ -24,9 +26,16 @@ export default function EmployerCreateJobPage() {
     }
     setSubmitError(false)
     try {
-      await employerApi.createJob(buildJobPayload(values))
+      const created = await employerApi.createJob(buildJobPayload(values))
+      // The response carries the post-write allowance, so the sidebar and
+      // dashboard meters reflect this job without a second round trip.
+      applyServerPlan(created?.usage)
       navigate('/employer/jobs')
-    } catch {
+    } catch (error) {
+      // A 403 with `plan_limit_reached` is the API saying the plan is full.
+      // Showing the generic failure would hide the only actionable fact, so
+      // hand it to the paywall and keep the form's contents intact.
+      if (showPaywall(error, { resource: 'job_post' })) return
       setSubmitError(true)
     }
   }
