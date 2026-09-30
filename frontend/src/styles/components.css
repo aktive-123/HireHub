@@ -11,7 +11,7 @@
   gap: var(--hh-space-2);
   font-family: var(--hh-font-sans);
   font-weight: var(--hh-fw-semibold);
-  font-size: clamp(0.9375rem, 1vw, 1rem);
+  font-size: var(--hh-type-body-size);
   line-height: 1;
   padding: 0 var(--hh-space-5);
   min-height: var(--btn-height);
@@ -139,15 +139,21 @@
 }
 
 .hh-btn-sm {
+  font-size: var(--hh-type-card-body-size);
+  font-weight: var(--hh-type-card-body-weight);
+  line-height: var(--hh-type-card-body-lh);
+  letter-spacing: var(--hh-type-card-body-ls);
   min-height: var(--btn-height-sm);
   padding: 0 var(--hh-space-4);
-  font-size: var(--hh-fs-xs);
 }
 
 .hh-btn-lg {
+  font-size: var(--hh-type-body-size);
+  font-weight: var(--hh-type-body-weight);
+  line-height: var(--hh-type-body-lh);
+  letter-spacing: var(--hh-type-body-ls);
   min-height: var(--btn-height-lg);
   padding: 0 var(--hh-space-7);
-  font-size: var(--hh-fs-base);
 }
 
 .hh-btn-pill {
@@ -160,18 +166,19 @@
 
 .hh-btn i,
 .hh-btn svg {
-  font-size: 1.1em;
+  font-size: var(--hh-icon-sm);
   line-height: 1;
 }
 
 .hh-badge {
+  font-size: var(--hh-type-card-meta-size);
+  font-weight: var(--hh-type-card-meta-weight);
+  line-height: var(--hh-type-card-meta-lh);
+  letter-spacing: var(--hh-type-card-meta-ls);
   display: inline-flex;
   align-items: center;
   gap: var(--hh-space-1);
   font-family: var(--hh-font-sans);
-  font-weight: var(--hh-fw-medium);
-  font-size: var(--hh-fs-xs);
-  line-height: 1;
   padding: var(--hh-space-1) var(--hh-space-3);
   border-radius: var(--hh-radius-pill);
   white-space: nowrap;
@@ -227,7 +234,7 @@
 }
 
 .hh-badge-sm {
-  font-size: 0.6875rem;
+  font-size: var(--hh-type-caption-size);
   padding: 2px var(--hh-space-2);
 }
 
@@ -249,13 +256,14 @@
 }
 
 .hh-section-eyebrow {
+  font-size: var(--hh-type-eyebrow-size);
+  font-weight: var(--hh-type-eyebrow-weight);
+  line-height: var(--hh-type-eyebrow-lh);
+  letter-spacing: var(--hh-type-eyebrow-ls);
   display: inline-flex;
   align-items: center;
   gap: var(--hh-space-2);
-  font-size: var(--hh-fs-sm);
-  font-weight: var(--hh-fw-semibold);
   text-transform: uppercase;
-  letter-spacing: 0.08em;
   color: var(--hh-primary);
   margin-bottom: var(--hh-space-3);
 }
@@ -265,10 +273,10 @@
 }
 
 .hh-section-title {
-  font-size: clamp(1.75rem, 2.2vw, 2.5rem);
-  font-weight: var(--hh-fw-bold);
-  line-height: 1.2;
-  letter-spacing: -0.02em;
+  font-size: var(--hh-type-h2-size);
+  font-weight: var(--hh-type-h2-weight);
+  line-height: var(--hh-type-h2-lh);
+  letter-spacing: var(--hh-type-h2-ls);
   color: var(--hh-secondary);
   margin-bottom: var(--hh-space-4);
 }
@@ -278,9 +286,11 @@
 }
 
 .hh-section-subtitle {
-  font-size: var(--hh-fs-md);
+  font-size: var(--hh-type-body-size);
+  font-weight: var(--hh-type-body-weight);
+  line-height: var(--hh-type-body-lh);
+  letter-spacing: var(--hh-type-body-ls);
   color: var(--hh-muted);
-  line-height: 1.65;
   margin-bottom: 0;
 }
 
@@ -344,7 +354,10 @@
 }
 
 .hh-loading-text {
-  font-size: var(--hh-fs-sm);
+  font-size: var(--hh-type-card-body-size);
+  font-weight: var(--hh-type-card-body-weight);
+  line-height: var(--hh-type-card-body-lh);
+  letter-spacing: var(--hh-type-card-body-ls);
   color: var(--hh-muted);
 }
 
@@ -366,18 +379,23 @@
 }
 
 .hh-empty-icon i {
-  font-size: 2rem;
+  font-size: var(--hh-icon-2xl);
 }
 
 .hh-empty-title {
-  font-size: var(--hh-fs-lg);
-  font-weight: var(--hh-fw-semibold);
+  font-size: var(--hh-type-card-title-size);
+  font-weight: var(--hh-type-card-title-weight);
+  line-height: var(--hh-type-card-title-lh);
+  letter-spacing: var(--hh-type-card-title-ls);
   color: var(--hh-secondary);
   margin-bottom: var(--hh-space-2);
 }
 
 .hh-empty-text {
-  font-size: var(--hh-fs-sm);
+  font-size: var(--hh-type-card-body-size);
+  font-weight: var(--hh-type-card-body-weight);
+  line-height: var(--hh-type-card-body-lh);
+  letter-spacing: var(--hh-type-card-body-ls);
   color: var(--hh-muted);
   max-width: 360px;
   margin-inline: auto;
@@ -399,11 +417,12 @@
 }
 
 .hh-placeholder-stage {
+  font-size: var(--hh-type-card-meta-size);
+  font-weight: var(--hh-type-card-meta-weight);
+  line-height: var(--hh-type-card-meta-lh);
+  letter-spacing: var(--hh-type-card-meta-ls);
   display: inline-block;
-  font-size: var(--hh-fs-xs);
-  font-weight: var(--hh-fw-semibold);
   text-transform: uppercase;
-  letter-spacing: 0.1em;
   color: var(--hh-primary);
   background: var(--hh-primary-light);
   padding: var(--hh-space-1) var(--hh-space-3);
@@ -412,14 +431,19 @@
 }
 
 .hh-placeholder-title {
-  font-size: var(--hh-fs-xl);
-  font-weight: var(--hh-fw-semibold);
+  font-size: var(--hh-type-card-title-size);
+  font-weight: var(--hh-type-card-title-weight);
+  line-height: var(--hh-type-card-title-lh);
+  letter-spacing: var(--hh-type-card-title-ls);
   color: var(--hh-secondary);
   margin-bottom: var(--hh-space-2);
 }
 
 .hh-placeholder-text {
-  font-size: var(--hh-fs-sm);
+  font-size: var(--hh-type-card-body-size);
+  font-weight: var(--hh-type-card-body-weight);
+  line-height: var(--hh-type-card-body-lh);
+  letter-spacing: var(--hh-type-card-body-ls);
   max-width: 420px;
 }
 
@@ -456,6 +480,10 @@
 }
 
 .hh-sort-trigger {
+  font-size: var(--hh-type-card-body-size);
+  font-weight: var(--hh-type-card-body-weight);
+  line-height: var(--hh-type-card-body-lh);
+  letter-spacing: var(--hh-type-card-body-ls);
   display: inline-flex;
   align-items: center;
   gap: 0.5rem;
@@ -465,8 +493,6 @@
   border: 1px solid var(--hh-border);
   border-radius: var(--hh-radius-pill);
   color: var(--hh-secondary);
-  font-size: var(--hh-fs-sm);
-  font-weight: var(--hh-fw-semibold);
   cursor: pointer;
   transition: border-color var(--hh-transition-fast), color var(--hh-transition-fast), box-shadow var(--hh-transition-fast);
 }
@@ -486,7 +512,7 @@
 }
 
 .hh-sort-chevron {
-  font-size: 0.6875rem;
+  font-size: var(--hh-type-caption-size);
   color: var(--hh-muted);
   transition: transform var(--hh-transition-fast);
 }
@@ -523,6 +549,10 @@
 }
 
 .hh-sort-option {
+  font-size: var(--hh-type-card-body-size);
+  font-weight: var(--hh-type-card-body-weight);
+  line-height: var(--hh-type-card-body-lh);
+  letter-spacing: var(--hh-type-card-body-ls);
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -534,7 +564,6 @@
   border: none;
   border-radius: var(--hh-radius-md);
   color: var(--hh-secondary);
-  font-size: var(--hh-fs-sm);
   cursor: pointer;
   transition: background-color var(--hh-transition-fast), color var(--hh-transition-fast);
 }
@@ -636,7 +665,7 @@
   background: var(--hh-secondary-deep);
   color: var(--hh-white);
   font-family: var(--hh-font-sans);
-  font-size: 0.72rem;
+  font-size: var(--hh-type-caption-size);
   font-weight: var(--hh-fw-semibold);
   line-height: 1.35;
   letter-spacing: 0.015em;

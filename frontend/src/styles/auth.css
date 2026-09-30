@@ -1,40 +1,46 @@
 /* HireHub - Stage 4: Auth Pages */
 
 .hh-auth-eyebrow {
+  font-size: var(--hh-type-eyebrow-size);
+  font-weight: var(--hh-type-eyebrow-weight);
+  line-height: var(--hh-type-eyebrow-lh);
+  letter-spacing: var(--hh-type-eyebrow-ls);
   display: inline-flex;
   align-items: center;
   gap: var(--hh-space-2);
-  font-size: var(--hh-fs-xs);
-  font-weight: var(--hh-fw-bold);
-  letter-spacing: var(--hh-ls-wide);
   text-transform: uppercase;
   color: var(--hh-primary);
   margin-bottom: var(--hh-space-3);
 }
 
 .hh-auth-title {
-  font-size: clamp(1.5rem, 2.4vw, 1.875rem);
-  font-weight: var(--hh-fw-extrabold);
-  letter-spacing: var(--hh-ls-tight);
+  font-size: var(--hh-type-h1-size);
+  font-weight: var(--hh-type-h1-weight);
+  line-height: var(--hh-type-h1-lh);
+  letter-spacing: var(--hh-type-h1-ls);
   color: var(--hh-secondary);
   margin-bottom: var(--hh-space-2);
 }
 
 .hh-auth-subtitle {
-  font-size: var(--hh-fs-base);
+  font-size: var(--hh-type-sub-size);
+  font-weight: var(--hh-type-sub-weight);
+  line-height: var(--hh-type-sub-lh);
+  letter-spacing: var(--hh-type-sub-ls);
   color: var(--hh-muted);
   margin-bottom: 0;
 }
 
 .hh-auth-divider {
+  font-size: var(--hh-type-card-meta-size);
+  font-weight: var(--hh-type-card-meta-weight);
+  line-height: var(--hh-type-card-meta-lh);
+  letter-spacing: var(--hh-type-card-meta-ls);
   display: flex;
   align-items: center;
   gap: var(--hh-space-3);
   color: var(--hh-muted);
-  font-size: var(--hh-fs-xs);
-  font-weight: var(--hh-fw-semibold);
   text-transform: uppercase;
-  letter-spacing: var(--hh-ls-wide);
   margin: var(--hh-space-5) 0;
 }
 
@@ -70,11 +76,14 @@
 }
 
 .hh-auth-footer {
+  font-size: var(--hh-type-card-meta-size);
+  font-weight: var(--hh-type-card-meta-weight);
+  line-height: var(--hh-type-card-meta-lh);
+  letter-spacing: var(--hh-type-card-meta-ls);
   margin-top: var(--hh-space-5);
   padding-top: var(--hh-space-5);
   border-top: 1px solid var(--hh-border);
   text-align: center;
-  font-size: var(--hh-fs-sm);
   color: var(--hh-muted);
 }
 
@@ -118,11 +127,13 @@
 }
 
 .hh-auth-check {
+  font-size: var(--hh-type-body-size);
+  font-weight: var(--hh-type-body-weight);
+  line-height: var(--hh-type-body-lh);
+  letter-spacing: var(--hh-type-body-ls);
   display: inline-flex;
   align-items: center;
   gap: var(--hh-space-2);
-  font-size: var(--hh-fs-sm);
-  font-weight: var(--hh-fw-medium);
   color: var(--hh-secondary);
   cursor: pointer;
   user-select: none;
@@ -219,10 +230,11 @@
 }
 
 .hh-password-meter-label {
-  font-size: var(--hh-fs-xs);
-  font-weight: var(--hh-fw-bold);
+  font-size: var(--hh-type-card-meta-size);
+  font-weight: var(--hh-type-card-meta-weight);
+  line-height: var(--hh-type-card-meta-lh);
+  letter-spacing: var(--hh-type-card-meta-ls);
   text-transform: uppercase;
-  letter-spacing: 0.06em;
 }
 
 .hh-password-meter.is-weak .hh-password-meter-label {
@@ -276,16 +288,18 @@
 }
 
 .hh-checklist-item {
+  font-size: var(--hh-type-card-meta-size);
+  font-weight: var(--hh-type-card-meta-weight);
+  line-height: var(--hh-type-card-meta-lh);
+  letter-spacing: var(--hh-type-card-meta-ls);
   display: flex;
   align-items: center;
   gap: var(--hh-space-2);
-  font-size: var(--hh-fs-xs);
   color: var(--hh-muted);
-  line-height: 1.35;
 }
 
 .hh-checklist-item i {
-  font-size: 0.9rem;
+  font-size: var(--hh-icon-sm);
   color: var(--hh-muted-light);
   transition: color var(--hh-transition-fast);
 }
@@ -317,26 +331,6 @@
   }
 }
 
-.hh-auth-code-input {
-  width: 3rem;
-  height: 3.5rem;
-  text-align: center;
-  font-size: var(--hh-fs-xl);
-  font-weight: var(--hh-fw-bold);
-  color: var(--hh-secondary);
-  background: var(--hh-bg-soft);
-  border: 1px solid var(--hh-border-strong);
-  border-radius: var(--hh-radius);
-  transition: border-color var(--hh-transition-fast), box-shadow var(--hh-transition-fast), background var(--hh-transition-fast);
-}
-
-.hh-auth-code-input:focus {
-  outline: none;
-  border-color: var(--hh-primary);
-  background: var(--hh-white);
-  box-shadow: 0 0 0 0.25rem var(--hh-primary-ring);
-}
-
 .hh-auth-benefits {
   list-style: none;
   padding: 0;
@@ -346,10 +340,13 @@
 }
 
 .hh-auth-benefits li {
+  font-size: var(--hh-type-card-body-size);
+  font-weight: var(--hh-type-card-body-weight);
+  line-height: var(--hh-type-card-body-lh);
+  letter-spacing: var(--hh-type-card-body-ls);
   display: flex;
   align-items: flex-start;
   gap: var(--hh-space-2);
-  font-size: var(--hh-fs-sm);
   color: var(--hh-muted);
 }
 
@@ -369,13 +366,15 @@
 }
 
 .hh-role-tab {
+  font-size: var(--hh-type-card-body-size);
+  font-weight: var(--hh-type-card-body-weight);
+  line-height: var(--hh-type-card-body-lh);
+  letter-spacing: var(--hh-type-card-body-ls);
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: var(--hh-space-2);
   padding: var(--hh-space-2) var(--hh-space-4);
-  font-size: var(--hh-fs-sm);
-  font-weight: var(--hh-fw-semibold);
   color: var(--hh-muted);
   border-radius: var(--hh-radius-pill);
   text-decoration: none;
@@ -397,4 +396,112 @@
 .hh-role-switch .hh-role-tab:focus-visible {
   outline: 3px solid var(--hh-primary-ring);
   outline-offset: 0;
+}
+/* --- One-time password ------------------------------------------------- */
+/*
+ * Six boxes over a single real input. The input is transparent and sits on top,
+ * so it keeps normal focus, paste and mobile-keyboard behaviour while the boxes
+ * are only a rendering of the value and the caret position.
+ */
+.hh-otp {
+  position: relative;
+  margin-bottom: var(--hh-space-4);
+}
+
+.hh-otp-boxes {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: var(--hh-space-2);
+  cursor: text;
+}
+
+.hh-otp-box {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  aspect-ratio: 3 / 4;
+  min-height: 3.25rem;
+  border: 1px solid var(--hh-gray-300);
+  border-radius: var(--hh-radius);
+  background: var(--hh-white);
+  color: var(--hh-text);
+  font-size: 1.5rem;
+  font-weight: 600;
+  line-height: 1;
+  transition: border-color var(--hh-transition), box-shadow var(--hh-transition);
+}
+
+.hh-otp-box--filled {
+  border-color: var(--hh-gray-400);
+}
+
+.hh-otp-box--active {
+  border-color: var(--hh-primary);
+  box-shadow: 0 0 0 3px var(--hh-primary-ring);
+}
+
+.hh-otp--error .hh-otp-box {
+  border-color: var(--hh-danger);
+}
+
+.hh-otp--error .hh-otp-box--active {
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--hh-danger) 26%, transparent);
+}
+
+.hh-otp--disabled .hh-otp-boxes {
+  opacity: 0.6;
+}
+
+.hh-otp-input {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: transparent;
+  caret-color: transparent;
+  font-size: 1rem;
+  letter-spacing: 0.5em;
+}
+
+.hh-otp-input:focus {
+  outline: none;
+  box-shadow: none;
+}
+
+.hh-otp-input:disabled {
+  cursor: not-allowed;
+}
+
+/* Honour a reduced-motion preference: the box highlight is the only motion
+ * here and it is decorative, so it is simply removed rather than animated. */
+@media (prefers-reduced-motion: reduce) {
+  .hh-otp-box {
+    transition: none;
+  }
+}
+
+/*
+ * Below the small breakpoint six boxes in one row get too narrow to show a digit
+ * legibly, so the field falls back to three columns of two.
+ */
+@media (max-width: 400px) {
+  .hh-otp-boxes {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+.hh-otp-hint {
+  font-size: var(--hh-type-card-body-size);
+  color: var(--hh-muted);
+  margin-bottom: var(--hh-space-4);
+}
+
+.hh-otp-resend {
+  text-align: center;
+  margin-top: var(--hh-space-4);
+  font-size: 0.9375rem;
+  color: var(--hh-muted);
 }

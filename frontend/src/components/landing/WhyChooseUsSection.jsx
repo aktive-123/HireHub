@@ -72,7 +72,7 @@ export default function WhyChooseUsSection() {
             <Reveal>
               <div className="hh-section-eyebrow text-info hh-why-eyebrow">WHY HIREHUB</div>
             </Reveal>
-            <h2 className="hh-hero-title mb-3">Why Choose HireHub?</h2>
+            <h2 className="hh-section-title hh-section-title--white mb-3">Why Choose HireHub?</h2>
             <p className="hh-hero-subtitle mb-5">
               We make it easier for you to find the right job or hire the right talent with
               transparency, verified badges, and streamlined recruiting tools.
