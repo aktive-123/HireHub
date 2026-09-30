@@ -19,7 +19,12 @@ return [
     ],
 
     'resend' => [
-        'key' => env('RESEND_API_KEY'),
+        // `RESEND_KEY` is the name .env.example and the README document, and
+        // `RESEND_API_KEY` is Laravel's own convention. Accept either so
+        // swapping the provider is a rename in .env rather than a hunt through
+        // the config. With neither set, the transport would be built with a
+        // null client and fail at send time rather than at boot.
+        'key' => env('RESEND_KEY', env('RESEND_API_KEY')),
     ],
 
     'ses' => [
