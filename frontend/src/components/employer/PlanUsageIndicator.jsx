@@ -22,7 +22,10 @@ export default function PlanUsageIndicator() {
   const label = remaining === 0 ? 'No job posts left' : `${remaining} of ${jobs.limit} job posts left`
 
   return (
-    <span className="ms-auto d-inline-flex align-items-center gap-2">
+    // flex-shrink-0: the counter and the Upgrade badge are fixed-width status,
+    // not prose. Allowed to shrink they were compressed into the label instead of
+    // the label wrapping, which is how "Billing & Plan" ended up on three lines.
+    <span className="ms-auto d-inline-flex align-items-center gap-2 flex-shrink-0 hh-dashboard-nav-indicator">
       {remaining === 0 && !canPostJob && (
         <span className="hh-badge hh-badge-danger">Upgrade</span>
       )}

@@ -5,8 +5,8 @@ namespace App\Payments\Gateways;
 use App\Enums\PaymentGateway;
 use App\Enums\PaymentStatus;
 use App\Models\Company;
-use App\Models\Payment;
 use App\Models\User;
+use App\Payments\Contracts\Chargeable;
 use App\Payments\Contracts\ChargeRequest;
 use App\Payments\Contracts\PaymentGateway as PaymentGatewayContract;
 use App\Payments\Data\CheckoutSession;
@@ -31,7 +31,7 @@ class PaystackGateway implements PaymentGatewayContract
         return (bool) config('payments.gateways.paystack.secret_key');
     }
 
-    public function createCheckout(Payment $payment, ChargeRequest $charge, User $user, ?Company $company): CheckoutSession
+    public function createCheckout(Chargeable $chargeable, ChargeRequest $charge, User $user, ?Company $company): CheckoutSession
     {
         // The amount was priced server-side before this call. Nothing the client
         // sent reaches Paystack.
@@ -39,10 +39,10 @@ class PaystackGateway implements PaymentGatewayContract
             'email' => $user->email,
             'amount' => $charge->amount,
             'currency' => $charge->currency,
-            'reference' => $payment->reference,
-            'callback_url' => $charge->returnUrlFor($payment),
+            'reference' => $chargeable->getReference(),
+            'callback_url' => $charge->returnUrlFor($chargeable->getReference()),
             'metadata' => [
-                'payment_id' => $payment->id,
+                'payment_id' => $chargeable->asPayment()?->id,
                 'label' => $charge->label,
                 'company_id' => $company?->id,
                 ...$charge->metadata,
@@ -59,7 +59,7 @@ class PaystackGateway implements PaymentGatewayContract
         return new CheckoutSession(
             url: $data['authorization_url'],
             gatewayReference: $data['access_code'] ?? null,
-            meta: ['paystack_reference' => $data['reference'] ?? $payment->reference],
+            meta: ['paystack_reference' => $data['reference'] ?? $chargeable->getReference()],
         );
     }
 

@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import SectionHeading from '../../components/ui/SectionHeading'
+import PageHeader from '../../components/ui/PageHeader'
 import Reveal from '../../components/ui/Reveal'
 import Card from '../../components/ui/Card'
 import Button from '../../components/ui/Button'
@@ -72,20 +72,18 @@ export default function SeekerResumePage() {
     <>
       <section className="hh-section-space bg-white">
         <div className="page-container">
-          <div className="hh-toolbar hh-toolbar-between hh-mb-4">
-            <SectionHeading
-              eyebrow="JOB SEEKER DASHBOARD"
-              title="CV / Resume"
-              subtitle="Upload, update, and preview the resume employers see."
-            />
-            {files.length > 0 && (
-              <div className="d-flex gap-2">
+          <PageHeader
+            eyebrow="JOB SEEKER DASHBOARD"
+            title="CV / Resume"
+            subtitle="Upload, update, and preview the resume employers see."
+            action={
+              files.length > 0 ? (
                 <Button variant="outline" icon="bi-download" pill onClick={download}>
                   Download
                 </Button>
-              </div>
-            )}
-          </div>
+              ) : null
+            }
+          />
 
           {notice && (
             <div className="alert alert-warning hh-mb-4" role="alert">

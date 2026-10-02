@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { seekerApi } from '../../services/api'
 import { useApiData } from '../../hooks/useApiData'
-import SectionHeading from '../../components/ui/SectionHeading'
+import PageHeader from '../../components/ui/PageHeader'
 import Reveal from '../../components/ui/Reveal'
 import Card from '../../components/ui/Card'
 import Button from '../../components/ui/Button'
@@ -127,16 +127,16 @@ export default function SeekerEditProfilePage() {
   return (
     <section className="hh-section-space bg-white">
       <div className="page-container">
-        <div className="hh-toolbar hh-toolbar-between hh-mb-4">
-          <SectionHeading
-            eyebrow="JOB SEEKER DASHBOARD"
-            title="Edit your profile"
-            subtitle="Keep your information up to date so employers can find you."
-          />
-          <Button to="/seeker/profile" variant="outline" icon="bi-arrow-left" pill>
-            Back to profile
-          </Button>
-        </div>
+        <PageHeader
+          eyebrow="JOB SEEKER DASHBOARD"
+          title="Edit your profile"
+          subtitle="Keep your information up to date so employers can find you."
+          action={
+            <Button to="/seeker/profile" variant="outline" icon="bi-arrow-left" pill>
+              Back to profile
+            </Button>
+          }
+        />
 
         {notice ? (
           <Alert

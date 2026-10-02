@@ -2115,11 +2115,30 @@
    uniform step. Table cells, labels, captions, badges and Bootstrap
    .small helper text keep their existing sizes.
 ------------------------------------------------------------- */
+/* The admin overview banner title, the admin hero variant and the flat header.
+   All three are the "page name" role, so all three read the one console token —
+   listed here at the same specificity so the later admin.css hero rule cannot
+   quietly put the admin overview back to the 32px public h1. */
 .hh-dashboard-body .hh-page-title,
+.hh-dashboard-body .hh-welcome-title,
+.hh-dashboard-body .hh-welcome-hero--admin .hh-welcome-title,
 .hh-dashboard-body .hh-admin-page-title,
 .hh-dashboard-body .hh-dashboard-page-title {
   font-size: var(--hh-type-console-title-size);
   letter-spacing: 0;
+}
+
+/* The page subtitle is excluded from the 18px body copy below. It is a `<p>`, so
+   the broad prose rule used to catch it and render the subtitle at exactly the
+   same size as the title — the header read as two equal-weight lines with no
+   anchor. It is pulled back to 15px so the title is unambiguously the page's
+   primary element. Both variants are listed so the admin gradient hero and the
+   flat employer header stay identical. */
+.hh-dashboard-body .hh-page-subtitle,
+.hh-dashboard-body .hh-admin-page-subtitle,
+.hh-dashboard-body .hh-welcome-subtitle {
+  font-size: var(--hh-type-console-sub-size);
+  line-height: 1.5;
 }
 
 /* The admin console's own hero title is white on the gradient band, and its
@@ -2142,10 +2161,7 @@
 .hh-dashboard-body .hh-resume-entry-text,
 .hh-dashboard-body .hh-empty-text,
 .hh-dashboard-body .hh-upload-drop-text,
-.hh-dashboard-body .hh-welcome-subtitle,
 .hh-dashboard-body .hh-welcome-tagline,
-.hh-dashboard-body .hh-page-subtitle,
-.hh-dashboard-body .hh-admin-page-subtitle,
 .hh-dashboard-body .hh-kanban-empty {
   font-size: var(--hh-fs-18);
   line-height: 1.6;

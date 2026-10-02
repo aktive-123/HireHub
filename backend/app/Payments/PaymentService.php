@@ -15,6 +15,7 @@ use App\Payments\Contracts\ChargeRequest;
 use App\Payments\Data\CheckoutSession;
 use App\Payments\Data\WebhookEvent;
 use App\Services\HiringFeeService;
+use App\Services\ReceiptService;
 use App\Support\Notifier;
 use Illuminate\Database\QueryException;
 use Illuminate\Support\Facades\DB;
@@ -22,6 +23,7 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 use InvalidArgumentException;
 use RuntimeException;
+use Throwable;
 
 class PaymentService
 {
@@ -47,7 +49,7 @@ class PaymentService
         $gateway = $this->manager->driver($gatewayName);
 
         if (! $gateway->isConfigured()) {
-            throw new InvalidArgumentException("The {$gateway->name()->label()} gateway is not configured.");
+            throw new InvalidArgumentException($gateway->name()->notConfiguredMessage());
         }
 
         if (! $gateway->name()->supportsCurrency($plan->currency)) {
@@ -101,7 +103,7 @@ class PaymentService
                 $user,
                 $company,
             );
-        } catch (\Throwable $e) {
+        } catch (Throwable $e) {
             // The gateway refused, so no payment is outstanding. Do not leave a
             // dangling pending row that would block the next attempt.
             $payment->update(['status' => PaymentStatus::Failed, 'meta' => ['gateway_error' => $e->getMessage()]]);
@@ -179,6 +181,14 @@ class PaymentService
                         PaymentPurpose::HiringFee => $this->settleHiringFee($payment),
                         default => $this->settleSubscription($payment),
                     };
+
+                    // Issued after the entitlement, and never allowed to fail
+                    // the payment. The customer's money already moved; a
+                    // receipt that fails to render is a support ticket, not a
+                    // reason to withhold the plan they paid for. It is also
+                    // lazily backfillable, so even a total failure here loses
+                    // nothing permanently.
+                    $this->issueReceipt($payment);
                 }
 
                 return $payment->fresh();
@@ -210,6 +220,27 @@ class PaymentService
             'icon' => 'credit-card',
             'subject' => 'Payment confirmed',
         ]);
+    }
+
+    /**
+     * Record the receipt for a settled payment, swallowing any failure.
+     *
+     * Deliberately not allowed to throw. The gateway has already taken the
+     * money and the entitlement has already been granted, so an exception here
+     * would roll back a real, paid, fulfilled purchase and tell the gateway
+     * the payment failed. The receipt is backfillable on demand, which is what
+     * makes swallowing this safe rather than lossy.
+     */
+    protected function issueReceipt(Payment $payment): void
+    {
+        try {
+            app(ReceiptService::class)->issue($payment);
+        } catch (Throwable $e) {
+            Log::error('Receipt issuance failed; the receipt will be backfilled on download.', [
+                'payment_id' => $payment->id,
+                'reason' => $e->getMessage(),
+            ]);
+        }
     }
 
     /**

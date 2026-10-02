@@ -540,7 +540,7 @@ class SubscriptionTest extends ApiTestCase
             ->getJson('/api/v1/employer/billing/usage')
             ->assertJsonPath('data.plan.slug', 'free')
             ->assertJsonPath('data.usage.job_posts.limit', 2)
-            ->assertJsonPath('data.usage.job_posts.used', 3)
+            ->assertJsonPath('data.usage.job_posts.used', 2)
             ->assertJsonPath('data.usage.job_posts.remaining', 0);
 
         // And the free limit is genuinely enforced afterwards.
@@ -548,6 +548,26 @@ class SubscriptionTest extends ApiTestCase
             ->postJson('/api/v1/employer/jobs', $this->jobPayload(['title' => 'Over The Top']))
             ->assertForbidden()
             ->assertJsonPath('error_code', 'plan_limit_reached');
+    }
+
+    public function test_free_plan_usage_is_capped_at_the_current_limit(): void
+    {
+        $employer = $this->employer();
+
+        $this->makeJob($employer->company, ['title' => 'Posted 1']);
+        $this->makeJob($employer->company, ['title' => 'Posted 2']);
+        $featured = $this->makeJob($employer->company, ['title' => 'Featured', 'is_featured' => true]);
+        $this->asApiUser($employer)->patchJson("/api/v1/employer/jobs/{$featured->slug}/featured", ['featured' => true])->assertOk();
+
+        $response = $this->asApiUser($employer)->getJson('/api/v1/employer/billing/usage')->assertOk();
+
+        $this->assertSame('free', $response->json('data.plan.slug'));
+        $this->assertSame(2, $response->json('data.usage.job_posts.limit'));
+        $this->assertSame(2, $response->json('data.usage.job_posts.used'));
+        $this->assertSame(0, $response->json('data.usage.job_posts.remaining'));
+        $this->assertSame(0, $response->json('data.usage.featured.limit'));
+        $this->assertSame(0, $response->json('data.usage.featured.used'));
+        $this->assertSame(0, $response->json('data.usage.featured.remaining'));
     }
 
     public function test_the_sweep_sends_one_expiry_reminder_per_period(): void

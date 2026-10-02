@@ -36,6 +36,11 @@ class HiringFeeResource extends JsonResource
             'paid_at' => $this->paid_at?->toIso8601String(),
             'paid_at_label' => $this->paid_at?->format('d M Y'),
             'checkout_url' => $this->payment?->checkout_url,
+            // Lets the row render receipt actions without knowing the receipt is
+            // keyed on the payment rather than on the fee. Read through
+            // $this->resource because that is the model; bare $this-> forwards
+            // through magic and hides the type from static analysis.
+            'has_receipt' => $this->resource->isSettled(),
             'created_at' => $this->created_at?->toIso8601String(),
         ];
     }

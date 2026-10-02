@@ -37,6 +37,10 @@ class AdminHiringFeeResource extends JsonResource
             'percentage_applied' => $this->percentage_applied,
             'paid_at' => $this->paid_at?->toIso8601String(),
             'paid_at_label' => $this->paid_at?->format('d M Y'),
+            // Receipts are keyed on the payment, not on the fee, so the admin
+            // table needs the payment reference to render receipt actions. Null
+            // until a gateway checkout has been opened for this fee.
+            'payment_reference' => $this->resource->payment?->reference,
             'created_at' => $this->created_at?->toIso8601String(),
         ];
     }

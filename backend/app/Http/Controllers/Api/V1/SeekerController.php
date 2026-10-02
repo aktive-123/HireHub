@@ -13,6 +13,8 @@ use App\Models\Application;
 use App\Models\Job;
 use App\Models\Profile;
 use App\Models\SavedJob;
+use App\Services\HiringFeeService;
+use App\Services\Upsell\UpsellCatalogue;
 use App\Support\Notifier;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -68,6 +70,103 @@ class SeekerController extends ApiController
             ->findOrFail($id);
 
         return $this->success(new ApplicationResource($application), 'Application retrieved.');
+    }
+
+    /**
+     * Accept a confirmed offer. Free, and never charged for.
+     *
+     * The employer has already paid the hiring fee by the time this state is
+     * reachable, so there is nothing to collect here — the only job of this
+     * endpoint is to record the seeker's consent and complete the hire.
+     *
+     * Scoped by seeker_id in the query rather than fetched-then-checked, so an
+     * application belonging to somebody else is a 404 and not a disclosure
+     * that it exists.
+     */
+    public function acceptOffer(Request $request, $id)
+    {
+        $application = Application::with(['job.company:id,slug,name,logo_text,logo_bg,logo_color,is_verified', 'seeker:id,name,email,phone', 'seeker.profile'])
+            ->where('seeker_id', $request->user()->id)
+            ->findOrFail($id);
+
+        // Already accepted: report success rather than refusing, because a
+        // double-tap or a retried request is not a client error and the state
+        // the caller asked for is the state it is in.
+        if ($application->status === ApplicationStatus::Hired) {
+            return $this->success(
+                new ApplicationResource($application),
+                'This offer has already been accepted.'
+            );
+        }
+
+        if ($application->status !== ApplicationStatus::OfferConfirmedPendingAcceptance) {
+            return $this->error(
+                'This application has no confirmed offer waiting on you.',
+                409,
+                null,
+                ['status' => $application->status->value],
+                'no_confirmed_offer'
+            );
+        }
+
+        $application = app(HiringFeeService::class)->completeHire($application);
+
+        return $this->success(
+            new ApplicationResource($application->load(['job.company:id,slug,name,logo_text,logo_bg,logo_color,is_verified', 'seeker:id,name,email,phone'])),
+            'Offer accepted. You are hired.',
+            null,
+            ['upsells' => UpsellCatalogue::availableFor($application)]
+        );
+    }
+
+    /**
+     * Decline a confirmed offer.
+     *
+     * The hiring fee is kept — the employer committed to the hire and paid for
+     * it, and this endpoint does not move money. The application leaves the
+     * active pipeline, and the employer is told so they can reopen the role.
+     */
+    public function declineOffer(Request $request, $id)
+    {
+        $application = Application::with(['job:id,title,company_id', 'job.company:id,name', 'seeker:id,name,email'])
+            ->where('seeker_id', $request->user()->id)
+            ->findOrFail($id);
+
+        if (! in_array($application->status, [
+            ApplicationStatus::OfferConfirmedPendingAcceptance,
+            ApplicationStatus::Offer,
+        ], true)) {
+            return $this->error(
+                'This application has no offer to decline.',
+                409,
+                null,
+                ['status' => $application->status->value],
+                'no_offer'
+            );
+        }
+
+        $application->update(['status' => ApplicationStatus::Withdrawn]);
+
+        $job = $application->job;
+
+        $employer = $job?->company?->user;
+
+        if ($employer) {
+            Notifier::send($employer, [
+                'category' => 'applications',
+                'type' => 'warning',
+                'icon' => 'bi-envelope-x-fill',
+                'text' => ($application->seeker?->profile?->full_name ?? $application->seeker?->name ?? 'A candidate').' has declined your offer for '.($job?->title ?? 'the role').'. The listing stays open so you can continue.',
+                'action' => 'View applicant',
+                'link' => '/employer/applicants/'.$application->id,
+                'subject' => 'Offer declined — '.($job?->title ?? 'the role'),
+            ]);
+        }
+
+        return $this->success(
+            new ApplicationResource($application->fresh(['job.company:id,slug,name,logo_text,logo_bg,logo_color,is_verified', 'seeker:id,name,email,phone'])),
+            'Offer declined.'
+        );
     }
 
     public function apply(Request $request)

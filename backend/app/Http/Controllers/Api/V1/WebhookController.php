@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api\V1;
 use App\Http\Controllers\Api\ApiController;
 use App\Payments\PaymentManager;
 use App\Payments\PaymentService;
+use App\Services\Upsell\UpsellService;
 use Illuminate\Http\Request;
 
 class WebhookController extends ApiController
@@ -12,6 +13,7 @@ class WebhookController extends ApiController
     public function __construct(
         protected PaymentManager $manager,
         protected PaymentService $payments,
+        protected UpsellService $upsells,
     ) {}
 
     /**
@@ -38,11 +40,16 @@ class WebhookController extends ApiController
             return $this->error('Invalid or unrecognised webhook.', 401);
         }
 
+        // Two kinds of money share this one provider endpoint, so the
+        // subscription/hiring-fee service is offered the event first and the
+        // upsell service is only asked if it did not recognise the reference.
         $payment = $this->payments->apply($event);
 
+        $upsell = $payment ? null : $this->upsells->apply($event);
+
         return $this->success(
-            ['applied' => $payment !== null],
-            $payment ? 'Webhook processed.' : 'Webhook received.'
+            ['applied' => ($payment !== null || $upsell !== null)],
+            ($payment || $upsell) ? 'Webhook processed.' : 'Webhook received.'
         );
     }
 }

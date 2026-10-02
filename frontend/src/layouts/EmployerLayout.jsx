@@ -41,7 +41,8 @@ export default function EmployerLayout() {
               `hh-dashboard-nav-link ${isActive ? 'hh-dashboard-nav-link--active' : ''}`
             }
           >
-            <i className="bi bi-speedometer2" /> Dashboard
+            <i className="bi bi-speedometer2" />
+            <span className="hh-dashboard-nav-label">Dashboard</span>
           </NavLink>
           <NavLink
             to="/employer/jobs"
@@ -49,7 +50,8 @@ export default function EmployerLayout() {
               `hh-dashboard-nav-link ${isActive ? 'hh-dashboard-nav-link--active' : ''}`
             }
           >
-            <i className="bi bi-briefcase-fill" /> Job Postings
+            <i className="bi bi-briefcase-fill" />
+            <span className="hh-dashboard-nav-label">Job Postings</span>
           </NavLink>
           <NavLink
             to="/employer/jobs/create"
@@ -57,7 +59,8 @@ export default function EmployerLayout() {
               `hh-dashboard-nav-link ${isActive ? 'hh-dashboard-nav-link--active' : ''}`
             }
           >
-            <i className="bi bi-plus-circle-fill" /> Post a Job
+            <i className="bi bi-plus-circle-fill" />
+            <span className="hh-dashboard-nav-label">Post a Job</span>
           </NavLink>
           <NavLink
             to="/employer/applicants"
@@ -65,7 +68,8 @@ export default function EmployerLayout() {
               `hh-dashboard-nav-link ${isActive ? 'hh-dashboard-nav-link--active' : ''}`
             }
           >
-            <i className="bi bi-people-fill" /> All Applicants
+            <i className="bi bi-people-fill" />
+            <span className="hh-dashboard-nav-label">All Applicants</span>
           </NavLink>
           <NavLink
             to="/employer/tracking"
@@ -73,7 +77,8 @@ export default function EmployerLayout() {
               `hh-dashboard-nav-link ${isActive ? 'hh-dashboard-nav-link--active' : ''}`
             }
           >
-            <i className="bi bi-kanban" /> ATS Pipeline
+            <i className="bi bi-kanban" />
+            <span className="hh-dashboard-nav-label">ATS Pipeline</span>
           </NavLink>
           <NavLink
             to="/employer/interviews"
@@ -81,7 +86,8 @@ export default function EmployerLayout() {
               `hh-dashboard-nav-link ${isActive ? 'hh-dashboard-nav-link--active' : ''}`
             }
           >
-            <i className="bi bi-calendar-event-fill" /> Interviews
+            <i className="bi bi-calendar-event-fill" />
+            <span className="hh-dashboard-nav-label">Interviews</span>
           </NavLink>
           <NavLink
             to="/employer/company"
@@ -89,7 +95,8 @@ export default function EmployerLayout() {
               `hh-dashboard-nav-link ${isActive ? 'hh-dashboard-nav-link--active' : ''}`
             }
           >
-            <i className="bi bi-building-fill" /> Company Profile
+            <i className="bi bi-building-fill" />
+            <span className="hh-dashboard-nav-label">Company Profile</span>
           </NavLink>
           <NavLink
             to="/employer/notifications"
@@ -97,7 +104,8 @@ export default function EmployerLayout() {
               `hh-dashboard-nav-link ${isActive ? 'hh-dashboard-nav-link--active' : ''}`
             }
           >
-            <i className="bi bi-bell-fill" /> Notifications
+            <i className="bi bi-bell-fill" />
+            <span className="hh-dashboard-nav-label">Notifications</span>
           </NavLink>
           <NavLink
             to="/employer/billing"
@@ -105,7 +113,8 @@ export default function EmployerLayout() {
               `hh-dashboard-nav-link ${isActive ? 'hh-dashboard-nav-link--active' : ''}`
             }
           >
-            <i className="bi bi-credit-card-2-front-fill" /> Billing &amp; Plan
+            <i className="bi bi-credit-card-2-front-fill" />
+            <span className="hh-dashboard-nav-label">Billing &amp; Plan</span>
             <PlanUsageIndicator />
           </NavLink>
           <NavLink
@@ -114,13 +123,15 @@ export default function EmployerLayout() {
               `hh-dashboard-nav-link ${isActive ? 'hh-dashboard-nav-link--active' : ''}`
             }
           >
-            <i className="bi bi-gear-fill" /> Settings
+            <i className="bi bi-gear-fill" />
+            <span className="hh-dashboard-nav-label">Settings</span>
           </NavLink>
         </nav>
 
         <div className="p-3 border-top border-secondary">
           <Link to="/" className="hh-dashboard-nav-link text-danger">
-            <i className="bi bi-box-arrow-right" /> Exit to Website
+            <i className="bi bi-box-arrow-right" />
+            <span className="hh-dashboard-nav-label">Exit to Website</span>
           </Link>
         </div>
       </aside>

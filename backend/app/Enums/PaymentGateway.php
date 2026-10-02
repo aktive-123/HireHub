@@ -36,4 +36,29 @@ enum PaymentGateway: string
     {
         return in_array(strtoupper($currency), $this->supportedCurrencies(), true);
     }
+
+    /**
+     * The env keys a gateway needs before it can take money. Surfaced in the
+     * "not configured" error so whoever clicks a pay button learns which keys
+     * to add, instead of being told only that something is missing.
+     *
+     * @return array<int, string>
+     */
+    public function configKeys(): array
+    {
+        return match ($this) {
+            self::Paystack => ['PAYSTACK_SECRET_KEY', 'PAYSTACK_PUBLIC_KEY'],
+            self::Flutterwave => ['FLUTTERWAVE_SECRET_KEY', 'FLUTTERWAVE_PUBLIC_KEY'],
+            self::Stripe => ['STRIPE_SECRET_KEY', 'STRIPE_PUBLIC_KEY'],
+        };
+    }
+
+    public function notConfiguredMessage(): string
+    {
+        return sprintf(
+            'The %s gateway is not configured. Set %s in backend/.env.',
+            $this->label(),
+            implode(' and ', $this->configKeys()),
+        );
+    }
 }

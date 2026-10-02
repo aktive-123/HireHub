@@ -52,6 +52,28 @@ abstract class ApiTestCase extends TestCase
         return $user->load('company');
     }
 
+    /**
+     * The company belonging to an employer built by `employer()`.
+     *
+     * `User::$company` is nullable because a job seeker genuinely has no
+     * company, so reading it straight off the relation is a nullable type at
+     * every call site — which is why dozens of tests used to reach for a
+     * suppression to make `makeJob()` accept it. Narrowing once, here, with a
+     * real runtime check keeps the honest model and gives callers a `Company`.
+     */
+    public function companyOf(User $employer): Company
+    {
+        $company = $employer->company()->first();
+
+        if (! $company instanceof Company) {
+            throw new \RuntimeException(
+                'employer() always creates a company, so this one is missing. A test is constructing a User by hand instead of via the helper.'
+            );
+        }
+
+        return $company;
+    }
+
     public function admin(): User
     {
         return User::factory()->create(['role' => UserRole::Admin->value, 'status' => AccountStatus::Active->value]);

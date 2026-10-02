@@ -5,8 +5,8 @@ namespace App\Payments\Gateways;
 use App\Enums\PaymentGateway;
 use App\Enums\PaymentStatus;
 use App\Models\Company;
-use App\Models\Payment;
 use App\Models\User;
+use App\Payments\Contracts\Chargeable;
 use App\Payments\Contracts\ChargeRequest;
 use App\Payments\Contracts\PaymentGateway as PaymentGatewayContract;
 use App\Payments\Data\CheckoutSession;
@@ -33,14 +33,14 @@ class StripeGateway implements PaymentGatewayContract
             && (bool) config('payments.gateways.stripe.webhook_secret');
     }
 
-    public function createCheckout(Payment $payment, ChargeRequest $charge, User $user, ?Company $company): CheckoutSession
+    public function createCheckout(Chargeable $chargeable, ChargeRequest $charge, User $user, ?Company $company): CheckoutSession
     {
         $response = $this->postForm('https://api.stripe.com/v1/checkout/sessions', [
             'mode' => 'payment',
-            'client_reference_id' => $payment->reference,
+            'client_reference_id' => $chargeable->getReference(),
             'customer_email' => $user->email,
-            'success_url' => $charge->returnUrlFor($payment).($charge->returnUrl ? '&status=success' : ''),
-            'cancel_url' => $charge->returnUrlFor($payment).($charge->returnUrl ? '&status=cancelled' : ''),
+            'success_url' => $charge->returnUrlFor($chargeable->getReference()).($charge->returnUrl ? '&status=success' : ''),
+            'cancel_url' => $charge->returnUrlFor($chargeable->getReference()).($charge->returnUrl ? '&status=cancelled' : ''),
             'line_items' => [[
                 // price_data is built from the server-side amount, not from
                 // request input.
@@ -55,7 +55,7 @@ class StripeGateway implements PaymentGatewayContract
                 'quantity' => 1,
             ]],
             'metadata' => [
-                'payment_id' => (string) $payment->id,
+                'payment_id' => $chargeable->asPayment()?->id,
                 'company_id' => (string) ($company?->id ?? ''),
                 ...$charge->metadata,
             ],

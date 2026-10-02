@@ -59,7 +59,10 @@ return [
         'paystack' => [
             'secret_key' => env('PAYSTACK_SECRET_KEY'),
             'public_key' => env('PAYSTACK_PUBLIC_KEY'),
-            'webhook_secret' => env('PAYSTACK_WEBHOOK_SECRET'),
+            // No webhook secret, unlike Stripe's `whsec_`. Paystack signs each
+            // notification with HMAC SHA512 over the raw body using the SECRET
+            // KEY, so there is no second value to configure. See
+            // PaystackGateway::verifyWebhook().
         ],
 
         'flutterwave' => [

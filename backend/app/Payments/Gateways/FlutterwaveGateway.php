@@ -5,8 +5,8 @@ namespace App\Payments\Gateways;
 use App\Enums\PaymentGateway;
 use App\Enums\PaymentStatus;
 use App\Models\Company;
-use App\Models\Payment;
 use App\Models\User;
+use App\Payments\Contracts\Chargeable;
 use App\Payments\Contracts\ChargeRequest;
 use App\Payments\Contracts\PaymentGateway as PaymentGatewayContract;
 use App\Payments\Data\CheckoutSession;
@@ -31,7 +31,7 @@ class FlutterwaveGateway implements PaymentGatewayContract
         return (bool) config('payments.gateways.flutterwave.secret_key');
     }
 
-    public function createCheckout(Payment $payment, ChargeRequest $charge, User $user, ?Company $company): CheckoutSession
+    public function createCheckout(Chargeable $chargeable, ChargeRequest $charge, User $user, ?Company $company): CheckoutSession
     {
         $response = Http::withToken((string) config('payments.gateways.flutterwave.secret_key'))
             ->acceptJson()
@@ -39,22 +39,22 @@ class FlutterwaveGateway implements PaymentGatewayContract
             ->timeout(20)
             ->retry(2, 250)
             ->post('https://api.flutterwave.com/v3/payments', [
-                'txnt_x' => $payment->reference,
+                'txnt_x' => $chargeable->getReference(),
                 'amount' => $charge->amount,
                 'currency' => $charge->currency,
-                'redirect_url' => $charge->returnUrlFor($payment),
+                'redirect_url' => $charge->returnUrlFor($chargeable->getReference()),
                 'payment_options' => 'card,banktransfer,ussd,mobilemoney',
                 'customer' => [
                     'email' => $user->email,
                     'name' => $user->name,
                 ],
                 'custom_fields' => [
-                    'payment_id' => $payment->id,
+                    'payment_id' => $chargeable->asPayment()?->id,
                     'label' => $charge->label,
                     'company_id' => $company?->id,
                     ...$charge->metadata,
                 ],
-                'meta' => ['checkout_id' => $payment->reference],
+                'meta' => ['checkout_id' => $chargeable->getReference()],
             ]);
 
         $data = $response->json() ?? [];
@@ -66,7 +66,7 @@ class FlutterwaveGateway implements PaymentGatewayContract
         return new CheckoutSession(
             url: $data['data']['link'],
             gatewayReference: (string) ($data['data']['id'] ?? ''),
-            meta: ['txnt_x' => $data['data']['txnt_x'] ?? $payment->reference],
+            meta: ['txnt_x' => $data['data']['txnt_x'] ?? $chargeable->getReference()],
         );
     }
 

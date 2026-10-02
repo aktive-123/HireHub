@@ -12,8 +12,10 @@ use App\Http\Controllers\Api\V1\JobController;
 use App\Http\Controllers\Api\V1\NewsletterController;
 use App\Http\Controllers\Api\V1\PaymentController;
 use App\Http\Controllers\Api\V1\PlanController;
+use App\Http\Controllers\Api\V1\ReceiptController;
 use App\Http\Controllers\Api\V1\SeekerController;
 use App\Http\Controllers\Api\V1\SettingsController;
+use App\Http\Controllers\Api\V1\UpsellController;
 use App\Http\Controllers\Api\V1\VerificationController;
 use App\Http\Controllers\Api\V1\WebhookController;
 use Illuminate\Support\Facades\Route;
@@ -99,6 +101,13 @@ Route::middleware(['auth:sanctum', 'role:seeker'])->prefix('v1')->group(function
     Route::get('seeker/applications', [SeekerController::class, 'applications']);
     Route::post('seeker/applications', [SeekerController::class, 'apply'])->middleware('throttle:write');
     Route::get('seeker/applications/{id}', [SeekerController::class, 'application']);
+    // Accepting or declining an offer is the seeker's decision and is never
+    // charged, so it settles no money.
+    Route::post('seeker/applications/{id}/accept-offer', [SeekerController::class, 'acceptOffer'])->middleware('throttle:write');
+    Route::post('seeker/applications/{id}/decline-offer', [SeekerController::class, 'declineOffer'])->middleware('throttle:write');
+    // Paid add-ons, only ever offered once an offer has been accepted.
+    Route::get('seeker/applications/{id}/upsells', [UpsellController::class, 'index']);
+    Route::post('seeker/applications/{id}/upsells/checkout', [UpsellController::class, 'checkout'])->middleware('throttle:write');
     Route::get('seeker/saved-jobs', [SeekerController::class, 'savedJobs']);
     Route::post('seeker/saved-jobs', [SeekerController::class, 'saveJob'])->middleware('throttle:write');
     Route::delete('seeker/saved-jobs/{jobId}', [SeekerController::class, 'unSaveJob'])->middleware('throttle:write');
@@ -133,6 +142,11 @@ Route::middleware(['auth:sanctum', 'role:employer'])->prefix('v1')->group(functi
     Route::patch('employer/applicants/{application}/status', [EmployerController::class, 'updateApplicationStatus'])->middleware('throttle:write');
     // --- Hiring fee (employer pays; job seekers never reach these) ---
     Route::get('employer/hiring-fees', [EmployerController::class, 'hiringFees']);
+    // A hiring fee has its own reference, but its receipt is keyed on the
+    // payment behind it. Exposed under the fee's reference so the Placement
+    // Fees table can link each row without knowing about payments.
+    Route::get('employer/hiring-fees/{reference}/receipt', [ReceiptController::class, 'showForHiringFee']);
+    Route::get('employer/hiring-fees/{reference}/receipt/download', [ReceiptController::class, 'downloadForHiringFee']);
     Route::get('employer/applicants/{application}/hiring-fee', [EmployerController::class, 'hiringFeeQuote']);
     Route::post('employer/applicants/{application}/hiring-fee/checkout', [EmployerController::class, 'createHiringFeeCheckout'])->middleware('throttle:write');
     Route::get('employer/applicants/{application}/hiring-fee/status', [EmployerController::class, 'hiringFeeStatus']);
@@ -163,6 +177,10 @@ Route::middleware(['auth:sanctum', 'role:employer'])->prefix('v1')->group(functi
     Route::post('employer/billing/subscription/cancel', [PaymentController::class, 'cancel'])->middleware('throttle:write');
     Route::get('employer/billing/payments', [PaymentController::class, 'index']);
     Route::get('employer/billing/payments/{reference}', [PaymentController::class, 'show']);
+    // Receipts are addressed by the payment reference so the existing
+    // Payment History rows can link straight at them with no extra id.
+    Route::get('employer/billing/receipts/{reference}', [ReceiptController::class, 'show']);
+    Route::get('employer/billing/receipts/{reference}/download', [ReceiptController::class, 'download']);
 });
 
 // --- Shared authenticated routes (any signed-in role) ---
@@ -216,7 +234,12 @@ Route::middleware(['auth:sanctum', 'role:admin'])->prefix('v1/admin')->group(fun
     // --- Hiring fee revenue & rate management ---
     Route::get('hiring-fees', [AdminController::class, 'hiringFees']);
     Route::get('hiring-fees/summary', [AdminController::class, 'hiringFeeSummary']);
+    Route::get('upsell-summary', [AdminController::class, 'upsellSummary']);
     Route::get('hiring-fee-rates', [AdminController::class, 'hiringFeeRates']);
+    // Admin reads every receipt on the platform, so these sit inside the
+    // role:admin group with no company scoping.
+    Route::get('receipts/{reference}', [ReceiptController::class, 'show']);
+    Route::get('receipts/{reference}/download', [ReceiptController::class, 'download']);
     Route::post('hiring-fee-rates', [AdminController::class, 'storeHiringFeeRate'])->middleware('throttle:write');
     Route::put('hiring-fee-rates/{hiringFeeRate}', [AdminController::class, 'updateHiringFeeRate'])->middleware('throttle:write');
     Route::delete('hiring-fee-rates/{hiringFeeRate}', [AdminController::class, 'deleteHiringFeeRate'])->middleware('throttle:write');

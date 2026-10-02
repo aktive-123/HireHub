@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api\V1;
 
 use App\Enums\AccountStatus;
+use App\Enums\ApplicationStatus;
 use App\Enums\HiringFeeLevel;
 use App\Enums\JobStatus;
 use App\Enums\PaymentStatus;
@@ -20,6 +21,7 @@ use App\Models\Company;
 use App\Models\HiringFee;
 use App\Models\HiringFeeRate;
 use App\Models\Job;
+use App\Models\JobSeekerUpsell;
 use App\Models\Payment;
 use App\Models\Plan;
 use App\Models\Profile;
@@ -27,6 +29,7 @@ use App\Models\SavedJob;
 use App\Models\Setting;
 use App\Models\User;
 use App\Services\HiringFeeService;
+use App\Services\Upsell\UpsellCatalogue;
 use App\Support\Notifier;
 use Carbon\CarbonPeriod;
 use Illuminate\Http\Request;
@@ -46,7 +49,7 @@ class AdminController extends ApiController
      */
     private const APPLICATION_STATUSES = [
         'new', 'reviewing', 'shortlisted', 'interview',
-        'offer', 'hired', 'rejected', 'withdrawn',
+        'offer', 'offer_confirmed_pending_acceptance', 'hired', 'rejected', 'withdrawn',
     ];
 
     public function dashboard(Request $request)
@@ -798,13 +801,92 @@ class AdminController extends ApiController
     }
 
     /**
+     * Add-on revenue, reported separately from hiring fees.
+     *
+     * Separate on purpose: the two are different products sold to different
+     * people, and folding them into one "revenue" number would make it
+     * impossible to tell whether the business is growing from employers hiring
+     * or from seekers buying coaching. A single combined figure is also the kind
+     * of thing that quietly hides an upsell line that stopped selling.
+     *
+     * There is no company dimension here — a seeker has none — so the useful
+     * cuts are by product and by day.
+     */
+    public function upsellSummary(Request $request)
+    {
+        $period = (int) min(365, max(1, (int) $request->input('days', 30)));
+        $since = now()->subDays($period);
+
+        $window = JobSeekerUpsell::query()
+            ->where('created_at', '>=', $since)
+            ->when($request->filled('status'), fn ($q) => $q->whereIn('status', explode(',', $request->input('status'))))
+            ->when($request->filled('sku'), fn ($q) => $q->where('sku', $request->input('sku')));
+
+        $currency = (string) config('app.currency', 'NGN');
+
+        $collected = (int) (clone $window)->where('status', PaymentStatus::Succeeded)->sum('amount');
+        $pending = (int) (clone $window)->whereIn('status', [PaymentStatus::Pending, PaymentStatus::Processing])->sum('amount');
+        $settledCount = (clone $window)->where('status', PaymentStatus::Succeeded)->count();
+
+        $byProduct = (clone $window)
+            ->selectRaw('sku, count(*) as aggregate, sum(amount) as total')
+            ->groupBy('sku')
+            ->orderByDesc('total')
+            ->get()
+            ->map(function ($row) use ($currency) {
+                $product = UpsellCatalogue::find($row->sku);
+
+                return [
+                    'sku' => $row->sku,
+                    'product' => $product['name'] ?? $row->sku,
+                    'sold' => (int) $row->aggregate,
+                    'amount' => (int) $row->total,
+                    'formatted_amount' => $this->hiringFees->format((int) $row->total, $currency),
+                ];
+            });
+
+        $trend = JobSeekerUpsell::query()
+            ->where('status', PaymentStatus::Succeeded)
+            ->where('paid_at', '>=', $since)
+            ->selectRaw('DATE(paid_at) as day, count(*) as sold, sum(amount) as total')
+            ->groupBy('day')
+            ->orderBy('day')
+            ->get()
+            ->map(fn ($row) => [
+                'day' => $row->day,
+                'sold' => (int) $row->sold,
+                'amount' => (int) $row->total,
+            ]);
+
+        // Offers that were accepted but never bought anything: the size of the
+        // audience the upsell is failing to convert.
+        $hired = Application::where('status', ApplicationStatus::Hired)->count();
+        $converted = JobSeekerUpsell::query()->distinct('user_id')->count();
+
+        return $this->success([
+            'period_days' => $period,
+            'currency' => $currency,
+            'total' => (clone $window)->count(),
+            'collected' => $collected,
+            'collected_formatted' => $this->hiringFees->format($collected, $currency),
+            'pending' => $pending,
+            'pending_formatted' => $this->hiringFees->format($pending, $currency),
+            'average_order' => $settledCount > 0 ? (int) round($collected / $settledCount) : 0,
+            'buyers' => $converted,
+            'hires_total' => $hired,
+            'by_product' => $byProduct,
+            'trend' => $trend,
+        ], 'Add-on summary retrieved.');
+    }
+
+    /**
      * The placement-fee ledger. Filterable by status, employer, company, job and
      * level, with an optional CSV export for finance.
      */
     public function hiringFees(Request $request)
     {
         $query = HiringFee::query()
-            ->with(['employer:id,name,email', 'company:id,name', 'job:id,title', 'application.seeker:id,name'])
+            ->with(['employer:id,name,email', 'company:id,name', 'job:id,title', 'application.seeker:id,name', 'payment:id,reference'])
             ->when($request->filled('status'), fn ($q) => $q->whereIn('status', explode(',', $request->input('status'))))
             ->when($request->filled('level'), fn ($q) => $q->whereIn('level', explode(',', $request->input('level'))))
             ->when($request->filled('employer_id'), fn ($q) => $q->where('employer_id', $request->input('employer_id')))

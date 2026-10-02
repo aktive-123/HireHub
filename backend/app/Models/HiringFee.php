@@ -9,6 +9,21 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
+/**
+ * Nullable rather than non-nullable because the columns have no NOT NULL
+ * guarantee on every write path, and the console reads them defensively with
+ * `?->` throughout. Typing them as present would make that defensiveness look
+ * like dead code to static analysis, and deleting it would turn a null enum
+ * into a fatal on a legacy row.
+ *
+ * @property PaymentStatus|null $status
+ * @property HiringFeeLevel|null $level
+ * @property-read Payment|null $payment
+ * @property-read Job|null $job
+ * @property-read Company|null $company
+ *
+ * @method bool isSettled()
+ */
 class HiringFee extends Model
 {
     use HasFactory;

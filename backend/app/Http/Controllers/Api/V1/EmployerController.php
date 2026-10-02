@@ -34,7 +34,13 @@ class EmployerController extends ApiController
 {
     private const JOB_STATUSES = ['open', 'closed', 'draft', 'pending', 'flagged', 'expired'];
 
-    private const APP_STATUSES = ['new', 'reviewing', 'shortlisted', 'interview', 'offer', 'hired', 'rejected', 'withdrawn'];
+    // 'hired' is deliberately absent. A hire is now the job seeker's decision:
+    // paying the hiring fee moves the application to
+    // offer_confirmed_pending_acceptance, and only the seeker's acceptance
+    // completes the hire. Leaving 'hired' out of the employer's reachable set
+    // is what stops a paying employer from skipping that consent step by
+    // simply setting the status directly.
+    private const APP_STATUSES = ['new', 'reviewing', 'shortlisted', 'interview', 'offer', 'rejected', 'withdrawn'];
 
     public function __construct(
         protected PlanEntitlements $entitlements,
@@ -377,33 +383,47 @@ class EmployerController extends ApiController
     {
         $this->authorize('updateStatus', $application);
 
-        $validated = $request->validate([
-            'status' => ['required', 'string', Rule::in(self::APP_STATUSES)],
-        ]);
+        // Checked before validation, not after: 'hired' and
+        // 'offer_confirmed_pending_acceptance' are deliberately absent from
+        // APP_STATUSES, so validating first would answer a client that reached
+        // for either one with an opaque 422 instead of the reason it cannot.
+        $requested = (string) $request->input('status');
 
-        $target = ApplicationStatus::from($validated['status']);
-
-        // A hire is a paid transaction, not a status change. The client is never
-        // trusted to have gone through checkout: the only thing that unlocks
-        // this transition is a hiring_fees row for *this* application whose
-        // status is `succeeded`, which only a verified gateway webhook (or an
-        // out-of-band reconcile against the provider) can set. Reached here the
-        // request is refused and the application keeps whatever status it had.
-        if ($target === ApplicationStatus::Hired && ! $this->hiringFees->hasSettledHire($application)) {
+        // A hire is the job seeker's decision, not the employer's. Reaching
+        // `hired` requires the seeker accepting an offer the employer already
+        // paid for, so an employer reaching for the status directly is refused
+        // rather than validated away. The hiring fee gates the *offer*, not
+        // the hire.
+        if ($requested === ApplicationStatus::Hired->value) {
             return $this->error(
-                'Confirm and pay the hiring fee to complete this hire.',
-                402,
+                'Only the job seeker can complete a hire, by accepting their offer.',
+                403,
                 null,
-                [
-                    'hiring_fee' => $this->hiringFees->preview($application),
-                    // Where the client sends the employer to pay. Additive so
-                    // this can be attached to any future refusal shape without
-                    // changing the envelope's meaning.
-                    'checkout_endpoint' => "/api/v1/employer/applicants/{$application->id}/hiring-fee/checkout",
-                ],
+                ['checkout_endpoint' => "/api/v1/employer/applicants/{$application->id}/hiring-fee/checkout"],
+                'seeker_acceptance_required'
+            );
+        }
+
+        // Confirming the offer — and paying the fee that goes with it — moves
+        // the application to awaiting the seeker's acceptance, and that happens
+        // server-side when the payment settles. It is not a status the employer
+        // sets by hand, so an unpaid request is refused rather than accepted.
+        if ($requested === ApplicationStatus::OfferConfirmedPendingAcceptance->value) {
+            return $this->error(
+                $this->hiringFees->hasSettledHire($application)
+                    ? 'This offer is already confirmed and waiting on the candidate.'
+                    : 'Confirm and pay the hiring fee before we put this offer to the candidate.',
+                $this->hiringFees->hasSettledHire($application) ? 409 : 402,
+                null,
+                ['hiring_fee' => $this->hiringFees->preview($application),
+                    'checkout_endpoint' => "/api/v1/employer/applicants/{$application->id}/hiring-fee/checkout"],
                 'hiring_fee_required'
             );
         }
+
+        $validated = $request->validate([
+            'status' => ['required', 'string', Rule::in(self::APP_STATUSES)],
+        ]);
 
         DB::transaction(function () use ($application, $validated) {
             $application->update(['status' => $validated['status']]);
@@ -518,7 +538,7 @@ class EmployerController extends ApiController
         $perPage = min(50, max(1, (int) $request->input('per_page', 20)));
 
         $paginator = $company->hiringFees()
-            ->with(['job:id,title', 'application.seeker:id,name'])
+            ->with(['job:id,title', 'application.seeker:id,name', 'payment:id,reference'])
             ->when($request->filled('status'), fn ($q) => $q->whereIn('status', explode(',', $request->input('status'))))
             ->orderByDesc('id')
             ->paginate($perPage);

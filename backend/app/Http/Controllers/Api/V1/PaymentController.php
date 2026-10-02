@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api\V1;
 
 use App\Billing\PlanEntitlements;
 use App\Enums\PaymentGateway;
+use App\Enums\PaymentPurpose;
 use App\Http\Controllers\Api\ApiController;
 use App\Http\Resources\V1\PaymentResource;
 use App\Http\Resources\V1\SubscriptionResource;
@@ -110,6 +111,8 @@ class PaymentController extends ApiController
         $data = $request->validate([
             'plan' => ['required', 'string', 'exists:plans,slug'],
             'gateway' => ['nullable', 'string', Rule::in(array_column(PaymentGateway::cases(), 'value'))],
+            'amount' => ['prohibited'],
+            'currency' => ['prohibited'],
         ]);
 
         $plan = Plan::where('slug', $data['plan'])
@@ -135,6 +138,15 @@ class PaymentController extends ApiController
     /**
      * The caller's own payments, scoped to their company. An employer can only
      * ever see billing history belonging to their own company.
+     *
+     * Scoped to `purpose = subscription` on purpose. Placement fees live in the
+     * same table, and `HiringFeeSeeder` writes them with a null `plan_id`
+     * because a fee is priced from `hiring_fee_rates`, not bought from a plan.
+     * Returning them here put a ₦6,000,000 row in front of the employer with an
+     * empty Plan cell, which reads as a lost record rather than as a charge that
+     * belongs in the Placement Fees table further down the page. Filtering also
+     * means a future non-plan purpose cannot silently appear in a column that
+     * has no way to describe it.
      */
     public function index(Request $request)
     {
@@ -142,6 +154,7 @@ class PaymentController extends ApiController
 
         $payments = Payment::query()
             ->where('company_id', $company->id)
+            ->where('purpose', PaymentPurpose::Subscription)
             ->with('plan:id,slug,name')
             ->orderByDesc('id')
             ->limit(min(100, max(1, (int) $request->input('per_page', 20))))
@@ -157,6 +170,7 @@ class PaymentController extends ApiController
         $payment = Payment::query()
             ->where('reference', $reference)
             ->where('company_id', $company->id)
+            ->where('purpose', PaymentPurpose::Subscription)
             ->with('plan:id,slug,name')
             ->firstOrFail();
 

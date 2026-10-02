@@ -187,11 +187,20 @@
   --hh-type-h1-ls: -0.015em;
 
   /* Console page name — the h1 every admin, job seeker and employer page opens
-     with. Set to the same 18px as the paragraph copy below it, so the three
-     dashboards read as one system; the heading still separates by weight
-     (extrabold) rather than by size. Scoped to the dashboards in dashboard.css,
-     so public, landing and auth pages keep the 32px h1 above. */
-  --hh-type-console-title-size: var(--hh-fs-18);
+     with. This is the visual anchor of a dashboard page, so it is sized as one:
+     28px extrabold at line-height 1.2, well clear of the 18px body copy beneath
+     it. It was previously pinned to 18px on the theory that the heading should
+     separate by weight rather than by size; at that size it read as a sibling of
+     its own subtitle rather than as the page title, and the two were the same
+     size, so the header had no hierarchy at all. Scoped to the dashboards in
+     dashboard.css, so public, landing and auth pages keep the 32px h1 above. */
+  --hh-type-console-title-size: var(--hh-fs-28);
+
+  /* Console page subtitle — the muted line under the page name. Deliberately
+     smaller than the 18px dashboard body copy: it describes the page rather than
+     reading as a paragraph, and at body size the subtitle competed with the
+     title it is supposed to sit beneath. */
+  --hh-type-console-sub-size: var(--hh-fs-15);
 
   /* Console sidebar navigation — Dashboard, Find Jobs, My Applications, Saved
      Jobs, CV / Resume, Profile, Notifications, Settings and the admin and

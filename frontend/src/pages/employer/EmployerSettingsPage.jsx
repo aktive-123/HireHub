@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import SectionHeading from '../../components/ui/SectionHeading'
+import PageHeader from '../../components/ui/PageHeader'
 import Reveal from '../../components/ui/Reveal'
 import Card from '../../components/ui/Card'
 import Button from '../../components/ui/Button'
@@ -115,13 +115,11 @@ export default function EmployerSettingsPage() {
     <>
       <section className="hh-section-space bg-white">
         <div className="page-container">
-          <div className="hh-toolbar hh-toolbar-between hh-mb-4">
-            <SectionHeading
-              eyebrow="EMPLOYER DASHBOARD"
-              title="Account settings"
-              subtitle="Manage your account information, security, and preferences."
-            />
-          </div>
+          <PageHeader
+            eyebrow="EMPLOYER DASHBOARD"
+            title="Account settings"
+            subtitle="Manage your account information, security, and preferences."
+          />
 
           <Reveal>
             {message ? (

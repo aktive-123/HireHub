@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import { jobsApi, seekerApi } from '../../services/api'
 import { useAuth } from '../../context/AuthContext'
 import { useApiData } from '../../hooks/useApiData'
+import PageHeader from '../../components/ui/PageHeader'
 import SectionHeading from '../../components/ui/SectionHeading'
 import Reveal from '../../components/ui/Reveal'
 import Badge from '../../components/ui/Badge'
@@ -121,13 +122,11 @@ export default function SeekerDashboardPage() {
             <div className="hh-toolbar hh-toolbar-between hh-mb-4">
               <div className="hh-welcome-id">
                 <span className="hh-avatar hh-avatar-soft" aria-hidden="true">{initials}</span>
-                <div>
-                  <SectionHeading
-                    eyebrow="JOB SEEKER DASHBOARD"
-                    title={`Welcome back, ${firstName}`}
-                    subtitle="Here's what's happening with your job search."
-                  />
-                </div>
+                <PageHeader
+                  eyebrow="JOB SEEKER DASHBOARD"
+                  title={`Welcome back, ${firstName}`}
+                  subtitle="Here's what's happening with your job search."
+                />
               </div>
               <Button to="/seeker/browse-jobs" variant="primary" icon="bi-search" pill>
                 Find jobs

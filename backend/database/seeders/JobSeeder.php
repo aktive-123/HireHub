@@ -2,9 +2,12 @@
 
 namespace Database\Seeders;
 
+use App\Billing\PlanEntitlements;
 use App\Models\Category;
 use App\Models\Company;
 use App\Models\Job;
+use App\Models\Plan;
+use App\Models\Subscription;
 use Illuminate\Database\Seeder;
 
 class JobSeeder extends Seeder
@@ -293,13 +296,40 @@ class JobSeeder extends Seeder
             ],
         ];
 
+        // Featured slots are a metered entitlement, so a seed cannot hand out
+        // more of them than the company's plan pays for. Tracked per company and
+        // checked against the limit resolved from the plan table, exactly as
+        // PlanEntitlements resolves it at request time — otherwise the console
+        // reports "1/0" for a free-tier company that was seeded a featured job.
+        $featuredUsed = [];
+
         foreach ($jobs as $job) {
             $company = Company::where('name', $job['company'])->first();
             $category = Category::where('name', $job['category'])->first();
             $postedDaysAgo = $job['posted_days_ago'];
-            unset($job['company'], $job['category'], $job['posted_days_ago']);
+            // Read the seed's intent before unsetting: this is the only point at
+            // which the hardcoded value is still on the array. Every job in the
+            // list above declares the key, so there is no missing-key case here.
+            $wantsFeatured = (bool) $job['is_featured'];
+            // is_featured is unset with the other join keys because the row is
+            // built with `$job + [...]`, and union keeps the LEFT operand's keys
+            // on conflict. Left in place, the hardcoded seed value silently
+            // overrode the allowance-checked one below and the cap did nothing.
+            unset($job['company'], $job['category'], $job['posted_days_ago'], $job['is_featured']);
+
+            if ($wantsFeatured && $company) {
+                $allowance = $this->featuredAllowanceFor($company);
+                $used = $featuredUsed[$company->id] ?? 0;
+
+                if ($used >= $allowance) {
+                    $wantsFeatured = false;
+                }
+
+                $featuredUsed[$company->id] = $used + ($wantsFeatured ? 1 : 0);
+            }
 
             Job::updateOrCreate(['slug' => $job['slug']], $job + [
+                'is_featured' => $wantsFeatured,
                 'company_id' => $company?->id,
                 'category_id' => $category?->id,
                 'user_id' => $company?->user_id,
@@ -307,5 +337,33 @@ class JobSeeder extends Seeder
                 'expires_at' => now()->addDays(60)->subDays($postedDaysAgo),
             ]);
         }
+    }
+
+    /**
+     * How many featured slots this company may actually spend.
+     *
+     * Deliberately a local reimplementation of the live rule rather than a call
+     * into PlanEntitlements: a seeder is not a request, and resolving
+     * entitlements there would need a company to already be persisted. The rule
+     * it mirrors is the one that matters — the free plan grants none, a paid
+     * subscription grants its plan's limit, and an expired or cancelled
+     * subscription falls back to the free tier.
+     */
+    private function featuredAllowanceFor(Company $company): int
+    {
+        $subscription = Subscription::query()
+            ->where('company_id', $company->id)
+            ->live()
+            ->with('plan')
+            ->latest('id')
+            ->first();
+
+        if ($subscription?->grantsAccess() === true && $subscription->plan !== null) {
+            return $subscription->plan->featured_job_limit;
+        }
+
+        return Plan::query()
+            ->where('slug', PlanEntitlements::FREE_SLUG)
+            ->value('featured_job_limit') ?? 0;
     }
 }

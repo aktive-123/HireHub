@@ -25,6 +25,7 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 use InvalidArgumentException;
 use RuntimeException;
+use Throwable;
 
 /**
  * The placement fee an employer pays HireHub when a hire is confirmed.
@@ -317,7 +318,7 @@ class HiringFeeService
         $gateway = $this->manager->driver($gatewayName);
 
         if (! $gateway->isConfigured()) {
-            throw new InvalidArgumentException("The {$gateway->name()->label()} gateway is not configured.");
+            throw new InvalidArgumentException($gateway->name()->notConfiguredMessage());
         }
 
         if (! $gateway->name()->supportsCurrency($quote['currency'])) {
@@ -401,7 +402,7 @@ class HiringFeeService
                 $employer,
                 $job->company,
             );
-        } catch (\Throwable $e) {
+        } catch (Throwable $e) {
             // The gateway refused, so nothing is owed. Leaving a pending row
             // behind would block the employer from retrying.
             $payment->update(['status' => PaymentStatus::Failed, 'meta' => ['gateway_error' => $e->getMessage()]]);
@@ -468,9 +469,14 @@ class HiringFeeService
     }
 
     /**
-     * The post-payment side effects: mark the application hired, close the job,
-     * and tell the job seeker. The seeker is never charged and is never asked
-     * to do anything — this is a notification only.
+     * The post-payment side effects of a settled fee: put the confirmed offer
+     * to the seeker and wait for their answer.
+     *
+     * This deliberately does *not* mark the application hired and does not close
+     * the job. The employer has paid, which buys the offer — not the hire. The
+     * seeker is the one who accepts, and until they do the role stays open: a
+     * job closed at payment time would be a filled vacancy the moment a
+     * candidate said no.
      */
     protected function confirmHire(?Application $application): void
     {
@@ -480,29 +486,83 @@ class HiringFeeService
 
         $application->loadMissing(['job', 'job.company', 'seeker', 'seeker.profile']);
 
-        if ($application->status !== ApplicationStatus::Hired) {
-            $application->update(['status' => ApplicationStatus::Hired]);
+        if ($application->status === ApplicationStatus::Hired) {
+            return;
         }
+
+        $application->update([
+            'status' => ApplicationStatus::OfferConfirmedPendingAcceptance,
+        ]);
 
         $job = $application->job;
 
-        // A single-headcount listing is now filled. Jobs have no open-slots
-        // counter in this schema, so "closed" is how a filled role is
-        // represented — a closed job stops accepting applications, which is
-        // exactly the intended effect.
-        if ($job && $job->status === JobStatus::Open) {
-            $job->update(['status' => JobStatus::Closed]);
-        }
+        Notifier::send($application->seeker, [
+            'category' => 'applications',
+            'type' => 'success',
+            'icon' => 'bi-envelope-check-fill',
+            'text' => $job?->company?->name.' has confirmed an offer for '.$job?->title.'. Accept it to confirm the role — accepting is free and takes one tap.',
+            'action' => 'Review offer',
+            'link' => '/seeker/applications/'.$application->id,
+            'subject' => 'Offer confirmed — '.$job?->title,
+        ]);
+    }
+
+    /**
+     * The seeker accepted. This is the point the hire actually completes: the
+     * status moves, the vacancy closes, and the employer is told.
+     *
+     * Idempotent, because accepting twice (a retried request, a double tap)
+     * must not re-close a job that has since been reposted.
+     */
+    public function completeHire(Application $application): Application
+    {
+        $application->loadMissing(['job', 'job.company', 'seeker', 'seeker.profile']);
+
+        DB::transaction(function () use ($application) {
+            if ($application->status !== ApplicationStatus::Hired) {
+                $application->update(['status' => ApplicationStatus::Hired]);
+            }
+
+            $job = $application->job;
+
+            // A single-headcount listing is now filled. Jobs have no open-slots
+            // counter in this schema, so "closed" is how a filled role is
+            // represented — a closed job stops accepting applications, which is
+            // exactly the intended effect.
+            if ($job && $job->status === JobStatus::Open) {
+                $job->update(['status' => JobStatus::Closed]);
+            }
+        });
+
+        $job = $application->job;
 
         Notifier::send($application->seeker, [
             'category' => 'applications',
             'type' => 'success',
             'icon' => 'bi-briefcase-fill',
-            'text' => 'Congratulations — you have been hired for '.$job?->title.' at '.($job?->company?->name ?? 'the company').'. The employer will be in touch with next steps.',
+            'text' => 'Congratulations — you have accepted the offer for '.$job?->title.' at '.($job?->company?->name ?? 'the company').'. The employer will be in touch with next steps.',
             'action' => 'View application',
             'link' => '/seeker/applications',
             'subject' => 'You have been hired — '.$job?->title,
         ]);
+
+        // The employer paid for this hire at the offer stage, so the acceptance
+        // that completes it is the one thing they are waiting on.
+        $employer = $job?->company?->user;
+
+        if ($employer) {
+            Notifier::send($employer, [
+                'category' => 'applications',
+                'type' => 'success',
+                'icon' => 'bi-person-check-fill',
+                'text' => ($application->seeker?->profile?->full_name ?? $application->seeker?->name ?? 'The candidate').' has accepted your offer for '.$job?->title.'. The role is now filled and the listing has closed.',
+                'action' => 'View applicant',
+                'link' => '/employer/applicants/'.$application->id,
+                'subject' => 'Offer accepted — '.$job?->title,
+            ]);
+        }
+
+        return $application->fresh();
     }
 
     /**
@@ -548,6 +608,19 @@ class HiringFeeService
             $this->settleForPayment($payment);
         });
 
+        // Same guarantee as the webhook path: the hire is confirmed first, and
+        // the receipt is a best-effort side effect that cannot fail the
+        // confirmation. Receipts are keyed on the payment and backfilled
+        // lazily, so issuing twice is harmless.
+        try {
+            app(ReceiptService::class)->issue($payment);
+        } catch (Throwable $e) {
+            Log::error('Receipt issuance failed after hiring fee confirmation; will backfill on download.', [
+                'payment_id' => $payment->id,
+                'reason' => $e->getMessage(),
+            ]);
+        }
+
         return $fee->fresh();
     }
 
@@ -574,8 +647,6 @@ class HiringFeeService
                     (string) config('payments.gateways.stripe.secret_key')
                 )
                 : null,
-
-            default => null,
         };
 
         if (! $json) {
@@ -586,7 +657,6 @@ class HiringFeeService
             PaymentGateway::Paystack => $this->parsePaystackVerification($json, $payment),
             PaymentGateway::Flutterwave => $this->parseFlutterwaveVerification($json, $payment),
             PaymentGateway::Stripe => $this->parseStripeVerification($json, $payment),
-            default => null,
         };
     }
 
@@ -674,7 +744,7 @@ class HiringFeeService
                 ->retry(1, 250)
                 ->get($url)
                 ->json();
-        } catch (\Throwable $e) {
+        } catch (Throwable $e) {
             Log::warning('Out-of-band payment verification request failed.', [
                 'url' => $url,
                 'error' => $e->getMessage(),

@@ -7,6 +7,22 @@ export function formatSalary(min, max, { currency = '$', locale = 'en-US', notat
   return `${currency}${format(min)} – ${currency}${format(max)}`
 }
 
+const CURRENCY_SYMBOLS = { NGN: '₦', USD: '$', GBP: '£', EUR: '€' }
+
+/**
+ * Money for display: symbol first, no decimals, thousands grouped.
+ *
+ * Amounts arrive from the API in minor units (kobo, cents) because that is
+ * what the gateway charges in. Dividing here — and never in a component —
+ * keeps a round price like ₦25,000 from rendering as "25,000.00 NGN", which
+ * reads as a mistake on a pricing page.
+ */
+export function formatAmount(minorUnits, currency = 'NGN') {
+  const value = Number(minorUnits ?? 0) / 100
+  const symbol = CURRENCY_SYMBOLS[currency] ?? `${currency} `
+  return `${symbol}${new Intl.NumberFormat('en-US', { maximumFractionDigits: 0 }).format(value)}`
+}
+
 export function formatDate(value, { locale = 'en-US', style = 'medium' } = {}) {
   if (!value) return ''
   const date = new Date(value)

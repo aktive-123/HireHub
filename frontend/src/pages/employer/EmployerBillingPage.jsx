@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
 import Alert from '../../components/ui/Alert'
 import Button from '../../components/ui/Button'
@@ -7,6 +7,7 @@ import EmptyState from '../../components/ui/EmptyState'
 import LoadingState from '../../components/ui/LoadingState'
 import Modal from '../../components/ui/Modal'
 import PageHeader from '../../components/ui/PageHeader'
+import ReceiptActions from '../../components/common/ReceiptActions'
 import StatusBadge from '../../components/ui/StatusBadge'
 import { billingApi, employerApi } from '../../services/api'
 import { usePlanUsage } from '../../context/PlanUsageContext'
@@ -48,23 +49,39 @@ function SubscriptionCard({ subscription, onCancel, cancelling, cancellingAllowe
 
   const { plan, status, status_label: statusLabel, gateway } = subscription
   const periodEnd = formatDate(subscription.current_period_end)
+  const isExpired = status === 'expired' || (subscription.current_period_end && new Date(subscription.current_period_end) <= new Date())
   const isEnding = Boolean(subscription.cancelled_at)
+  const renewalSoon =
+    !isEnding &&
+    !isExpired &&
+    periodEnd &&
+    new Date(subscription.current_period_end) - Date.now() < 7 * 24 * 60 * 60 * 1000
+  const cancelTitle = periodEnd
+    ? `You'll keep access until ${periodEnd}.`
+    : 'You will keep access until the current period ends.'
 
   return (
-    <Card className="mb-4">
+    <Card className="mb-4 hh-plan-card hh-plan-card--current">
       <div className="d-flex flex-wrap justify-content-between align-items-start gap-3 mb-3">
-        <div>
-          <h2 className="h5 mb-1">{plan?.name ?? 'Your plan'}</h2>
-          <div className="d-flex flex-wrap align-items-center gap-2">
-            <StatusBadge status={status} label={statusLabel} />
-            {gateway && <span className="small text-muted text-capitalize">via {gateway}</span>}
+        <div className="hh-plan-card__content">
+          <h2 className="hh-plan-card__title mb-1">{plan?.name ?? 'Your plan'}</h2>
+          <div className="hh-plan-card__meta">
+            <StatusBadge status={status === 'expired' ? 'expired' : status} label={statusLabel || (isExpired ? 'Expired' : status)} sm />
+            {gateway && (
+              <span className="hh-plan-card__gateway">
+                <span className="hh-plan-card__gateway-mark" aria-hidden="true">
+                  P
+                </span>
+                Via Paystack
+              </span>
+            )}
           </div>
         </div>
 
-        <div className="text-end">
-          {plan?.price_display && <div className="h5 mb-0">{plan.price_display}</div>}
+        <div className="hh-plan-card__pricing text-end">
+          {plan?.price_display && <div className="hh-plan-card__price">{plan.price_display}</div>}
           {plan?.billing_period && plan?.is_free !== true && (
-            <div className="small text-muted">per {plan.billing_period.replace(/e$/, '')}</div>
+            <div className="hh-plan-card__price-period">/ month</div>
           )}
         </div>
       </div>
@@ -81,22 +98,41 @@ function SubscriptionCard({ subscription, onCancel, cancelling, cancellingAllowe
           This plan is cancelled and will end{periodEnd ? ` on ${periodEnd}` : ' at the end of the current period'}.
           You keep every entitlement until then, and nothing further will be charged.
         </Alert>
+      ) : isExpired ? (
+        <Alert variant="warning" icon="exclamation-triangle" className="mb-3">
+          Your <strong>{plan?.name ?? 'Business'}</strong> plan expired on {periodEnd ?? 'the end of the last billing period'}.
+          Renew it or choose a new plan to restore your job posting and featured slot allowances.
+        </Alert>
       ) : (
         periodEnd && (
-          <p className="small text-muted mb-3">
+          <p className={`hh-plan-card__renewal ${renewalSoon ? 'hh-plan-card__renewal--warning' : ''}`}>
             Renews on <strong>{periodEnd}</strong>.
           </p>
         )
       )}
 
-      <div className="d-flex flex-wrap gap-2">
+      <div className="hh-plan-card__actions">
         {!isEnding && (
-          <Button to="/pricing" variant="outline" size="sm" icon="arrow-repeat">
-            Change Plan
+          <Button
+            to="/pricing"
+            variant="outline"
+            size="sm"
+            icon={isExpired ? 'arrow-up-circle' : 'arrow-repeat'}
+            className="hh-plan-card__action hh-plan-card__action--primary"
+          >
+            {isExpired ? 'Renew Business Plan' : 'Change Plan'}
           </Button>
         )}
-        {!isEnding && cancellingAllowed && (
-          <Button variant="ghost" size="sm" icon="x-circle" onClick={onCancel} disabled={cancelling}>
+        {!isEnding && cancellingAllowed && !isExpired && (
+          <Button
+            variant="ghost"
+            size="sm"
+            icon="x-circle"
+            onClick={onCancel}
+            disabled={cancelling}
+            className="hh-plan-card__action-delete"
+            title={cancelTitle}
+          >
             Cancel Subscription
           </Button>
         )}
@@ -203,6 +239,32 @@ export default function EmployerBillingPage() {
   const [subscription, setSubscription] = useState(null)
   const [payments, setPayments] = useState([])
   const [hiringFees, setHiringFees] = useState([])
+  const resolvedSubscription = useMemo(() => {
+    if (subscription) return subscription
+
+    const successfulPayment = [...payments].find((payment) => payment.status === 'succeeded' && payment.plan)
+    if (!successfulPayment) return null
+
+    const paidAt = new Date(successfulPayment.paid_at ?? successfulPayment.created_at ?? Date.now())
+    const currentPeriodEnd = new Date(paidAt)
+    currentPeriodEnd.setMonth(currentPeriodEnd.getMonth() + 1)
+
+    return {
+      plan: {
+        ...successfulPayment.plan,
+        name: successfulPayment.plan?.name ?? 'Business',
+        price_display: successfulPayment.amount ? formatMoney(successfulPayment.amount, successfulPayment.currency) : null,
+        billing_period: 'monthly',
+        is_free: false,
+      },
+      status: 'expired',
+      status_label: 'Expired',
+      gateway: successfulPayment.gateway,
+      current_period_end: currentPeriodEnd.toISOString(),
+      cancelled_at: null,
+      on_grace_period: false,
+    }
+  }, [subscription, payments])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [notice, setNotice] = useState('')
@@ -339,10 +401,10 @@ export default function EmployerBillingPage() {
       )}
 
       <SubscriptionCard
-        subscription={subscription}
+        subscription={resolvedSubscription}
         onCancel={() => setConfirmOpen(true)}
         cancelling={cancelling}
-        cancellingAllowed={subscription?.status !== 'cancelled'}
+        cancellingAllowed={resolvedSubscription?.status !== 'cancelled'}
       />
 
       <PlanUsageSection onRenew={handleRenew} renewing={renewing} />
@@ -385,7 +447,7 @@ export default function EmployerBillingPage() {
                 {payments.map((payment) => (
                   <tr key={payment.reference ?? payment.id}>
                     <td className="text-nowrap">{formatDate(payment.paid_at ?? payment.created_at) ?? '—'}</td>
-                    <td>{payment.plan?.name ?? '—'}</td>
+                    <td>{payment.plan?.name ?? payment.purpose_label ?? '—'}</td>
                     <td className="text-nowrap">
                       {formatMoney(payment.amount, payment.currency) ?? '—'}
                     </td>
@@ -394,19 +456,12 @@ export default function EmployerBillingPage() {
                       <StatusBadge status={payment.status} label={payment.status_label} />
                     </td>
                     <td className="text-end">
-                      {payment.checkout_url ? (
-                        <a
-                          href={payment.checkout_url}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="hh-table-link"
-                        >
-                          <i className="bi bi-box-arrow-up-right" aria-hidden="true" />
-                          <span className="visually-hidden">Open receipt for {payment.reference}</span>
-                        </a>
-                      ) : (
-                        <span className="text-muted small text-nowrap">{payment.reference}</span>
-                      )}
+                      <ReceiptActions
+                        reference={payment.reference}
+                        paid={payment.status === 'succeeded'}
+                        onView={billingApi.openReceipt}
+                        onDownload={billingApi.downloadReceipt}
+                      />
                     </td>
                   </tr>
                 ))}
@@ -449,19 +504,12 @@ export default function EmployerBillingPage() {
                         <StatusBadge status={fee.status} label={fee.status_label} />
                       </td>
                       <td className="text-end">
-                        {fee.checkout_url ? (
-                          <a
-                            href={fee.checkout_url}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="hh-table-link"
-                          >
-                            <i className="bi bi-box-arrow-up-right" aria-hidden="true" />
-                            <span className="visually-hidden">Open receipt for {fee.reference}</span>
-                          </a>
-                        ) : (
-                          <span className="text-muted small text-nowrap">{fee.reference}</span>
-                        )}
+                        <ReceiptActions
+                          reference={fee.reference}
+                          paid={fee.has_receipt === true}
+                          onView={employerApi.openHiringFeeReceipt}
+                          onDownload={employerApi.downloadHiringFeeReceipt}
+                        />
                       </td>
                     </tr>
                   ))}

@@ -56,8 +56,8 @@ class PlanEntitlements
         return new Entitlement(
             plan: $plan,
             subscription: $paid ? $subscription : null,
-            jobPostsUsed: $this->jobPostsUsed($company),
-            featuredUsed: $this->featuredUsed($company),
+            jobPostsUsed: $this->jobPostsUsed($company, $plan),
+            featuredUsed: $this->featuredUsed($company, $plan),
             cvViewsUsed: $this->cvViewsUsed($company),
             periodEndsAt: $paid ? $subscription->current_period_end?->toIso8601String() : null,
             cancelledAt: $paid ? $subscription->cancelled_at?->toIso8601String() : null,
@@ -86,17 +86,29 @@ class PlanEntitlements
      * closes ten jobs still cannot post an eleventh — but deleting one frees
      * the slot immediately, which is the behaviour an employer expects.
      */
-    protected function jobPostsUsed(Company $company): int
+    protected function jobPostsUsed(Company $company, Plan $plan): int
     {
-        return Job::query()->where('company_id', $company->id)->count();
+        $used = Job::query()->where('company_id', $company->id)->count();
+
+        if ($plan->job_post_limit <= 0) {
+            return 0;
+        }
+
+        return min($used, $plan->job_post_limit);
     }
 
-    protected function featuredUsed(Company $company): int
+    protected function featuredUsed(Company $company, Plan $plan): int
     {
-        return Job::query()
+        $used = Job::query()
             ->where('company_id', $company->id)
             ->where('is_featured', true)
             ->count();
+
+        if ($plan->featured_job_limit <= 0) {
+            return 0;
+        }
+
+        return min($used, $plan->featured_job_limit);
     }
 
     /**

@@ -38,9 +38,9 @@ final readonly class ChargeRequest
         public ?string $returnUrl = null,
     ) {}
 
-    public function returnUrlFor(Payment $payment): string
+    public function returnUrlFor(string $reference): string
     {
-        return $this->returnUrl ?? route('payments.return', ['reference' => $payment->reference]);
+        return $this->returnUrl ?? route('payments.return', ['reference' => $reference]);
     }
 }
 
@@ -70,7 +70,7 @@ interface PaymentGateway
      * profile. The gateway only needs it for its own bookkeeping metadata.
      */
     public function createCheckout(
-        Payment $payment,
+        Chargeable $chargeable,
         ChargeRequest $charge,
         User $user,
         ?Company $company,

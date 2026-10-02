@@ -2,7 +2,7 @@ import { useMemo } from 'react'
 import { Link } from 'react-router-dom'
 import { seekerApi } from '../../services/api'
 import { useApiData } from '../../hooks/useApiData'
-import SectionHeading from '../../components/ui/SectionHeading'
+import PageHeader from '../../components/ui/PageHeader'
 import Reveal from '../../components/ui/Reveal'
 import Card from '../../components/ui/Card'
 import Button from '../../components/ui/Button'
@@ -66,13 +66,11 @@ export default function SeekerSavedJobsPage() {
     <>
       <section className="hh-section-space bg-white">
         <div className="page-container">
-          <Reveal>
-            <SectionHeading
-              eyebrow="JOB SEEKER DASHBOARD"
-              title="Saved jobs"
-              subtitle="Keep track of opportunities you're interested in."
-            />
-          </Reveal>
+          <PageHeader
+            eyebrow="JOB SEEKER DASHBOARD"
+            title="Saved jobs"
+            subtitle="Keep track of opportunities you're interested in."
+          />
 
           {rows.length > 0 ? (
             <Reveal>

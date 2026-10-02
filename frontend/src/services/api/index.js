@@ -33,6 +33,57 @@ const numericAppId = (item) => ({ ...item, id: String(item.id).replace(/^app-/, 
 // application detail/status/CV actions.
 const appNum = (value) => num(String(value).replace(/^app-/, ''))
 
+const POPUP_BLOCKED = 'Your browser blocked the new tab. Allow pop-ups to view receipts.'
+
+/**
+ * Opens a tab for a receipt.
+ *
+ * The tab is opened synchronously, before the fetch that authenticates it. A
+ * `window.open` issued after an `await` is outside the user-gesture window and
+ * gets blocked by every current browser, which would make the button look
+ * broken. `noopener` is deliberately not passed because it makes `window.open`
+ * return null in Chrome, losing the handle; clearing `opener` afterwards gives
+ * the same protection.
+ *
+ * Returns the tab handle so the caller can navigate it to the receipt blob once
+ * the response has arrived, or close it if the request failed.
+ */
+function openReceiptTab() {
+  const tab = window.open('', '_blank')
+
+  if (!tab) {
+    throw new Error(POPUP_BLOCKED)
+  }
+
+  tab.opener = null
+  tab.document.title = 'Loading receipt…'
+
+  return tab
+}
+
+/**
+ * Fetches an HTML receipt with the bearer token and points an already-opened
+ * tab at it as a blob URL. Revoked on a delay so the tab has finished loading.
+ */
+async function showReceiptInTab(path) {
+  const tab = openReceiptTab()
+
+  try {
+    const res = await apiClient.xhr(path, { headers: { Accept: 'text/html' } })
+
+    if (!res.ok) {
+      throw new Error(`Could not load the receipt (status ${res.status}).`)
+    }
+
+    const url = URL.createObjectURL(await res.blob())
+    tab.location.replace(url)
+    setTimeout(() => URL.revokeObjectURL(url), 60_000)
+  } catch (err) {
+    tab.close()
+    throw err
+  }
+}
+
 function buildQuery(params = {}) {
   const search = new URLSearchParams()
   Object.entries(params).forEach(([key, value]) => {
@@ -188,6 +239,26 @@ export const billingApi = {
   async payment(reference) {
     const res = await apiClient.get(`/v1/employer/billing/payments/${reference}`)
     return res.data
+  },
+  /**
+   * Download a receipt as a PDF. Goes through the raw xhr helper rather than
+   * `get` because the response is a binary stream, and the endpoint is
+   * token-authenticated so a plain <a href> would come back 401.
+   */
+  async downloadReceipt(reference) {
+    const res = await apiClient.xhr(`/v1/employer/billing/receipts/${encodeURIComponent(reference)}/download`)
+    return saveResponseAsFile(res, `hirehub-receipt-${reference}.pdf`)
+  },
+  /**
+   * Open the on-screen version of a receipt in a new tab.
+   *
+   * Fetches it with the bearer token and points the tab at a blob URL, rather
+   * than handing `window.open` the API path. The endpoint is token-protected,
+   * so a bare URL in a new tab arrives with no Authorization header and shows
+   * the customer a 401 instead of their receipt.
+   */
+  async openReceipt(reference) {
+    return showReceiptInTab(`/v1/employer/billing/receipts/${encodeURIComponent(reference)}`)
   },
 }
 
@@ -381,6 +452,7 @@ export const employerApi = {
     const res = await apiClient.xhr(`/v1/employer/applicants/${appNum(id)}/cv`)
     return saveResponseAsFile(res, `candidate-cv-${Date.now()}.pdf`)
   },
+
   async company() {
     const res = await apiClient.get('/v1/employer/company')
     return res.data
@@ -399,6 +471,37 @@ export const employerApi = {
   async markAllNotificationsRead() {
     const res = await apiClient.post('/v1/employer/notifications/read-all')
     return res.data
+  },
+  async downloadHiringFeeReceipt(reference) {
+    const res = await apiClient.xhr(
+      `/v1/employer/hiring-fees/${encodeURIComponent(reference)}/receipt/download`,
+    )
+    return saveResponseAsFile(res, `hirehub-hiring-fee-${reference}.pdf`)
+  },
+  /**
+   * On-screen version of a hiring fee receipt. Same blob-url approach as
+   * billingApi.openReceipt, for the same reason: the endpoint needs the bearer
+   * token, so a bare URL in a new tab would 401.
+   */
+  async openHiringFeeReceipt(reference) {
+    return showReceiptInTab(`/v1/employer/hiring-fees/${encodeURIComponent(reference)}/receipt`)
+  },
+}
+
+/**
+ * Receipt helpers for the admin console.
+ *
+ * Kept separate from the plain `adminApi` object literal because Object.assign
+ * onto a module export that other modules may already have bound produces two
+ * different objects. A plain object means one identity, one set of methods.
+ */
+export const adminReceiptsApi = {
+  async downloadReceipt(reference) {
+    const res = await apiClient.xhr(`/v1/admin/receipts/${encodeURIComponent(reference)}/download`)
+    return saveResponseAsFile(res, `hirehub-receipt-${reference}.pdf`)
+  },
+  async openReceipt(reference) {
+    return showReceiptInTab(`/v1/admin/receipts/${encodeURIComponent(reference)}`)
   },
 }
 

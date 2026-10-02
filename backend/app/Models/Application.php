@@ -7,7 +7,19 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Support\Carbon;
 
+/**
+ * @property int $id
+ * @property int $job_id
+ * @property int $seeker_id
+ * @property ApplicationStatus $status
+ * @property int|null $match_score
+ * @property Carbon|null $applied_at
+ * @property Carbon|null $status_changed_at
+ * @property-read Job|null $job
+ * @property-read User|null $seeker
+ */
 class Application extends Model
 {
     use HasFactory;
@@ -44,9 +56,7 @@ class Application extends Model
     protected static function booted(): void
     {
         static::saving(function (self $application): void {
-            $status = $application->status instanceof ApplicationStatus
-                ? $application->status->value
-                : $application->status;
+            $status = $application->status?->value;
 
             $changed = ! $application->exists
                 || $application->getOriginal('status') !== $status;

@@ -1,7 +1,7 @@
 import { useMemo } from 'react'
 import { seekerApi } from '../../services/api'
 import { useApiData } from '../../hooks/useApiData'
-import SectionHeading from '../../components/ui/SectionHeading'
+import PageHeader from '../../components/ui/PageHeader'
 import Reveal from '../../components/ui/Reveal'
 import Card from '../../components/ui/Card'
 import Button from '../../components/ui/Button'
@@ -91,21 +91,21 @@ export default function SeekerProfilePage() {
     <>
       <section className="hh-section-space bg-white">
         <div className="page-container">
-          <div className="hh-toolbar hh-toolbar-between hh-mb-4">
-            <SectionHeading
-              eyebrow="JOB SEEKER DASHBOARD"
-              title="Your professional profile"
-              subtitle="Show employers the value you bring at a glance."
-            />
-            <div className="d-flex gap-2">
-              <Button to="/seeker/profile/edit" variant="outline" icon="bi-pencil" pill>
-                Edit profile
-              </Button>
-              <Button to="/" variant="primary" icon="bi-eye" pill>
-                Preview profile
-              </Button>
-            </div>
-          </div>
+          <PageHeader
+            eyebrow="JOB SEEKER DASHBOARD"
+            title="Your professional profile"
+            subtitle="Show employers the value you bring at a glance."
+            action={
+              <>
+                <Button to="/seeker/profile/edit" variant="outline" icon="bi-pencil" pill>
+                  Edit profile
+                </Button>
+                <Button to="/" variant="primary" icon="bi-eye" pill>
+                  Preview profile
+                </Button>
+              </>
+            }
+          />
 
           <Reveal>
             <Card className="hh-card-body hh-mb-4">

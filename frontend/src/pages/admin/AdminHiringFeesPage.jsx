@@ -9,7 +9,8 @@ import TablePagination from '../../components/ui/TablePagination'
 import EmptyState from '../../components/ui/EmptyState'
 import Alert from '../../components/ui/Alert'
 import LoadingState from '../../components/ui/LoadingState'
-import { adminApi } from '../../services/api'
+import ReceiptActions from '../../components/common/ReceiptActions'
+import { adminApi, adminReceiptsApi } from '../../services/api'
 import { useAdminList, useAdminData } from '../../hooks/useAdminData'
 
 const PAGE_SIZE = 10
@@ -168,6 +169,7 @@ export default function AdminHiringFeesPage() {
                 { key: 'amount', label: 'Amount', align: 'right' },
                 { key: 'status', label: 'Status', align: 'center' },
                 { key: 'paid_at', label: 'Paid', align: 'right' },
+                { key: 'receipt', label: 'Receipt', align: 'right' },
               ]}
               rows={fees.map((fee) => ({
                 id: fee.id,
@@ -191,6 +193,16 @@ export default function AdminHiringFeesPage() {
                 }),
                 status: <StatusBadge status={fee.status} />,
                 paid_at: fee.paid_at_label || '—',
+                // Receipts are stored against the payment, so the admin table
+                // reads the fee's payment reference rather than the fee's own.
+                receipt: (
+                  <ReceiptActions
+                    reference={fee.payment_reference}
+                    paid={fee.status === 'succeeded' && Boolean(fee.payment_reference)}
+                    onView={adminReceiptsApi.openReceipt}
+                    onDownload={adminReceiptsApi.downloadReceipt}
+                  />
+                ),
               }))}
               rowKey={(row) => row.id}
             />

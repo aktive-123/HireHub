@@ -10,7 +10,7 @@ use Illuminate\Http\Request;
 
 class ApplicationController extends ApiController
 {
-    private const STATUSES = ['new', 'reviewing', 'shortlisted', 'interview', 'offer', 'hired', 'rejected', 'withdrawn'];
+    private const STATUSES = ['new', 'reviewing', 'shortlisted', 'interview', 'offer', 'offer_confirmed_pending_acceptance', 'hired', 'rejected', 'withdrawn'];
 
     /**
      * Applications are never listed globally. The query is always narrowed to

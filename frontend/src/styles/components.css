@@ -323,6 +323,152 @@
   transform: translateY(-3px);
 }
 
+.hh-plan-card {
+  position: relative;
+  overflow: hidden;
+  padding: calc(var(--hh-space-5) + 0.25rem);
+  background: linear-gradient(180deg, #f8fbff 0%, var(--hh-white) 100%);
+  border: 1px solid rgba(0, 84, 236, 0.18);
+  box-shadow: 0 14px 28px rgba(11, 31, 58, 0.06), inset 0 1px 0 rgba(255, 255, 255, 0.92);
+}
+
+.hh-plan-card::before {
+  content: '';
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 4px;
+  border-radius: var(--hh-radius-lg) 0 0 var(--hh-radius-lg);
+  background: linear-gradient(180deg, var(--hh-primary) 0%, color-mix(in srgb, var(--hh-primary) 68%, #7dd3fc) 100%);
+}
+
+.hh-plan-card__content { flex: 1 1 0; min-width: 0; }
+
+.hh-plan-card__title {
+  font-size: var(--hh-fs-28);
+  font-weight: 800;
+  line-height: 1.15;
+  letter-spacing: -0.03em;
+  color: var(--hh-secondary);
+}
+
+.hh-plan-card__meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--hh-space-2);
+  margin-top: var(--hh-space-2);
+}
+
+.hh-plan-card__gateway {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--hh-space-2);
+  padding: calc(var(--hh-space-1) + 1px) var(--hh-space-3);
+  border-radius: var(--hh-radius-pill);
+  border: 1px solid var(--hh-border);
+  background: rgba(11, 31, 58, 0.02);
+  color: var(--hh-secondary);
+  font-size: var(--hh-type-card-meta-size);
+  font-weight: var(--hh-type-card-meta-weight);
+  line-height: var(--hh-type-card-meta-lh);
+  letter-spacing: var(--hh-type-card-meta-ls);
+}
+
+.hh-plan-card__gateway-mark {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.1rem;
+  height: 1.1rem;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #00a5ff 0%, #0054ec 100%);
+  color: var(--hh-white);
+  font-size: var(--hh-icon-xs);
+  font-weight: 800;
+}
+
+.hh-plan-card__pricing {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: var(--hh-space-1);
+  min-width: 12rem;
+}
+
+.hh-plan-card__price {
+  font-size: var(--hh-fs-32);
+  font-weight: 800;
+  line-height: 1;
+  letter-spacing: -0.05em;
+  color: var(--hh-secondary);
+}
+
+.hh-plan-card__price-period {
+  font-size: var(--hh-type-card-meta-size);
+  font-weight: var(--hh-type-card-meta-weight);
+  line-height: var(--hh-type-card-meta-lh);
+  letter-spacing: var(--hh-type-card-meta-ls);
+  color: var(--hh-muted);
+}
+
+.hh-plan-card__renewal {
+  margin: 0;
+  font-size: var(--hh-type-card-body-size);
+  font-weight: var(--hh-type-card-body-weight);
+  line-height: var(--hh-type-card-body-lh);
+  letter-spacing: var(--hh-type-card-body-ls);
+  color: var(--hh-muted);
+}
+
+.hh-plan-card__renewal strong {
+  color: var(--hh-secondary);
+  font-weight: 700;
+}
+
+.hh-plan-card__renewal--warning {
+  color: var(--hh-warning);
+}
+
+.hh-plan-card__renewal--warning strong {
+  color: var(--hh-accent-dark);
+}
+
+.hh-plan-card__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--hh-space-2);
+  margin-top: var(--hh-space-4);
+  padding-top: var(--hh-space-3);
+  border-top: 1px solid var(--hh-border);
+}
+
+.hh-plan-card__action {
+  min-height: 36px;
+}
+
+.hh-plan-card__action--primary {
+  background-color: rgba(0, 84, 236, 0.03);
+}
+
+.hh-plan-card__action--primary:hover,
+.hh-plan-card__action--primary:focus {
+  background-color: var(--hh-primary);
+  color: var(--hh-white) !important;
+}
+
+.hh-plan-card__action-delete {
+  border: 1px solid rgba(220, 38, 38, 0.35) !important;
+  background-color: rgba(220, 38, 38, 0.02);
+  color: var(--hh-danger) !important;
+}
+
+.hh-plan-card__action-delete:hover,
+.hh-plan-card__action-delete:focus {
+  background-color: var(--hh-danger-soft);
+  border-color: var(--hh-danger) !important;
+  color: var(--hh-danger) !important;
+}
+
 .hh-loading {
   display: flex;
   flex-direction: column;

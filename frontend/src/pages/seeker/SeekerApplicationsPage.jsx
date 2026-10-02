@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react'
 import { seekerApi } from '../../services/api'
 import { useApiData } from '../../hooks/useApiData'
-import SectionHeading from '../../components/ui/SectionHeading'
+import PageHeader from '../../components/ui/PageHeader'
 import Reveal from '../../components/ui/Reveal'
 import Badge from '../../components/ui/Badge'
 import EmptyState from '../../components/ui/EmptyState'
@@ -107,13 +107,11 @@ export default function SeekerApplicationsPage() {
     <>
       <section className="hh-section-space bg-white">
         <div className="page-container">
-          <Reveal>
-            <SectionHeading
-              eyebrow="JOB SEEKER DASHBOARD"
-              title="My applications"
-              subtitle="Track the status of every role you've applied for."
-            />
-          </Reveal>
+          <PageHeader
+            eyebrow="JOB SEEKER DASHBOARD"
+            title="My applications"
+            subtitle="Track the status of every role you've applied for."
+          />
 
           <div className="hh-tabs hh-mb-4" role="tablist" aria-label="Filter by application status">
             {FILTERS.map(({ value, label }) => (

@@ -5,12 +5,21 @@ namespace App\Models;
 use App\Enums\PaymentGateway;
 use App\Enums\PaymentPurpose;
 use App\Enums\PaymentStatus;
+use App\Payments\Contracts\Chargeable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
-class Payment extends Model
+/**
+ * @property PaymentPurpose $purpose
+ * @property PaymentStatus $status
+ * @property PaymentGateway $gateway
+ * @property-read Receipt|null $receipt
+ * @property-read HiringFee|null $hiringFee
+ */
+class Payment extends Model implements Chargeable
 {
     use HasFactory;
 
@@ -75,8 +84,47 @@ class Payment extends Model
         return $this->hasMany(PaymentEvent::class);
     }
 
+    public function receipt(): HasOne
+    {
+        return $this->hasOne(Receipt::class);
+    }
+
     public function isSettled(): bool
     {
         return $this->status === PaymentStatus::Succeeded;
+    }
+
+    public function getReference(): string
+    {
+        return $this->reference;
+    }
+
+    public function getGatewayReference(): ?string
+    {
+        return $this->gateway_reference;
+    }
+
+    public function getChargeDescription(): string
+    {
+        // Parenthesised deliberately: `.` binds tighter than `??`, so without
+        // the brackets the whole concatenation lands on the left of the `??`
+        // and the fallback below can never be reached.
+        return ($this->plan?->name.' plan')
+            ?? ($this->hiringFee ? 'Hiring confirmation fee' : 'HireHub payment');
+    }
+
+    public function getAmount(): int
+    {
+        return (int) $this->amount;
+    }
+
+    public function getCurrency(): string
+    {
+        return (string) $this->currency;
+    }
+
+    public function asPayment(): ?Payment
+    {
+        return $this;
     }
 }

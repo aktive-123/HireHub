@@ -2,7 +2,7 @@ import { useMemo } from 'react'
 import { useParams } from 'react-router-dom'
 import { seekerApi } from '../../services/api'
 import { useApiData } from '../../hooks/useApiData'
-import SectionHeading from '../../components/ui/SectionHeading'
+import PageHeader from '../../components/ui/PageHeader'
 import Reveal from '../../components/ui/Reveal'
 import Badge from '../../components/ui/Badge'
 import Card from '../../components/ui/Card'
@@ -109,13 +109,11 @@ export default function SeekerApplicationDetailsPage() {
     <>
       <section className="hh-section-space bg-white">
         <div className="page-container">
-          <Reveal>
-            <SectionHeading
-              eyebrow="JOB SEEKER DASHBOARD"
-              title="Application details"
-              subtitle="Review your application and follow its progress."
-            />
-          </Reveal>
+          <PageHeader
+            eyebrow="JOB SEEKER DASHBOARD"
+            title="Application details"
+            subtitle="Review your application and follow its progress."
+          />
 
           <div className="row g-4">
             <div className="col-12 col-lg-8">

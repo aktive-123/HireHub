@@ -1,0 +1,35 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "npm package.json (offline)",
+  "description": "Local stand-in for https://www.schemastore.org/package.json, used when this machine cannot reach schemastore.org. Deliberately permissive - it only pins down the fields npm actually requires, so it will not report false errors on the rest of the manifest.",
+  "type": "object",
+  "required": ["name", "version"],
+  "properties": {
+    "name": { "type": "string" },
+    "version": { "type": "string" },
+    "private": { "type": "boolean" },
+    "type": { "type": "string" },
+    "description": { "type": "string" },
+    "license": { "type": "string" },
+    "scripts": { "type": "object" },
+    "dependencies": { "$ref": "#/definitions/dependencyMap" },
+    "devDependencies": { "$ref": "#/definitions/dependencyMap" },
+    "peerDependencies": { "$ref": "#/definitions/dependencyMap" },
+    "engines": { "type": "object" },
+    "workspaces": {
+      "anyOf": [
+        { "type": "array", "items": { "type": "string" } },
+        { "type": "object" }
+      ]
+    }
+  },
+  "definitions": {
+    "dependencyMap": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "string",
+        "description": "A semver range, or a registry alias such as \"npm:package@1.2.3\"."
+      }
+    }
+  }
+}

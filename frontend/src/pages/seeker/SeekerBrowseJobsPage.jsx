@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react'
 import { jobsApi } from '../../services/api'
 import { useApiData } from '../../hooks/useApiData'
-import SectionHeading from '../../components/ui/SectionHeading'
+import PageHeader from '../../components/ui/PageHeader'
 import Reveal from '../../components/ui/Reveal'
 import EmptyState from '../../components/ui/EmptyState'
 import LoadingState from '../../components/ui/LoadingState'
@@ -100,13 +100,11 @@ export default function SeekerBrowseJobsPage() {
     <>
       <section className="hh-section-space bg-white">
         <div className="page-container">
-          <Reveal>
-            <SectionHeading
-              eyebrow="JOB SEEKER DASHBOARD"
-              title="Find your next opportunity"
-              subtitle="Search and discover jobs that match your skills, experience, and career goals."
-            />
-          </Reveal>
+          <PageHeader
+            eyebrow="JOB SEEKER DASHBOARD"
+            title="Find your next opportunity"
+            subtitle="Search and discover jobs that match your skills, experience, and career goals."
+          />
 
           <Reveal delay={60}>
             <div className="hh-jobs-toolbar">

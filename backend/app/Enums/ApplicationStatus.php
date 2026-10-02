@@ -9,6 +9,7 @@ enum ApplicationStatus: string
     case Shortlisted = 'shortlisted';
     case Interview = 'interview';
     case Offer = 'offer';
+    case OfferConfirmedPendingAcceptance = 'offer_confirmed_pending_acceptance';
     case Hired = 'hired';
     case Rejected = 'rejected';
     case Withdrawn = 'withdrawn';
@@ -21,6 +22,7 @@ enum ApplicationStatus: string
             self::Shortlisted => 'Shortlisted',
             self::Interview => 'Interview',
             self::Offer => 'Offer',
+            self::OfferConfirmedPendingAcceptance => 'Offer confirmed — awaiting acceptance',
             self::Hired => 'Hired',
             self::Rejected => 'Rejected',
             self::Withdrawn => 'Withdrawn',

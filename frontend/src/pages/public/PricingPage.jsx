@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import Alert from '../../components/ui/Alert'
 import Button from '../../components/ui/Button'
@@ -8,15 +8,65 @@ import PageHero from '../../components/ui/PageHero'
 import SectionHeading from '../../components/ui/SectionHeading'
 import { useAuth } from '../../context/AuthContext'
 import { billingApi, plansApi } from '../../services/api'
+import { formatAmount } from '../../utils/format'
 import heroSlide1 from '../../assets/growth.jpg'
 import heroSlide2 from '../../assets/growth2.jpg'
 import heroSlide3 from '../../assets/hero4.jpg'
 
 const HERO_IMAGES = [heroSlide1, heroSlide2, heroSlide3]
 
-const PERIOD_SUFFIX = { month: 'per month', year: 'per year', once: 'one-off' }
+/**
+ * The rows of the comparison table, and the field each one reads.
+ *
+ * Declared here rather than derived from `features` because the feature
+ * strings are prose ("Post up to 10 jobs") while a table needs the same
+ * capability expressed as one comparable number per tier. Reading the numbers
+ * from the plan's own limit columns is the part that matters: it means the
+ * table cannot claim a limit the server does not actually enforce.
+ */
+const COMPARISON_ROWS = [
+  { label: 'Job postings', field: 'job_post_limit', format: (v) => (v > 0 ? `${v}` : '—') },
+  { label: 'Featured job slots', field: 'featured_job_limit', format: (v) => (v > 0 ? `${v}` : '—') },
+  { label: 'CV views per month', field: 'cv_view_limit', format: (v) => (v > 0 ? `${v}` : '—') },
+]
 
-function PlanCard({ plan, gateways, onChoose, busy, signedIn }) {
+const FAQS = [
+  {
+    q: 'When am I charged?',
+    a: 'When your subscription starts, and then on the same date each month. Cancel whenever you like and you keep everything until the period you have paid for ends.',
+  },
+  {
+    q: 'Can I change plans later?',
+    a: 'Yes. Upgrades take effect as soon as the payment is confirmed, and the difference is prorated against what you have already paid. Downgrades apply from your next billing date.',
+  },
+  {
+    q: 'What happens if I go over my limit?',
+    a: 'We will always tell you before anything stops working. You can upgrade at any point in the month and your new limits apply immediately.',
+  },
+  {
+    q: 'Is there a hiring fee on top?',
+    a: 'Only when you actually hire. Each hire carries a one-off confirmation fee, shown to you in full before you pay and never deducted silently from a payout.',
+  },
+  {
+    q: 'Do you offer refunds?',
+    a: 'If something has not worked as expected, contact us within 14 days of a charge and we will sort it out.',
+  },
+  {
+    q: 'Can I pay by invoice or transfer?',
+    a: 'For annual or enterprise arrangements, get in touch and we will issue a proforma invoice. Everything else is card payment at checkout.',
+  },
+]
+
+const TRUST_POINTS = [
+  { icon: 'credit-card-2-front', text: 'Card details handled by our payment provider — they never touch our servers' },
+  { icon: 'lock', text: 'Secure checkout' },
+  { icon: 'x-circle', text: 'Cancel any time, no lock-in' },
+  { icon: 'receipt', text: 'A downloadable receipt for every payment' },
+]
+
+function PlanCard({ plan, onChoose, busy, signedIn }) {
+  const isFree = plan.is_free
+
   return (
     <Card className={`h-100 d-flex flex-column${plan.is_featured ? ' hh-plan--featured' : ''}`}>
       {plan.is_featured && (
@@ -30,10 +80,19 @@ function PlanCard({ plan, gateways, onChoose, busy, signedIn }) {
         {plan.tagline && <p className="small text-muted mb-0">{plan.tagline}</p>}
       </div>
 
-      <div className="mb-3">
-        <span className="hh-plan-price">{plan.price_display}</span>
-        {plan.billing_period && !plan.is_free && (
-          <span className="text-muted small ms-1">{PERIOD_SUFFIX[plan.billing_period]}</span>
+      {/* The free tier has no figure, so the row is given the same height with
+          a word instead of a number. All three then share one baseline. */}
+      <div className="hh-plan-price-row mb-3">
+        {isFree ? (
+          <>
+            <span className="hh-plan-price hh-plan-price--free">Free</span>
+            <span className="hh-plan-price-period">forever</span>
+          </>
+        ) : (
+          <>
+            <span className="hh-plan-price">{formatAmount(plan.price, plan.currency)}</span>
+            <span className="hh-plan-price-period">/month</span>
+          </>
         )}
       </div>
 
@@ -45,26 +104,123 @@ function PlanCard({ plan, gateways, onChoose, busy, signedIn }) {
         ))}
       </ul>
 
-      <Button
-        block
-        pill
-        variant={plan.is_featured ? 'primary' : 'outline'}
-        onClick={onChoose}
-        disabled={busy}
-      >
-        {plan.is_free ? 'Start Free' : 'Choose Plan'}
-      </Button>
+      <div className="hh-plan-cta">
+        {/* Business gets a solid CTA as well as the featured one: the two
+            commercial tiers should not look like the secondary choice. */}
+        <Button
+          block
+          pill
+          variant={plan.is_featured || !isFree ? 'primary' : 'outline'}
+          onClick={onChoose}
+          disabled={busy}
+        >
+          {busy ? (
+            <>
+              <span className="spinner-border spinner-border-sm me-2" aria-hidden="true" />
+              Redirecting…
+            </>
+          ) : isFree ? (
+            'Start Free'
+          ) : (
+            `Choose ${plan.name}`
+          )}
+        </Button>
 
-      {signedIn ? null : (
-        <p className="small text-muted text-center mt-2 mb-0">
-          You&apos;ll be asked to{' '}
-          <Link to="/login" className="hh-auth-link">
-            sign in
-          </Link>{' '}
-          first.
-        </p>
-      )}
+        {signedIn ? null : (
+          <p className="hh-plan-note mb-0">
+            You&apos;ll be asked to{' '}
+            <Link to="/login" className="hh-auth-link">
+              sign in
+            </Link>{' '}
+            first.
+          </p>
+        )}
+      </div>
     </Card>
+  )
+}
+
+function ComparisonTable({ plans }) {
+  if (plans.length === 0) return null
+
+  return (
+    <div className="hh-compare">
+      <div className="hh-compare-scroll">
+        <table>
+          <thead>
+            <tr>
+              <th scope="col">Compare plans</th>
+              {plans.map((plan) => (
+                <th
+                  key={plan.slug ?? plan.id}
+                  scope="col"
+                  className={plan.is_featured ? 'hh-compare--featured' : undefined}
+                >
+                  {plan.name}
+                </th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <th scope="row">Price</th>
+              {plans.map((plan) => (
+                <td
+                  key={plan.slug ?? plan.id}
+                  className={plan.is_featured ? 'hh-compare--featured' : undefined}
+                >
+                  {plan.is_free
+                    ? 'Free'
+                    : `${formatAmount(plan.price, plan.currency)}${
+                        plan.billing_period === 'monthly' ? '/mo' : ''
+                      }`}
+                </td>
+              ))}
+            </tr>
+
+            {COMPARISON_ROWS.map((row) => (
+              <tr key={row.label}>
+                <th scope="row">{row.label}</th>
+                {plans.map((plan) => (
+                  <td
+                    key={plan.slug ?? plan.id}
+                    className={plan.is_featured ? 'hh-compare--featured' : undefined}
+                  >
+                    {row.format(plan[row.field])}
+                  </td>
+                ))}
+              </tr>
+            ))}
+
+            <tr>
+              <th scope="row">Applicant tracking</th>
+              {plans.map((plan) => (
+                <td
+                  key={plan.slug ?? plan.id}
+                  className={plan.is_featured ? 'hh-compare--featured' : undefined}
+                >
+                  <i className="bi bi-check-circle-fill hh-compare-yes" aria-hidden="true" />
+                  <span className="visually-hidden">Included</span>
+                </td>
+              ))}
+            </tr>
+
+            <tr>
+              <th scope="row">Company profile</th>
+              {plans.map((plan) => (
+                <td
+                  key={plan.slug ?? plan.id}
+                  className={plan.is_featured ? 'hh-compare--featured' : undefined}
+                >
+                  <i className="bi bi-check-circle-fill hh-compare-yes" aria-hidden="true" />
+                  <span className="visually-hidden">Included</span>
+                </td>
+              ))}
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
   )
 }
 
@@ -138,6 +294,11 @@ export default function PricingPage() {
     }
   }, [isAuthenticated, role])
 
+  const gatewayLabel = useMemo(
+    () => gateways.map((g) => g.label).join(', '),
+    [gateways]
+  )
+
   const handleChoose = async (plan) => {
     if (!isAuthenticated) {
       navigate(`/login?next=${encodeURIComponent(`/pricing?plan=${plan.slug}`)}`)
@@ -168,8 +329,7 @@ export default function PricingPage() {
       navigate('/employer/billing?checkout=success', { replace: true })
     } catch (err) {
       setError(err?.message || 'We could not start checkout. Please try again.')
-    } finally {
-      setBusy(false)
+      setBusy(null)
     }
   }
 
@@ -220,7 +380,6 @@ export default function PricingPage() {
                 <div key={plan.slug ?? plan.id} className="col-12 col-md-6 col-lg-4">
                   <PlanCard
                     plan={plan}
-                    gateways={gateways}
                     onChoose={() => handleChoose(plan)}
                     busy={busy === plan.slug}
                     signedIn={isAuthenticated}
@@ -229,39 +388,43 @@ export default function PricingPage() {
               ))}
             </div>
 
-            {gateways.length > 0 && (
-              <p className="text-center text-muted small mt-4 mb-0">
-                We accept {gateways.map((g) => g.label).join(', ')}. Card details are handled by
-                the payment provider and never touch our servers.
-              </p>
-            )}
+            <div className="hh-trust">
+              {TRUST_POINTS.map((point) => (
+                <span key={point.text} className="hh-trust-item">
+                  <i className={`bi bi-${point.icon}`} aria-hidden="true" />
+                  {point.text}
+                </span>
+              ))}
+            </div>
+
+            <div className="mt-5 pt-4 border-top">
+              <SectionHeading eyebrow="Compare" title="What each plan includes" />
+              <div className="mt-4">
+                <ComparisonTable plans={plans} />
+              </div>
+              {gatewayLabel && (
+                <p className="text-center text-muted small mt-3 mb-0">
+                  We accept {gatewayLabel}.
+                </p>
+              )}
+            </div>
           </>
         )}
 
         <div className="mt-5 pt-4 border-top">
           <SectionHeading eyebrow="Questions" title="How billing works" />
           <div className="row g-4 mt-1">
-            <div className="col-12 col-md-4">
-              <h3 className="h6">When am I charged?</h3>
-              <p className="small text-muted mb-0">
-                When your subscription starts, and then on the same date each period. Cancel
-                whenever you like and you keep everything until the period ends.
-              </p>
-            </div>
-            <div className="col-12 col-md-4">
-              <h3 className="h6">Can I change plans later?</h3>
-              <p className="small text-muted mb-0">
-                Yes. Upgrades take effect immediately and the difference is prorated; downgrades
-                apply from your next billing date.
-              </p>
-            </div>
-            <div className="col-12 col-md-4">
-              <h3 className="h6">Do you offer refunds?</h3>
-              <p className="small text-muted mb-0">
-                If something has not worked as expected, contact us within 14 days of a charge
-                and we will sort it out.
-              </p>
-            </div>
+            {FAQS.map((faq) => (
+              <div key={faq.q} className="col-12 col-md-6 col-lg-4">
+                <div className="hh-faq-card">
+                  <h3 className="hh-faq-q">
+                    <i className="bi bi-question-circle-fill" aria-hidden="true" />
+                    {faq.q}
+                  </h3>
+                  <p className="hh-faq-a">{faq.a}</p>
+                </div>
+              </div>
+            ))}
           </div>
 
           <div className="text-center mt-4">
