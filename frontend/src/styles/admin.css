@@ -336,8 +336,18 @@
    Admin page header band (shared by all management pages)
    Standardised banner typography:
      - Eyebrow  : 0.75rem / 600, +0.05em, uppercase, green accent
-     - Title    : 1.875rem / 800, line-height 1.2, white
-     - Subtitle : 0.9375rem / 400, line-height 1.4, slate blue-gray
+     - Title    : 1.75rem / 800, line-height 1.2, white
+     - Subtitle : 0.9375rem / 400, line-height 1.5, slate blue-gray
+
+   Sizes are named by token on purpose, not written as literals: the title and
+   subtitle are sized by `--hh-type-console-title-size` / `-sub-size`, which
+   dashboard.css scopes to these heroes so they match the flat console headers.
+   The resolved values above are recorded here for reference only — this block
+   cannot set the sizes itself. Earlier revisions of this comment quoted
+   1.875rem for the title and 1.4 for the subtitle line-height, which no rule
+   has ever produced; reading those numbers against the rendered page is what
+   made the admin headers look inconsistent when every page was in fact on the
+   same tokens.
 ------------------------------------------------------------- */
 .hh-admin-page-hero {
   position: relative;

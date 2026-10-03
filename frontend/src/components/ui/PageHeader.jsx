@@ -20,7 +20,7 @@ export default function PageHeader({
       >
         <div className={isAdmin ? 'hh-admin-page-hero-text' : 'hh-page-header-text'}>
           <span
-            className={`hh-section-eyebrow ${isAdmin ? 'hh-section-eyebrow--admin' : ''} hh-mb-2`}
+            className={`hh-section-eyebrow hh-mb-2`}
           >
             {eyebrow}
           </span>
