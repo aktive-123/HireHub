@@ -2424,14 +2424,80 @@
    PRICING — employer plan comparison
    =================================================================== */
 
-/* The featured plan is lifted out of the row rather than merely tinted, so
-   the recommended option is recognisable before any text is read. The lift
-   is a transform, so the three cards stay on one baseline for their
-   footers only via the flex column inside. */
+/* The plan card is a full-height flex column. Everything above the CTA sits at
+   the top, the feature list takes the space it needs, and the CTA is pushed to
+   the bottom by `margin-top: auto` on `.hh-plan-cta`. Equal card heights plus a
+   bottom-pinned CTA is what keeps the three buttons on one baseline even though
+   the plans list different numbers of features.
+
+   The padding lives here rather than on `.hh-card` because that shell is shared
+   with cards that manage their own interior spacing. */
+.hh-plan {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  padding: var(--hh-space-5) var(--hh-space-5) var(--hh-space-6);
+}
+
+/* Plan name and tagline. The tagline is clamped to the height of two lines so a
+   short one ("Start hiring, pay nothing.") cannot leave its card's price block
+   sitting higher than the other two; the plans ship with taglines of 26, 37 and
+   40 characters, which wrap to one and two lines at this column width. */
+.hh-plan-head {
+  margin-bottom: var(--hh-space-4);
+}
+
+.hh-plan-tagline {
+  min-height: 2.6em;
+  font-size: var(--hh-fs-14);
+  line-height: 1.3;
+  color: var(--hh-muted);
+}
+
+/* The featured plan is lifted out of the row, ringed and enlarged, so the
+   recommended option is recognisable before any text is read.
+
+   The lift is done with a negative top margin and an equal positive bottom
+   margin rather than a translate. A transform moves the card but not its layout
+   box, so the featured card's CTA ended up 6px above the other two — the exact
+   misalignment this block exists to prevent. Margins reserve the space, so all
+   three footers land on the same line while the recommended card still reads as
+   raised. */
 .hh-plan--featured {
-  border-color: var(--hh-primary);
-  box-shadow: 0 18px 40px -24px var(--hh-primary-ring);
-  transform: translateY(-6px);
+  z-index: 1;
+  margin-top: -6px;
+  margin-bottom: 6px;
+  border: 2px solid var(--hh-primary);
+  box-shadow:
+    0 0 0 4px var(--hh-primary-soft),
+    0 24px 48px -22px var(--hh-primary-ring);
+}
+
+/* `.hh-card:hover` lifts by transform and would otherwise override the margins
+   that hold the featured card in alignment. */
+.hh-plan--featured:hover {
+  box-shadow:
+    0 0 0 5px var(--hh-primary-soft),
+    0 28px 54px -20px var(--hh-primary-ring);
+}
+
+/* Scaled about the bottom edge, so the enlargement grows upward and the foot of
+   the card — and with it the CTA — stays on the shared baseline. Below the
+   desktop breakpoint the three cards stack, so there is no row to stand out of
+   and the enlargement is dropped. */
+@media (min-width: 992px) {
+  .hh-plan--featured {
+    transform: scale(1.03);
+    transform-origin: center bottom;
+  }
+
+  /* Restates the lift that `.hh-card:hover` gives every other card. The scale
+     above outranks it on source order, so without this the recommended card
+     would be the one card in the row that did not react to the pointer. Kept
+     inside this breakpoint so the enlargement stays desktop-only. */
+  .hh-plan--featured:hover {
+    transform: translateY(-2px) scale(1.03);
+  }
 }
 
 .hh-plan-flag {
@@ -2452,10 +2518,18 @@
 
 .hh-plan-price {
   font-size: var(--hh-fs-36);
-  font-weight: 700;
+  /* The figure is the loudest element in the card; the period beside it is
+     deliberately quieter so the eye lands on the number first. */
+  font-weight: 800;
   line-height: 1.1;
   letter-spacing: -0.02em;
   color: var(--hh-text);
+  /* These prices are never "was" prices. A price is the single most likely
+     thing on the page to be misread as a discount, and `text-decoration` is not
+     inherited but propagates to in-flow descendants, so anything decorating an
+     ancestor would strike this through and nothing on the element itself could
+     take it back off. Declaring it here is the one place that reliably wins. */
+  text-decoration: none;
 }
 
 .hh-plan-features li {
@@ -2477,12 +2551,17 @@
 
 /* The price row is a single baseline: the figure sets the line height and the
    "/month" rides beside it, rather than sitting under it and adding a line the
-   eye has to re-read. */
+   eye has to re-read. `min-height` is the height of one `--hh-fs-36` line, so
+   the row is the same depth whatever it contains and the checklists below all
+   start on the same line. */
 .hh-plan-price-row {
   display: flex;
   align-items: baseline;
   flex-wrap: wrap;
   gap: 0.375rem;
+  min-height: calc(var(--hh-fs-36) * 1.1);
+  /* Breathing room between the price block and the checklist below it. */
+  margin-bottom: 1.25rem;
 }
 
 .hh-plan-price-period {
@@ -2492,16 +2571,23 @@
   white-space: nowrap;
 }
 
-/* The free tier has no figure to emphasise, so its row is padded to the same
-   height as the paid ones and keeps the three card bodies in alignment. */
-.hh-plan-price--free {
-  font-size: var(--hh-fs-28);
-}
+/* The free tier carries no class of its own: it renders the same shape as the
+   paid ones — a figure on the baseline with a quiet unit beside it — so
+   "Free forever" and "₦25,000 /month" read as the same kind of statement.
+   Sizing it down was the tidier-looking option, and it was the thing that left
+   the free card's checklist starting a line above the other two. */
 
 /* Pushed to the very bottom of the flex column, so every CTA on the row
    lines up regardless of how many features a plan lists. */
 .hh-plan-cta {
   margin-top: auto;
+}
+
+/* Every plan CTA is the same size whatever the card's height or the label's
+   length, so the three read as one set. `--btn-height-lg` rather than a new
+   value: it is the height the buttons already use elsewhere. */
+.hh-plan-cta .hh-btn {
+  min-height: var(--btn-height-lg);
 }
 
 /* Sits under the CTA and above the card edge. */
@@ -2665,9 +2751,14 @@
 }
 
 /* On small screens the featured card is pulled *down* instead of up, so it
-   never sits above the fold at the cost of clipping the hero. */
+   never sits above the fold at the cost of clipping the hero. The margins that
+   reserve its lift have to be dropped with it: the cards stack here, so there is
+   no shared baseline left to protect and a negative top margin would just tuck
+   the card under its neighbour. The border and glow still mark it out. */
 @media (max-width: 991.98px) {
   .hh-plan--featured {
+    margin-top: 0;
+    margin-bottom: 0;
     transform: none;
   }
 }

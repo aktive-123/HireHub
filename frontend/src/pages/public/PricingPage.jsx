@@ -68,24 +68,26 @@ function PlanCard({ plan, onChoose, busy, signedIn }) {
   const isFree = plan.is_free
 
   return (
-    <Card className={`h-100 d-flex flex-column${plan.is_featured ? ' hh-plan--featured' : ''}`}>
+    <Card className={`hh-plan${plan.is_featured ? ' hh-plan--featured' : ''}`}>
       {plan.is_featured && (
         <div className="hh-plan-flag">
           <i className="bi bi-stars" aria-hidden="true" /> Most Popular
         </div>
       )}
 
-      <div className="mb-3">
+      <div className="hh-plan-head">
         <h2 className="h5 mb-1">{plan.name}</h2>
-        {plan.tagline && <p className="small text-muted mb-0">{plan.tagline}</p>}
+        {plan.tagline && <p className="hh-plan-tagline mb-0">{plan.tagline}</p>}
       </div>
 
-      {/* The free tier has no figure, so the row is given the same height with
-          a word instead of a number. All three then share one baseline. */}
-      <div className="hh-plan-price-row mb-3">
+      {/* The free tier has no figure, so it renders the same shape as the paid
+          ones — the word on the baseline with a quiet unit beside it — and the
+          row reserves the height of one figure line. All three price blocks then
+          start and end on the same lines, so the checklists below line up too. */}
+      <div className="hh-plan-price-row">
         {isFree ? (
           <>
-            <span className="hh-plan-price hh-plan-price--free">Free</span>
+            <span className="hh-plan-price">Free</span>
             <span className="hh-plan-price-period">forever</span>
           </>
         ) : (
@@ -96,7 +98,7 @@ function PlanCard({ plan, onChoose, busy, signedIn }) {
         )}
       </div>
 
-      <ul className="list-unstyled hh-plan-features flex-grow-1 mb-4">
+      <ul className="list-unstyled hh-plan-features">
         {(plan.features ?? []).map((feature) => (
           <li key={feature}>
             <i className="bi bi-check-circle-fill" aria-hidden="true" /> {feature}
