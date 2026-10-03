@@ -2457,46 +2457,55 @@
 /* The featured plan is lifted out of the row, ringed and enlarged, so the
    recommended option is recognisable before any text is read.
 
-   The lift is done with a negative top margin and an equal positive bottom
-   margin rather than a translate. A transform moves the card but not its layout
-   box, so the featured card's CTA ended up 6px above the other two — the exact
-   misalignment this block exists to prevent. Margins reserve the space, so all
-   three footers land on the same line while the recommended card still reads as
-   raised. */
+   The lift is done with margin and height rather than a transform, because a
+   transform moves the painted card without moving its layout box. Measured in a
+   browser, `translateY(-6px)` left the featured card's button 6px above the
+   other two — the exact misalignment this block exists to prevent.
+
+   Lifting a card while keeping its foot on the shared baseline means making it
+   that much taller, not sliding it: the extra 6px of height is what the
+   negative top margin eats, so the bottom edge lands where the other two do. */
 .hh-plan--featured {
   z-index: 1;
   margin-top: -6px;
-  margin-bottom: 6px;
-  border: 2px solid var(--hh-primary);
+  height: calc(100% + 6px);
+  /* Colour only. A thicker border would shrink this card's content box by 1px on
+     every side against the other two, which measured as its button sitting 1px
+     proud of theirs even with the heights matched. The ring below carries the
+     emphasis instead, and a shadow adds no layout. */
+  border-color: var(--hh-primary);
   box-shadow:
     0 0 0 4px var(--hh-primary-soft),
     0 24px 48px -22px var(--hh-primary-ring);
 }
 
-/* `.hh-card:hover` lifts by transform and would otherwise override the margins
-   that hold the featured card in alignment. */
+/* The hover state keeps the base lift. `.hh-card:hover` raises whichever card
+   the pointer is over, which is the behaviour wanted here and is left alone;
+   what it must not do is restate a transform that fights the margins, or the
+   featured card would be the one card in the row that reacted differently. */
 .hh-plan--featured:hover {
   box-shadow:
     0 0 0 5px var(--hh-primary-soft),
     0 28px 54px -20px var(--hh-primary-ring);
 }
 
-/* Scaled about the bottom edge, so the enlargement grows upward and the foot of
-   the card — and with it the CTA — stays on the shared baseline. Below the
-   desktop breakpoint the three cards stack, so there is no row to stand out of
-   and the enlargement is dropped. */
-@media (min-width: 992px) {
-  .hh-plan--featured {
-    transform: scale(1.03);
-    transform-origin: center bottom;
-  }
+/* Deliberately not scaled, which is worth stating because it was tried. A
+   `scale()` on the card scales its contents with it, so the featured card's
+   button rendered 51.5px against the other two at 50px, with its top edge
+   1.5px proud of theirs. The enlargement undid the alignment it was meant to
+   sit on top of. The border, ring, shadow and 6px lift mark the recommended
+   plan without touching the grid the buttons sit in. */
 
-  /* Restates the lift that `.hh-card:hover` gives every other card. The scale
-     above outranks it on source order, so without this the recommended card
-     would be the one card in the row that did not react to the pointer. Kept
-     inside this breakpoint so the enlargement stays desktop-only. */
-  .hh-plan--featured:hover {
-    transform: translateY(-2px) scale(1.03);
+/* On small screens the featured card is pulled *down* instead of up, so it
+   never sits above the fold at the cost of clipping the hero. The margin and
+   height that reserve its lift are dropped with it: the cards stack here, so
+   there is no shared baseline left to protect and a negative top margin would
+   just tuck the card under its neighbour. The border and glow still mark it
+   out. */
+@media (max-width: 991.98px) {
+  .hh-plan--featured {
+    margin-top: 0;
+    height: 100%;
   }
 }
 
