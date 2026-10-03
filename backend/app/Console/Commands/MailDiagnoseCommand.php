@@ -169,8 +169,49 @@ class MailDiagnoseCommand extends Command
             $problems[] = "MAIL_FROM_ADDRESS is still the placeholder ({$from}) — providers reject or spam-filter it.";
         }
 
+        $problems = [...$problems, ...$this->senderBelongsToTheConfiguredProvider($transport, $from)];
+
         if (! config('otp.hmac_key') && ! config('app.key')) {
             $problems[] = 'Neither OTP_HMAC_KEY nor APP_KEY is set, so codes cannot be signed.';
+        }
+
+        return $problems;
+    }
+
+    /**
+     * Catches a sender left over from a different mail provider.
+     *
+     * Providers accept a message at the SMTP layer and only validate the From
+     * domain afterwards, so a mismatched sender reports as a successful send and
+     * is then discarded without a bounce reaching the application. Switching
+     * MAIL_MAILER without switching MAIL_FROM_ADDRESS is the easy way to hit it:
+     * moving off Resend's `onboarding@resend.dev` sandbox sender to Brevo's SMTP
+     * relay leaves a resend.dev From that Brevo has no reason to accept.
+     *
+     * The sandbox sender is called out specifically because it is the one value
+     * that is correct for exactly one provider and silently wrong for all the
+     * others.
+     *
+     * @return array<int, string>
+     */
+    private function senderBelongsToTheConfiguredProvider(string $transport, string $from): array
+    {
+        if ($from === '' || $transport === 'log' || $transport === 'array') {
+            return [];
+        }
+
+        $problems = [];
+
+        $sandboxSenders = [
+            'resend.dev' => 'Resend',
+        ];
+
+        $fromDomain = strtolower(substr(strrchr($from, '@') ?: '', 1));
+
+        if (isset($sandboxSenders[$fromDomain]) && $transport !== 'resend') {
+            $problems[] = "MAIL_FROM_ADDRESS ({$from}) is {$sandboxSenders[$fromDomain]}'s shared sandbox sender, but MAIL_MAILER is '{$transport}'. "
+                .'Providers check the From domain after accepting the message, so this sends successfully and is then dropped with no bounce. '
+                .'Set MAIL_FROM_ADDRESS to a sender verified in the configured provider.';
         }
 
         return $problems;
