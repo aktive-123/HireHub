@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Models\Application;
 use App\Notifications\PlatformNotification;
 use Illuminate\Support\Facades\Storage;
 use Tests\ApiTestCase;
@@ -119,6 +120,101 @@ class EmployerTest extends ApiTestCase
 
         $attacker = $this->employer();
         $this->asApiUser($attacker)->get('/api/v1/employer/applicants/'.$application->id.'/cv')->assertStatus(403);
+    }
+
+    /**
+     * A candidate who never uploaded a CV is a normal state, not a fault, and it
+     * arrives as 404 like any other absent resource. What makes it unambiguous
+     * is the `cv_not_uploaded` code: the client branches on that to show "No CV
+     * uploaded" rather than a bare download failure, which is the difference
+     * between a correct answer and a bug report.
+     */
+    public function test_downloading_a_cv_the_candidate_never_uploaded_is_not_reported_as_a_broken_file(): void
+    {
+        Storage::fake('local');
+        $owner = $this->employer();
+        $job = $this->makeJob($owner->company);
+        $seeker = $this->seeker();
+        $application = $this->makeApplication($job, $seeker);
+
+        $this->assertNull($application->cv_path);
+        $this->assertNull($seeker->profile->cv_path);
+
+        $this->asApiUser($owner)
+            ->getJson('/api/v1/employer/applicants/'.$application->id.'/cv')
+            ->assertStatus(404)
+            ->assertJsonPath('error_code', 'cv_not_uploaded')
+            ->assertJsonPath('success', false);
+    }
+
+    /**
+     * The other 404 is ours, not the candidate's: a path in the database with
+     * nothing behind it. It has to stay distinguishable from the case above,
+     * because one is fixed by asking the candidate to re-upload and the other by
+     * restoring the file on disk.
+     */
+    public function test_downloading_a_cv_recorded_but_absent_from_disk_is_reported_separately(): void
+    {
+        Storage::fake('local');
+        $owner = $this->employer();
+        $job = $this->makeJob($owner->company);
+        $seeker = $this->seeker();
+
+        $path = 'cv/'.$seeker->id.'/vanished.pdf';
+        $seeker->profile->update(['cv_path' => $path, 'cv_name' => 'vanished.pdf']);
+
+        // Recorded, but never actually written — the inconsistency this guards.
+        Storage::disk('local')->assertMissing($path);
+
+        $application = $this->makeApplication($job, $seeker);
+
+        $this->asApiUser($owner)
+            ->getJson('/api/v1/employer/applicants/'.$application->id.'/cv')
+            ->assertStatus(404)
+            ->assertJsonPath('error_code', 'cv_file_missing');
+    }
+
+    /**
+     * The application snapshots the CV at the moment of applying, so a download
+     * still resolves after the candidate replaces or deletes the file on their
+     * own profile. Without the snapshot the row's path is null and every
+     * historical application silently becomes undownloadable — which is the
+     * same 404 as "no CV", from a cause that looks identical to the client.
+     *
+     * Driven through the real apply endpoint, because that is the only place
+     * the snapshot is taken.
+     */
+    public function test_an_application_downloads_the_cv_it_snapshot_at_the_time_of_applying(): void
+    {
+        Storage::fake('local');
+        $owner = $this->employer();
+        $job = $this->makeJob($owner->company);
+        $seeker = $this->seeker();
+
+        $seeker->profile->update(['cv_path' => 'cv/'.$seeker->id.'/at-apply.pdf']);
+        Storage::disk('local')->put('cv/'.$seeker->id.'/at-apply.pdf', 'pdf-bytes');
+
+        $this->asApiUser($seeker)
+            ->postJson('/api/v1/seeker/applications', ['job_id' => $job->id])
+            ->assertCreated();
+
+        // Taken from the row rather than the response: the resource publishes the
+        // public `app-{id}` form, and this route binds on the integer key.
+        $application = Application::where('job_id', $job->id)
+            ->where('seeker_id', $seeker->id)
+            ->sole();
+
+        $this->assertSame('cv/'.$seeker->id.'/at-apply.pdf', $application->cv_path);
+
+        // The candidate replaces their CV afterwards.
+        $seeker->profile->update(['cv_path' => 'cv/'.$seeker->id.'/later.pdf']);
+        Storage::disk('local')->put('cv/'.$seeker->id.'/later.pdf', 'other-bytes');
+
+        $response = $this->asApiUser($owner)
+            ->get('/api/v1/employer/applicants/'.$application->id.'/cv')
+            ->assertOk();
+
+        $this->assertSame('pdf-bytes', $response->streamedContent());
     }
 
     public function test_employer_dashboard_returns_stats(): void
