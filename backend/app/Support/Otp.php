@@ -172,6 +172,11 @@ class Otp
         // the user's quota for a code they never received.
         RateLimiter::hit($this->issueKey($purpose, $email, $ip), $decay);
 
+        Log::channel('stderr')->info('HireHub OTP generated.', [
+            'event' => 'otp.generated',
+            'purpose' => $purpose,
+        ]);
+
         $this->deliverSafely($code, $email, $purpose, $name ?? $user?->name);
 
         return $code;
@@ -296,15 +301,15 @@ class Otp
                 ->where('purpose', $purpose)
                 ->delete();
 
-            // Logged rather than shown: the address is already known to be real
-            // at this point, but the person is mid-signup and cannot act on a
-            // provider error page. The message is enough to tell a rejected
-            // sender domain from an exhausted quota.
-            Log::channel('otp-codes')->error(sprintf(
-                'HireHub OTP delivery to %s failed: %s',
-                $email,
-                $e->getMessage()
-            ));
+            $context = [
+                'event' => 'otp.mail.failed',
+                'purpose' => $purpose,
+                'failure_type' => $e::class,
+                'failure_message' => $this->safeFailureMessage($e->getMessage()),
+            ];
+
+            Log::channel('stderr')->error('HireHub OTP mail delivery failed.', $context);
+            Log::channel('otp-codes')->error('HireHub OTP mail delivery failed.', $context);
 
             throw new RuntimeException('delivery_failed');
         }
@@ -322,6 +327,11 @@ class Otp
         );
 
         if (! config('mail.enabled', false)) {
+            Log::channel('stderr')->warning('HireHub OTP mail is disabled.', [
+                'event' => 'otp.mail.disabled',
+                'purpose' => $purpose,
+            ]);
+
             // Local development and the test suite run without an SMTP account.
             // Writing to a dedicated channel keeps the flow exercisable end to
             // end instead of forcing everyone to stand up a mail catcher before
@@ -340,5 +350,48 @@ class Otp
         // OTPs expire quickly. Send them in this request so delivery does not
         // depend on a separate queue worker being provisioned by the host.
         Mail::to($email)->send($mail);
+
+        Log::channel('stderr')->info('HireHub OTP accepted by the mail transport.', [
+            'event' => 'otp.mail.accepted',
+            'purpose' => $purpose,
+            'mailer' => (string) config('mail.default'),
+        ]);
+    }
+
+    private function safeFailureMessage(string $message): string
+    {
+        $sensitiveValues = [
+            config('mail.mailers.smtp.password'),
+            config('mail.mailers.smtp.username'),
+            config('mail.mailers.smtp.url'),
+            config('mail.mailers.mailgun.secret'),
+            config('services.resend.key'),
+            config('services.postmark.key'),
+            config('services.ses.secret'),
+            config('otp.hmac_key'),
+            config('app.key'),
+        ];
+
+        foreach ($sensitiveValues as $value) {
+            if (is_string($value) && $value !== '') {
+                $message = str_replace($value, '[redacted]', $message);
+            }
+        }
+
+        $patterns = [
+            '~\\b(?:smtps?)://[^\\s/@]+@~i' => '[redacted-smtp-url]',
+            '~((?:password|passwd|secret|api[_ -]?key|token)\\s*[:=]\\s*)[^\\s,;]+~i' => '$1[redacted]',
+            '/\\b[A-Z0-9._%+-]+@[A-Z0-9.-]+\\.[A-Z]{2,}\\b/i' => '[redacted-email]',
+            '/(?<!\\d)\\d{6}(?!\\d)/' => '[redacted-code]',
+            '/(?<![A-Za-z0-9])[A-Za-z0-9_-]{32,}(?![A-Za-z0-9])/' => '[redacted-token]',
+        ];
+
+        foreach ($patterns as $pattern => $replacement) {
+            $message = preg_replace($pattern, $replacement, $message) ?? $message;
+        }
+
+        $message = preg_replace('/[\r\n\t]+/', ' ', $message) ?? $message;
+
+        return substr(trim($message), 0, 1000);
     }
 }

@@ -26,6 +26,8 @@ trait InteractsWithOtp
 {
     private ?TestHandler $otpLogHandler = null;
 
+    private ?TestHandler $otpStatusLogHandler = null;
+
     /**
      * Redirect the OTP log channel before the test issues anything.
      *
@@ -38,6 +40,7 @@ trait InteractsWithOtp
         parent::setUp();
 
         $this->otpLog();
+        $this->otpStatusLog();
     }
 
     /**
@@ -63,6 +66,21 @@ trait InteractsWithOtp
         }
 
         return $this->otpLogHandler;
+    }
+
+    protected function otpStatusLog(): TestHandler
+    {
+        if ($this->otpStatusLogHandler === null) {
+            $this->otpStatusLogHandler = new TestHandler;
+            $logger = new Logger('otp-status-test');
+            $logger->pushHandler($this->otpStatusLogHandler);
+
+            Log::extend('otp-status-test', fn () => $logger);
+            config(['logging.channels.stderr' => ['driver' => 'otp-status-test']]);
+            Log::forgetChannel('stderr');
+        }
+
+        return $this->otpStatusLogHandler;
     }
 
     /**

@@ -11,6 +11,7 @@ use App\Support\Otp;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
@@ -643,6 +644,12 @@ class SecurityTest extends ApiTestCase
         // OTP delivery must not depend on a queue worker being provisioned.
         Mail::assertSent(OtpMail::class, 1);
         Mail::assertNotQueued(OtpMail::class);
+
+        $events = collect($this->otpStatusLog()->getRecords())
+            ->map(fn ($record) => $record->context['event'] ?? null)
+            ->all();
+        $this->assertContains('otp.generated', $events);
+        $this->assertContains('otp.mail.accepted', $events);
     }
 
     public function test_a_code_is_never_written_to_the_log_once_mail_works(): void
@@ -733,10 +740,47 @@ class SecurityTest extends ApiTestCase
         // And the reason is written down, or an outage is invisible.
         $this->assertTrue(
             (bool) collect($this->otpLogMessages())->first(
-                fn (string $line): bool => str_contains($line, 'delivery to pending@example.com failed')
+                fn (string $line): bool => str_contains($line, 'OTP mail delivery failed')
             ),
             'A refused send should be recorded on the otp-codes channel.'
         );
+    }
+
+    public function test_password_reset_keeps_its_neutral_response_and_logs_redacted_mail_failures(): void
+    {
+        $recipient = 'reset-mail@example.com';
+        $smtpCredential = Str::random(48);
+        $oneTimeCode = (string) random_int(100000, 999999);
+        $failure = "SMTP authentication failed for {$recipient}; credential={$smtpCredential}; code={$oneTimeCode}";
+
+        User::factory()->create(['email' => $recipient, 'password' => 'secret123']);
+        config(['mail.mailers.smtp.password' => $smtpCredential]);
+        $this->useFailingMailTransport($failure);
+
+        $response = $this->postJson('/api/v1/auth/forgot-password', ['email' => $recipient])->assertOk();
+
+        $this->assertSame(
+            'If that email is registered, a verification code has been sent.',
+            $response->json('message')
+        );
+
+        $records = $this->otpStatusLog()->getRecords();
+        $events = collect($records)->map(fn ($record) => $record->context['event'] ?? null)->all();
+        $this->assertContains('otp.generated', $events);
+        $this->assertContains('otp.mail.failed', $events);
+        $this->assertContains('password_reset.otp.not_completed', $events);
+
+        $failureRecord = collect($records)->first(
+            fn ($record) => ($record->context['event'] ?? null) === 'otp.mail.failed'
+        );
+
+        $this->assertSame(TransportException::class, $failureRecord->context['failure_type']);
+        $safeMessage = $failureRecord->context['failure_message'];
+        $this->assertStringContainsString('SMTP authentication failed', $safeMessage);
+        $this->assertStringNotContainsString($recipient, $safeMessage);
+        $this->assertStringNotContainsString($smtpCredential, $safeMessage);
+        $this->assertStringNotContainsString($oneTimeCode, $safeMessage);
+        $this->assertDatabaseMissing('otp_codes', ['email' => $recipient]);
     }
 
     public function test_a_refused_send_answers_the_resend_with_503_not_a_throttle(): void
@@ -766,13 +810,15 @@ class SecurityTest extends ApiTestCase
      * what an unverified sender domain, a revoked API key or a provider outage
      * looks like from inside the app.
      */
-    private function useFailingMailTransport(): void
+    private function useFailingMailTransport(string $failureMessage = 'The example.com domain is not verified.'): void
     {
-        Mail::extend('failing', fn (array $config = []) => new class implements TransportInterface
+        Mail::extend('failing', fn (array $config = []) => new class($failureMessage) implements TransportInterface
         {
+            public function __construct(private readonly string $failureMessage) {}
+
             public function send(RawMessage $message, ?Envelope $envelope = null): ?SymfonySentMessage
             {
-                throw new TransportException('The example.com domain is not verified.');
+                throw new TransportException($this->failureMessage);
             }
 
             public function __toString(): string

@@ -12,6 +12,7 @@ use App\Support\OtpVerificationResult;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\Rules\Password as PasswordRule;
@@ -94,11 +95,23 @@ class VerificationController extends ApiController
                     ip: $request->ip(),
                     name: $user->name,
                 );
-            } catch (RuntimeException) {
+            } catch (RuntimeException $e) {
                 // Swallowed on purpose. Reporting "you are rate limited" for a
                 // real account and "check your inbox" for an unknown one is an
                 // enumeration oracle. The client shows the same neutral
                 // confirmation either way.
+                $reason = match (true) {
+                    str_starts_with($e->getMessage(), 'rate_limited:') => 'rate_limited',
+                    str_starts_with($e->getMessage(), 'cooldown:') => 'cooldown',
+                    $e->getMessage() === 'delivery_failed' => 'delivery_failed',
+                    default => 'issue_failed',
+                };
+
+                Log::channel('stderr')->notice('Password-reset OTP issuance did not complete.', [
+                    'event' => 'password_reset.otp.not_completed',
+                    'failure_type' => $e::class,
+                    'reason' => $reason,
+                ]);
             }
         }
 
