@@ -1,0 +1,16 @@
+.git
+**/.env
+**/.env.*
+!**/.env.example
+**/node_modules
+**/vendor
+**/dist
+**/public/build
+backend/public/storage
+backend/storage/**
+backend/bootstrap/cache/*.php
+**/*.log
+**/*.sqlite
+**/*.sql
+**/*.pem
+**/*.key
