@@ -41,19 +41,38 @@ RUN apt-get update \
         zip \
     && rm -rf /var/lib/apt/lists/*
 
-RUN sed -ri 's!/var/www/html!/var/www/html/public!g' /etc/apache2/sites-available/000-default.conf \
-    && sed -ri 's/Listen 80/Listen 10000/' /etc/apache2/ports.conf \
-    && printf '<Directory /var/www/html/public>\n    AllowOverride All\n    Require all granted\n</Directory>\n' \
+RUN printf '%s\n' \
+        '<VirtualHost *:10000>' \
+        '    DocumentRoot /var/www/html/public' \
+        '    ErrorLog ${APACHE_LOG_DIR}/error.log' \
+        '    CustomLog ${APACHE_LOG_DIR}/access.log combined' \
+        '</VirtualHost>' \
+        > /etc/apache2/sites-available/000-default.conf \
+    && sed -ri 's/^Listen 80$/Listen 10000/' /etc/apache2/ports.conf \
+    && printf '%s\n' \
+        '<Directory /var/www/html/public>' \
+        '    Options FollowSymLinks' \
+        '    AllowOverride All' \
+        '    Require all granted' \
+        '    DirectoryIndex index.php index.html' \
+        '</Directory>' \
         > /etc/apache2/conf-available/laravel.conf \
     && a2enmod rewrite headers \
-    && a2enconf laravel
+    && a2enconf laravel \
+    && apache2ctl -t \
+    && grep -q '^Listen 10000$' /etc/apache2/ports.conf \
+    && grep -q 'DocumentRoot /var/www/html/public' /etc/apache2/sites-available/000-default.conf
 
 WORKDIR /var/www/html
 COPY backend/ ./
 COPY --from=vendor /app/vendor ./vendor
 COPY --from=frontend-build /workspace/backend/public/build ./public/build
 
-RUN mkdir -p storage/app/private storage/app/public storage/framework/cache/data \
+RUN test -f public/index.php \
+    && test -f public/.htaccess \
+    && test -f public/build/index.html \
+    && test -d public/build/assets \
+    && mkdir -p storage/app/private storage/app/public storage/framework/cache/data \
         storage/framework/sessions storage/framework/views storage/logs bootstrap/cache \
     && chown -R www-data:www-data storage bootstrap/cache \
     && php artisan package:discover --ansi \
