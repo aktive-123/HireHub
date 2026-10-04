@@ -67,6 +67,17 @@ class OtpMail extends Mailable
         );
     }
 
+    public function renderText(): string
+    {
+        $content = $this->content();
+
+        if (! is_string($content->text) || $content->text === '') {
+            return '';
+        }
+
+        return view($content->text, $content->with)->render();
+    }
+
     /**
      * Absolute URL of the brand logo, so mail clients that strip relative
      * paths still render it. Falls back to an empty string, in which case the

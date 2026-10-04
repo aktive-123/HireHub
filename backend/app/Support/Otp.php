@@ -5,13 +5,16 @@ namespace App\Support;
 use App\Mail\OtpMail;
 use App\Models\OtpCode;
 use App\Models\User;
+use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Str;
 use RuntimeException;
 use Symfony\Component\Mailer\Exception\TransportExceptionInterface;
+use UnexpectedValueException;
 
 /**
  * Issues, mails and verifies six-digit one-time passwords.
@@ -295,7 +298,7 @@ class Otp
     {
         try {
             $this->deliver($code, $email, $purpose, $name);
-        } catch (TransportExceptionInterface $e) {
+        } catch (TransportExceptionInterface|ConnectionException|UnexpectedValueException $e) {
             OtpCode::query()
                 ->where('email', $email)
                 ->where('purpose', $purpose)
@@ -347,15 +350,86 @@ class Otp
             return;
         }
 
-        // OTPs expire quickly. Send them in this request so delivery does not
-        // depend on a separate queue worker being provisioned by the host.
-        Mail::to($email)->send($mail);
+        if ($purpose === OtpCode::PURPOSE_RESET) {
+            $this->deliverPasswordResetViaBrevoApi($mail, $email, $name);
+            $transport = 'brevo_api';
+        } else {
+            // OTPs expire quickly. Send them in this request so delivery does not
+            // depend on a separate queue worker being provisioned by the host.
+            Mail::to($email)->send($mail);
+            $transport = (string) config('mail.default');
+        }
 
         Log::channel('stderr')->info('HireHub OTP accepted by the mail transport.', [
             'event' => 'otp.mail.accepted',
             'purpose' => $purpose,
-            'mailer' => (string) config('mail.default'),
+            'transport' => $transport,
         ]);
+    }
+
+    private function deliverPasswordResetViaBrevoApi(OtpMail $mail, string $email, ?string $name): void
+    {
+        $apiKey = config('services.brevo.api_key');
+
+        if (! is_string($apiKey) || trim($apiKey) === '') {
+            throw new UnexpectedValueException('BREVO_API_KEY is not configured.');
+        }
+
+        $senderEmail = (string) config('mail.from.address');
+        $senderName = (string) config('mail.from.name');
+
+        if ($senderEmail === '') {
+            throw new UnexpectedValueException('MAIL_FROM_ADDRESS is not configured.');
+        }
+
+        $sender = ['email' => $senderEmail];
+        if ($senderName !== '') {
+            $sender['name'] = $senderName;
+        }
+
+        $recipient = ['email' => $email];
+        if ($name !== null && $name !== '') {
+            $recipient['name'] = $name;
+        }
+
+        $envelope = $mail->envelope();
+        $content = $mail->content();
+
+        try {
+            $response = Http::acceptJson()
+                ->withHeaders(['api-key' => $apiKey])
+                ->connectTimeout(5)
+                ->timeout(15)
+                ->post('https://api.brevo.com/v3/smtp/email', [
+                    'sender' => $sender,
+                    'to' => [$recipient],
+                    'subject' => $envelope->subject ?? 'HireHub password reset code',
+                    'htmlContent' => $mail->render(),
+                    'textContent' => $mail->renderText(),
+                ]);
+        } catch (ConnectionException $e) {
+            throw new UnexpectedValueException('Brevo API connection failed: '.$e->getMessage(), previous: $e);
+        }
+
+        if (! $response->successful()) {
+            $providerCode = $response->json('code');
+            $providerMessage = $response->json('message');
+            $details = [];
+
+            if (is_string($providerCode) && $providerCode !== '') {
+                $details[] = $providerCode;
+            }
+
+            if (is_string($providerMessage) && $providerMessage !== '') {
+                $details[] = $providerMessage;
+            }
+
+            throw new UnexpectedValueException(sprintf(
+                'Brevo API returned HTTP %d%s.',
+                $response->status(),
+                $details === [] ? '' : ': '.implode(' - ', $details),
+            ));
+        }
     }
 
     private function safeFailureMessage(string $message): string
@@ -364,6 +438,7 @@ class Otp
             config('mail.mailers.smtp.password'),
             config('mail.mailers.smtp.username'),
             config('mail.mailers.smtp.url'),
+            config('services.brevo.api_key'),
             config('mail.mailers.mailgun.secret'),
             config('services.resend.key'),
             config('services.postmark.key'),

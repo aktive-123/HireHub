@@ -8,9 +8,11 @@ use App\Mail\OtpMail;
 use App\Models\OtpCode;
 use App\Models\User;
 use App\Support\Otp;
+use Illuminate\Http\Client\Request as ClientRequest;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Storage;
@@ -24,6 +26,7 @@ use Symfony\Component\Mailer\Transport\TransportInterface;
 use Symfony\Component\Mime\RawMessage;
 use Tests\ApiTestCase;
 use Tests\InteractsWithOtp;
+use UnexpectedValueException;
 
 /**
  * Regression cover for the Stage 15 hardening and the one-time-password
@@ -631,31 +634,61 @@ class SecurityTest extends ApiTestCase
 
     // --- One-time passwords: delivery -------------------------------------
 
-    public function test_an_issued_code_is_handed_to_the_mail_transport(): void
+    public function test_password_reset_code_is_sent_through_the_brevo_api(): void
     {
         Mail::fake();
-        config(['mail.enabled' => true]);
-        config(['queue.default' => 'database']);
+        Http::preventStrayRequests();
+        Http::fake([
+            'https://api.brevo.com/v3/smtp/email' => Http::response(['messageId' => 'fake-message-id'], 201),
+        ]);
+
+        $apiKey = Str::random(48);
+        config([
+            'mail.enabled' => true,
+            'queue.default' => 'database',
+            'services.brevo.api_key' => $apiKey,
+        ]);
 
         User::factory()->create(['email' => 'real@example.com', 'password' => 'secret123']);
 
         $this->postJson('/api/v1/auth/forgot-password', ['email' => 'real@example.com'])->assertOk();
 
-        // OTP delivery must not depend on a queue worker being provisioned.
-        Mail::assertSent(OtpMail::class, 1);
-        Mail::assertNotQueued(OtpMail::class);
+        Http::assertSent(function (ClientRequest $request) use ($apiKey): bool {
+            $payload = $request->data();
+
+            return $request->url() === 'https://api.brevo.com/v3/smtp/email'
+                && $request->hasHeader('api-key', $apiKey)
+                && ($payload['sender']['email'] ?? null) === config('mail.from.address')
+                && ($payload['sender']['name'] ?? null) === config('mail.from.name')
+                && ($payload['to'][0]['email'] ?? null) === 'real@example.com'
+                && str_contains($payload['subject'] ?? '', 'password reset code')
+                && str_contains($payload['htmlContent'] ?? '', 'Reset your password')
+                && str_contains($payload['textContent'] ?? '', 'Reset your password');
+        });
+
+        Mail::assertNothingSent();
 
         $events = collect($this->otpStatusLog()->getRecords())
             ->map(fn ($record) => $record->context['event'] ?? null)
             ->all();
         $this->assertContains('otp.generated', $events);
         $this->assertContains('otp.mail.accepted', $events);
+        $this->assertSame('brevo_api', collect($this->otpStatusLog()->getRecords())
+            ->first(fn ($record) => ($record->context['event'] ?? null) === 'otp.mail.accepted')
+            ->context['transport']);
     }
 
     public function test_a_code_is_never_written_to_the_log_once_mail_works(): void
     {
         Mail::fake();
-        config(['mail.enabled' => true]);
+        Http::preventStrayRequests();
+        Http::fake([
+            'https://api.brevo.com/v3/smtp/email' => Http::response(['messageId' => 'fake-message-id'], 201),
+        ]);
+        config([
+            'mail.enabled' => true,
+            'services.brevo.api_key' => Str::random(48),
+        ]);
         $this->clearOtpLog();
 
         User::factory()->create(['email' => 'real@example.com', 'password' => 'secret123']);
@@ -749,13 +782,23 @@ class SecurityTest extends ApiTestCase
     public function test_password_reset_keeps_its_neutral_response_and_logs_redacted_mail_failures(): void
     {
         $recipient = 'reset-mail@example.com';
-        $smtpCredential = Str::random(48);
+        $apiKey = Str::random(48);
         $oneTimeCode = (string) random_int(100000, 999999);
-        $failure = "SMTP authentication failed for {$recipient}; credential={$smtpCredential}; code={$oneTimeCode}";
+        $failure = "Invalid API key {$apiKey} for {$recipient}; code={$oneTimeCode}";
+
+        Http::preventStrayRequests();
+        Http::fake([
+            'https://api.brevo.com/v3/smtp/email' => Http::response([
+                'code' => 'unauthorized',
+                'message' => $failure,
+            ], 401),
+        ]);
 
         User::factory()->create(['email' => $recipient, 'password' => 'secret123']);
-        config(['mail.mailers.smtp.password' => $smtpCredential]);
-        $this->useFailingMailTransport($failure);
+        config([
+            'mail.enabled' => true,
+            'services.brevo.api_key' => $apiKey,
+        ]);
 
         $response = $this->postJson('/api/v1/auth/forgot-password', ['email' => $recipient])->assertOk();
 
@@ -774,13 +817,36 @@ class SecurityTest extends ApiTestCase
             fn ($record) => ($record->context['event'] ?? null) === 'otp.mail.failed'
         );
 
-        $this->assertSame(TransportException::class, $failureRecord->context['failure_type']);
+        $this->assertSame(UnexpectedValueException::class, $failureRecord->context['failure_type']);
         $safeMessage = $failureRecord->context['failure_message'];
-        $this->assertStringContainsString('SMTP authentication failed', $safeMessage);
+        $this->assertStringContainsString('Brevo API returned HTTP 401', $safeMessage);
         $this->assertStringNotContainsString($recipient, $safeMessage);
-        $this->assertStringNotContainsString($smtpCredential, $safeMessage);
+        $this->assertStringNotContainsString($apiKey, $safeMessage);
         $this->assertStringNotContainsString($oneTimeCode, $safeMessage);
         $this->assertDatabaseMissing('otp_codes', ['email' => $recipient]);
+    }
+
+    public function test_email_verification_keeps_using_the_existing_mailer(): void
+    {
+        Mail::fake();
+        Http::preventStrayRequests();
+        config([
+            'mail.enabled' => true,
+            'queue.default' => 'database',
+        ]);
+
+        $user = $this->seeker([
+            'email' => 'verify@example.com',
+            'email_verified_at' => null,
+            'status' => AccountStatus::Pending,
+        ]);
+
+        $this->asApiUser($user)
+            ->postJson('/api/v1/auth/email/verification-notification')
+            ->assertOk();
+
+        Mail::assertSent(OtpMail::class, fn (OtpMail $mail): bool => $mail->purpose === OtpCode::PURPOSE_VERIFY);
+        Http::assertNothingSent();
     }
 
     public function test_a_refused_send_answers_the_resend_with_503_not_a_throttle(): void
