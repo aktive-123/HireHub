@@ -260,10 +260,18 @@ class PaymentService
             return;
         }
 
+        $application = $payment->hiringFee?->application;
+
+        // The fee commits the employer, not the hire. The candidate still has to
+        // accept, so saying "marked as hired" here told the employer to expect a
+        // start date for a hire that had not happened yet. Link straight to the
+        // applicant so the next click shows them waiting on an answer.
         Notifier::send($payment->user, [
             'category' => 'billing',
-            'text' => 'Your hiring fee was confirmed. The candidate has been marked as hired.',
-            'link' => '/employer/applicants',
+            'text' => 'Your hiring fee was confirmed. The offer is now with the candidate and the application is awaiting their answer.',
+            'link' => $application !== null
+                ? "/employer/applicants/{$application->id}"
+                : '/employer/applicants',
             'type' => 'success',
             'icon' => 'check2-circle',
             'subject' => 'Hiring fee paid',

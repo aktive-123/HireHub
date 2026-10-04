@@ -15,6 +15,9 @@ class AuthTest extends ApiTestCase
             'first_name' => 'Ada',
             'last_name' => 'Obi',
             'email' => 'ada@example.com',
+            'phone' => '08012345678',
+            'city' => 'Lagos',
+            'state' => 'Lagos',
             'password' => 'secret123',
             'password_confirmation' => 'secret123',
         ]);
@@ -34,6 +37,15 @@ class AuthTest extends ApiTestCase
         $this->assertDatabaseHas('users', ['email' => 'ada@example.com', 'role' => UserRole::Seeker->value]);
         $this->assertDatabaseHas('profiles', ['user_id' => User::where('email', 'ada@example.com')->value('id')]);
 
+        // Typed as a spaced local number, stored as canonical E.164.
+        $this->assertDatabaseHas('users', ['email' => 'ada@example.com', 'phone' => '+2348012345678']);
+        $this->assertDatabaseHas('profiles', [
+            'user_id' => User::where('email', 'ada@example.com')->value('id'),
+            'city' => 'Lagos',
+            'state' => 'Lagos',
+            'location' => 'Lagos, Lagos',
+        ]);
+
         $this->assertDatabaseHas('otp_codes', [
             'email' => 'ada@example.com',
             'purpose' => OtpCode::PURPOSE_VERIFY,
@@ -48,6 +60,10 @@ class AuthTest extends ApiTestCase
             'full_name' => 'David Okafor',
             'company_name' => 'Acme Tech',
             'work_email' => 'david@acme.com',
+            'phone' => '+234 801 234 5678',
+            'address_line' => '12 Admiralty Way, Lekki Phase 1',
+            'city' => 'Lagos',
+            'state' => 'Lagos',
             'password' => 'secret123',
             'password_confirmation' => 'secret123',
         ]);
@@ -55,7 +71,16 @@ class AuthTest extends ApiTestCase
         $response->assertStatus(201)->assertJsonPath('data.user.role', 'employer');
 
         $user = User::where('email', 'david@acme.com')->firstOrFail();
-        $this->assertDatabaseHas('companies', ['user_id' => $user->id, 'name' => 'Acme Tech']);
+        $this->assertDatabaseHas('companies', [
+            'user_id' => $user->id,
+            'name' => 'Acme Tech',
+            'city' => 'Lagos',
+            'state' => 'Lagos',
+            'location' => 'Lagos, Lagos',
+        ]);
+
+        // The company's contact number lives on the account, normalised.
+        $this->assertDatabaseHas('users', ['email' => 'david@acme.com', 'phone' => '+2348012345678']);
     }
 
     public function test_user_can_login_and_access_me(): void
@@ -103,9 +128,12 @@ class AuthTest extends ApiTestCase
             'first_name' => 'Ada',
             'last_name' => 'Obi',
             'email' => 'ada@example.com',
+            'phone' => '08012345678',
+            'city' => 'Lagos',
+            'state' => 'Lagos',
             'password' => 'secret123',
             'password_confirmation' => 'secret123',
-        ])->assertStatus(422);
+        ])->assertStatus(422)->assertJsonValidationErrors('email');
     }
 
     public function test_logout_revokes_token(): void

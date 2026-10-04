@@ -1,7 +1,7 @@
 import { apiClient } from './client'
 
 // Re-exported so pages take one import for the whole API surface.
-export { apiErrorMessage, UNREACHABLE_MESSAGE } from './client'
+export { apiErrorMessage, apiFieldErrors, UNREACHABLE_MESSAGE } from './client'
 import { saveResponseAsFile } from '../../utils/exportData'
 
 // Route-bound models are addressed by slug because their getRouteKeyName()
@@ -69,11 +69,10 @@ async function showReceiptInTab(path) {
   const tab = openReceiptTab()
 
   try {
-    const res = await apiClient.xhr(path, { headers: { Accept: 'text/html' } })
-
-    if (!res.ok) {
-      throw new Error(`Could not load the receipt (status ${res.status}).`)
-    }
+    // `binary()` so a refusal carries the server's wording. This used to throw
+    // "Could not load the receipt (status 404)", which told the employer nothing
+    // about whether the reference was wrong or the receipt was never issued.
+    const res = await apiClient.binary(path, { headers: { Accept: 'text/html' } })
 
     const url = URL.createObjectURL(await res.blob())
     tab.location.replace(url)
@@ -122,6 +121,14 @@ export const authApi = {
   async updateSettings(payload) {
     const res = await apiClient.patch('/v1/settings', payload)
     return res.data
+  },
+  async uploadProfilePicture(file) {
+    const body = new FormData()
+    body.append('profile_photo', file)
+    return apiClient.post('/v1/settings/profile-picture', body)
+  },
+  async removeProfilePicture() {
+    return apiClient.delete('/v1/settings/profile-picture')
   },
   async changePassword(payload) {
     const res = await apiClient.patch('/v1/auth/password', payload)
@@ -246,7 +253,7 @@ export const billingApi = {
    * token-authenticated so a plain <a href> would come back 401.
    */
   async downloadReceipt(reference) {
-    const res = await apiClient.xhr(`/v1/employer/billing/receipts/${encodeURIComponent(reference)}/download`)
+    const res = await apiClient.binary(`/v1/employer/billing/receipts/${encodeURIComponent(reference)}/download`)
     return saveResponseAsFile(res, `hirehub-receipt-${reference}.pdf`)
   },
   /**
@@ -310,7 +317,12 @@ export const seekerApi = {
   },
   async applications(params = {}) {
     const res = await apiClient.get(`/v1/seeker/applications${buildQuery(params)}`)
-    return (res.data ?? []).map(numericAppId)
+    return {
+      items: (res.data ?? []).map(numericAppId),
+      // Unfiltered tallies, so the status tabs keep showing real counts while
+      // one of them is active.
+      statusCounts: res.meta?.status_counts ?? {},
+    }
   },
   async application(id) {
     const res = await apiClient.get(`/v1/seeker/applications/${appNum(id)}`)
@@ -330,6 +342,49 @@ export const seekerApi = {
   },
   async unSaveJob(jobId) {
     return apiClient.delete(`/v1/seeker/saved-jobs/${num(jobId)}`)
+  },
+  /**
+   * Accept a confirmed offer. This is what actually completes a hire: the
+   * employer has already paid the hiring fee, which confirms the offer, but
+   * only this call moves the application to `hired` and closes the listing.
+   *
+   * Idempotent server-side — accepting twice reports success rather than a
+   * conflict, so a double tap or a retried request is harmless.
+   *
+   * `upsells` rides along in `meta` because this is the exact moment a job
+   * seeker becomes eligible to buy an add-on. Returning it here saves the
+   * details page a second round trip right after the most expensive action it
+   * can take.
+   */
+  async acceptOffer(id) {
+    const res = await apiClient.post(`/v1/seeker/applications/${appNum(id)}/accept-offer`)
+    return { application: numericAppId(res.data), upsells: res.meta?.upsells ?? [] }
+  },
+  /**
+   * Decline a confirmed offer. The hiring fee is kept — the employer committed
+   * and paid — so this moves the application out of the pipeline and tells the
+   * employer to reopen the role.
+   */
+  async declineOffer(id) {
+    const res = await apiClient.post(`/v1/seeker/applications/${appNum(id)}/decline-offer`)
+    return numericAppId(res.data)
+  },
+  /**
+   * Add-ons this seeker may still buy against this application. Empty for
+   * anything that is not an accepted hire, so it is safe to call at any point.
+   */
+  async upsells(id) {
+    const res = await apiClient.get(`/v1/seeker/applications/${appNum(id)}/upsells`)
+    return res.data?.items ?? []
+  },
+  /**
+   * Open gateway checkout for one add-on. Refused with 422
+   * `upsell_unavailable` if the add-on was withdrawn, already bought, or the
+   * hire is not accepted yet.
+   */
+  async checkoutUpsell(id, sku) {
+    const res = await apiClient.post(`/v1/seeker/applications/${appNum(id)}/upsells/checkout`, { sku })
+    return res.data
   },
   async profile() {
     const res = await apiClient.get('/v1/seeker/profile')
@@ -449,7 +504,7 @@ export const employerApi = {
     return { items: res.data ?? [], meta: res.meta ?? {} }
   },
   async downloadCv(id) {
-    const res = await apiClient.xhr(`/v1/employer/applicants/${appNum(id)}/cv`)
+    const res = await apiClient.binary(`/v1/employer/applicants/${appNum(id)}/cv`)
     return saveResponseAsFile(res, `candidate-cv-${Date.now()}.pdf`)
   },
 
@@ -473,7 +528,7 @@ export const employerApi = {
     return res.data
   },
   async downloadHiringFeeReceipt(reference) {
-    const res = await apiClient.xhr(
+    const res = await apiClient.binary(
       `/v1/employer/hiring-fees/${encodeURIComponent(reference)}/receipt/download`,
     )
     return saveResponseAsFile(res, `hirehub-hiring-fee-${reference}.pdf`)
@@ -497,7 +552,7 @@ export const employerApi = {
  */
 export const adminReceiptsApi = {
   async downloadReceipt(reference) {
-    const res = await apiClient.xhr(`/v1/admin/receipts/${encodeURIComponent(reference)}/download`)
+    const res = await apiClient.binary(`/v1/admin/receipts/${encodeURIComponent(reference)}/download`)
     return saveResponseAsFile(res, `hirehub-receipt-${reference}.pdf`)
   },
   async openReceipt(reference) {
@@ -519,7 +574,7 @@ export const cvApi = {
     return apiClient.delete('/v1/seeker/cv')
   },
   async download() {
-    const res = await apiClient.xhr('/v1/seeker/cv/download')
+    const res = await apiClient.binary('/v1/seeker/cv/download')
     return saveResponseAsFile(res, `cv-${Date.now()}.pdf`)
   },
 }

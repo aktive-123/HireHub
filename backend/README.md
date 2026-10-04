@@ -61,9 +61,16 @@ send it as `Authorization: Bearer <token>`.
 | Auth | `/v1/auth/register`, `/login`, `/forgot-password`, `/reset-password`, `/email/verify` | Heavily rate limited |
 | Seeker | `/v1/seeker/*` | `auth:sanctum` + `role:seeker` |
 | Employer | `/v1/employer/*` | `auth:sanctum` + `role:employer` |
-| Shared | `/v1/applications`, `/v1/auth/me`, `/v1/auth/logout` | Any signed-in role |
+| Shared | `/v1/applications`, `/v1/auth/me`, `/v1/auth/logout`, `/v1/settings/profile-picture` | Any signed-in role |
 | Admin | `/v1/admin/*` | `auth:sanctum` + `role:admin` |
 | Webhooks | `/v1/webhooks/{gateway}` | Unauthenticated by design; every handler requires that gateway's HMAC signature |
+
+Profile pictures are uploaded through the shared authenticated settings routes
+and stored on the public disk. The frontend crops accepted JPG, PNG, and WebP
+images to a square; the API independently enforces image type, square dimensions,
+and a 2 MB limit. Run `php artisan migrate` after deploying the
+`profile_picture` column migration, and ensure the public storage link exists
+(`php artisan storage:link`) so uploaded images can be displayed.
 
 ## Security model
 

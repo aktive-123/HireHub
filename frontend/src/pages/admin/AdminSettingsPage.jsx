@@ -6,6 +6,7 @@ import Button from '../../components/ui/Button'
 import FormInput from '../../components/ui/FormInput'
 import FormSelect from '../../components/ui/FormSelect'
 import HiringFeeRatesSection from '../../components/admin/HiringFeeRatesSection'
+import ProfilePhotoCard from '../../components/common/ProfilePhotoCard'
 import { adminApi } from '../../services/api'
 import { useAdminData } from '../../hooks/useAdminData'
 
@@ -151,6 +152,8 @@ export default function AdminSettingsPage() {
             </div>
           }
         />
+
+        <ProfilePhotoCard />
 
         <Card className="hh-card-body hh-mb-4">
           <h3 className="hh-card-title-md hh-mb-3">General</h3>

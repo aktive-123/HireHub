@@ -4,8 +4,10 @@ namespace App\Http\Controllers\Api\V1;
 
 use App\Enums\AccountStatus;
 use App\Http\Controllers\Api\ApiController;
+use App\Support\Phone;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rules\Password as PasswordRule;
 use Illuminate\Validation\ValidationException;
 
@@ -43,7 +45,7 @@ class SettingsController extends ApiController
     {
         $validated = $request->validate([
             'name' => ['sometimes', 'string', 'max:255'],
-            'phone' => ['sometimes', 'nullable', 'string', 'max:255'],
+            'phone' => [...Phone::rules(required: false), 'sometimes'],
             'timezone' => ['sometimes', 'string', 'max:64'],
             'two_factor_enabled' => ['sometimes', 'boolean'],
             'email_preferences' => ['sometimes', 'nullable', 'array', 'max:50'],
@@ -67,6 +69,13 @@ class SettingsController extends ApiController
             $validated['timezone'] = $this->assertTimezone($validated['timezone']);
         }
 
+        // Normalised on the way in, so the settings screen, the profile editor
+        // and registration cannot each end up storing a different spelling of
+        // the same number.
+        if (array_key_exists('phone', $validated)) {
+            $validated['phone'] = Phone::normalize($validated['phone']);
+        }
+
         $changes = array_intersect_key($validated, array_flip([
             'name', 'phone', 'timezone', 'two_factor_enabled',
             ...self::PREFERENCE_COLUMNS,
@@ -77,6 +86,54 @@ class SettingsController extends ApiController
         }
 
         return $this->success($this->payload($user->fresh()), 'Your settings have been updated.');
+    }
+
+    public function uploadProfilePicture(Request $request)
+    {
+        $validated = $request->validate([
+            'profile_photo' => [
+                'required',
+                'image',
+                'mimes:jpg,jpeg,png,webp',
+                'max:2048',
+                'dimensions:ratio=1',
+            ],
+        ]);
+
+        $user = $request->user();
+        $oldPath = $user->profile_picture;
+        $path = $validated['profile_photo']->store("profile-pictures/{$user->id}", 'public');
+
+        if (! $path) {
+            abort(500, 'The profile picture could not be stored.');
+        }
+
+        $user->forceFill(['profile_picture' => $path, 'avatar_url' => null])->save();
+
+        if ($oldPath && ! Storage::disk('public')->delete($oldPath)) {
+            abort(500, 'The previous profile picture could not be removed.');
+        }
+
+        return $this->success(
+            ['avatar_url' => $user->fresh()->profilePictureUrl()],
+            'Your profile picture has been updated.'
+        );
+    }
+
+    public function deleteProfilePicture(Request $request)
+    {
+        $user = $request->user();
+        $path = $user->profile_picture;
+        $user->forceFill(['profile_picture' => null, 'avatar_url' => null])->save();
+
+        if ($path && ! Storage::disk('public')->delete($path)) {
+            abort(500, 'The profile picture could not be removed from storage.');
+        }
+
+        return $this->success(
+            ['avatar_url' => $user->fresh()->profilePictureUrl()],
+            'Your profile picture has been removed.'
+        );
     }
 
     /**
@@ -188,6 +245,7 @@ class SettingsController extends ApiController
         return [
             'name' => $user->name,
             'email' => $user->email,
+            'avatar_url' => $user->profilePictureUrl(),
             'phone' => $user->phone,
             'timezone' => $user->timezone ?? 'UTC',
             'two_factor_enabled' => (bool) $user->two_factor_enabled,

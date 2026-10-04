@@ -10,6 +10,19 @@ use Tests\ApiTestCase;
 
 class SeekerTest extends ApiTestCase
 {
+    public function test_seeker_dashboard_loads_recent_applications_with_avatar_fields(): void
+    {
+        $company = $this->employer()->company;
+        $job = $this->makeJob($company);
+        $seeker = $this->seeker();
+        $this->makeApplication($job, $seeker);
+
+        $this->asApiUser($seeker)
+            ->getJson('/api/v1/seeker/dashboard')
+            ->assertOk()
+            ->assertJsonPath('success', true);
+    }
+
     public function test_seeker_can_apply_to_a_job(): void
     {
         $company = $this->employer()->company;

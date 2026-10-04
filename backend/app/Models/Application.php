@@ -13,7 +13,7 @@ use Illuminate\Support\Carbon;
  * @property int $id
  * @property int $job_id
  * @property int $seeker_id
- * @property ApplicationStatus $status
+ * @property ApplicationStatus|null $status
  * @property int|null $match_score
  * @property Carbon|null $applied_at
  * @property Carbon|null $status_changed_at

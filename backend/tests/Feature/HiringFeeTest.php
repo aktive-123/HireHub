@@ -3,15 +3,18 @@
 namespace Tests\Feature;
 
 use App\Enums\HiringFeeLevel;
+use App\Enums\PaymentGateway;
 use App\Enums\PaymentPurpose;
 use App\Enums\PaymentStatus;
 use App\Models\HiringFee;
 use App\Models\HiringFeeRate;
 use App\Models\Job;
+use App\Models\JobSeekerUpsell;
 use App\Models\Payment;
 use App\Models\PaymentEvent;
 use App\Models\User;
 use App\Notifications\PlatformNotification;
+use App\Support\FrontendUrl;
 use Database\Seeders\HiringFeeRateSeeder;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Notification;
@@ -47,14 +50,35 @@ class HiringFeeTest extends ApiTestCase
 
     // --- The gate -----------------------------------------------------------
 
-    public function test_an_employer_cannot_mark_a_candidate_hired_without_paying(): void
+    public function test_an_employer_cannot_mark_a_candidate_hired(): void
     {
         $employer = $this->employer();
         $job = $this->makeJob($employer->company, ['level' => 'mid']);
         $application = $this->makeApplication($job, $this->seeker(), ['status' => 'offer']);
 
-        $response = $this->asApiUser($employer)
+        // Paying the fee buys the *offer*, not the hire. Only the seeker can
+        // complete a hire, so this is refused whatever the payment state is.
+        $this->asApiUser($employer)
             ->patchJson("/api/v1/employer/applicants/{$application->id}/status", ['status' => 'hired'])
+            ->assertForbidden()
+            ->assertJsonPath('error_code', 'seeker_acceptance_required');
+
+        $this->assertSame('offer', $application->refresh()->status->value);
+        $this->assertSame(0, HiringFee::count());
+        $this->assertSame(0, Payment::where('purpose', PaymentPurpose::HiringFee)->count());
+    }
+
+    public function test_an_employer_cannot_confirm_an_offer_without_paying(): void
+    {
+        $employer = $this->employer();
+        $job = $this->makeJob($employer->company, ['level' => 'mid']);
+        $application = $this->makeApplication($job, $this->seeker(), ['status' => 'offer']);
+
+        // Confirming the offer is a server-side consequence of the fee settling,
+        // not a status the employer sets by hand, so the browser cannot skip the
+        // payment by setting the status directly.
+        $response = $this->asApiUser($employer)
+            ->patchJson("/api/v1/employer/applicants/{$application->id}/status", ['status' => 'offer_confirmed_pending_acceptance'])
             ->assertStatus(402)
             ->assertJsonPath('error_code', 'hiring_fee_required');
 
@@ -67,6 +91,27 @@ class HiringFeeTest extends ApiTestCase
         // a second round trip and the browser cannot invent its own figure.
         $this->assertSame(3_000_000, $response->json('data.hiring_fee.amount'));
         $this->assertSame('₦30,000.00', $response->json('data.hiring_fee.formatted_amount'));
+    }
+
+    public function test_confirming_an_offer_twice_is_reported_as_already_confirmed(): void
+    {
+        $employer = $this->employer();
+        $seeker = $this->seeker();
+        $application = $this->makeApplication($this->makeJob($employer->company, ['level' => 'mid']), $seeker, ['status' => 'offer']);
+
+        $checkout = $this->asApiUser($employer)
+            ->postJson("/api/v1/employer/applicants/{$application->id}/hiring-fee/checkout")
+            ->assertCreated();
+
+        $this->deliverPaystackSuccess($checkout->json('data.hiring_fee.reference'), $checkout->json('data.hiring_fee.amount'), 'NGN');
+
+        // Already past the payment. 409 rather than 402, because asking again
+        // here is a client that has stale state, not one that is trying to skip
+        // the fee.
+        $this->asApiUser($employer)
+            ->patchJson("/api/v1/employer/applicants/{$application->id}/status", ['status' => 'offer_confirmed_pending_acceptance'])
+            ->assertStatus(409)
+            ->assertJsonPath('error_code', 'hiring_fee_required');
     }
 
     public function test_every_other_status_still_works_without_payment(): void
@@ -111,7 +156,7 @@ class HiringFeeTest extends ApiTestCase
 
     // --- Paying -------------------------------------------------------------
 
-    public function test_a_confirmed_payment_hires_the_candidate_closes_the_job_and_notifies_the_seeker(): void
+    public function test_a_confirmed_payment_puts_the_offer_to_the_seeker_without_hiring_anybody(): void
     {
         Notification::fake();
 
@@ -135,8 +180,11 @@ class HiringFeeTest extends ApiTestCase
 
         $this->deliverPaystackSuccess($reference, $expected, 'NGN')->assertOk();
 
-        $this->assertSame('hired', $application->refresh()->status->value);
-        $this->assertSame('closed', $job->refresh()->status->value);
+        // Paid, so the offer is confirmed — but the vacancy stays open until the
+        // seeker says yes. Closing it here would mean one "no" leaves a filled
+        // vacancy nobody can apply to.
+        $this->assertSame('offer_confirmed_pending_acceptance', $application->refresh()->status->value);
+        $this->assertSame('open', $job->refresh()->status->value);
 
         $fee = HiringFee::where('application_id', $application->id)->firstOrFail();
         $this->assertSame(PaymentStatus::Succeeded, $fee->status);
@@ -149,10 +197,14 @@ class HiringFeeTest extends ApiTestCase
         $this->assertGreaterThan(0, Notification::sent($seeker, PlatformNotification::class)->count());
     }
 
-    public function test_the_hire_is_allowed_after_payment_and_is_idempotent(): void
+    public function test_the_seeker_accepting_completes_the_hire_closes_the_job_and_notifies_both_sides(): void
     {
+        Notification::fake();
+
         $employer = $this->employer();
-        $application = $this->makeApplication($this->makeJob($employer->company, ['level' => 'mid']), $this->seeker(), ['status' => 'offer']);
+        $seeker = $this->seeker(['name' => 'Ada Obi']);
+        $job = $this->makeJob($employer->company, ['level' => 'senior', 'status' => 'open']);
+        $application = $this->makeApplication($job, $seeker, ['status' => 'offer']);
 
         $checkout = $this->asApiUser($employer)
             ->postJson("/api/v1/employer/applicants/{$application->id}/hiring-fee/checkout")
@@ -160,12 +212,217 @@ class HiringFeeTest extends ApiTestCase
 
         $this->deliverPaystackSuccess($checkout->json('data.hiring_fee.reference'), $checkout->json('data.hiring_fee.amount'), 'NGN');
 
-        // Explicitly setting `hired` on an already-paid hire is now permitted,
-        // so an employer clicking the control again is not punished with a 402.
-        $this->asApiUser($employer)
-            ->patchJson("/api/v1/employer/applicants/{$application->id}/status", ['status' => 'hired'])
+        Notification::fake();
+
+        $this->asApiUser($seeker)
+            ->postJson("/api/v1/seeker/applications/{$application->id}/accept-offer")
             ->assertOk()
             ->assertJsonPath('data.status', 'hired');
+
+        $this->assertSame('hired', $application->refresh()->status->value);
+        $this->assertSame('closed', $job->refresh()->status->value);
+
+        // Both sides are told the outcome, because both were waiting on it.
+        $this->assertGreaterThan(0, Notification::sent($seeker, PlatformNotification::class)->count());
+        $this->assertGreaterThan(0, Notification::sent($employer, PlatformNotification::class)->count());
+    }
+
+    public function test_accepting_twice_is_idempotent_and_does_not_reclose_a_reposted_job(): void
+    {
+        Notification::fake();
+
+        $employer = $this->employer();
+        $seeker = $this->seeker();
+        $job = $this->makeJob($employer->company, ['level' => 'mid']);
+        $application = $this->makeApplication($job, $seeker, ['status' => 'offer']);
+
+        $checkout = $this->asApiUser($employer)
+            ->postJson("/api/v1/employer/applicants/{$application->id}/hiring-fee/checkout")
+            ->assertCreated();
+
+        $this->deliverPaystackSuccess($checkout->json('data.hiring_fee.reference'), $checkout->json('data.hiring_fee.amount'), 'NGN');
+
+        $this->asApiUser($seeker)
+            ->postJson("/api/v1/seeker/applications/{$application->id}/accept-offer")
+            ->assertOk();
+
+        $this->assertSame('closed', $job->refresh()->status->value);
+
+        // A retried request, or a double tap, reports the state the caller
+        // asked for rather than erroring.
+        $this->asApiUser($seeker)
+            ->postJson("/api/v1/seeker/applications/{$application->id}/accept-offer")
+            ->assertOk()
+            ->assertJsonPath('data.status', 'hired');
+
+        $this->assertSame('hired', $application->refresh()->status->value);
+    }
+
+    public function test_declining_a_confirmed_offer_leaves_the_role_open_and_keeps_the_fee(): void
+    {
+        Notification::fake();
+
+        $employer = $this->employer();
+        $seeker = $this->seeker();
+        $job = $this->makeJob($employer->company, ['level' => 'mid', 'status' => 'open']);
+        $application = $this->makeApplication($job, $seeker, ['status' => 'offer']);
+
+        $checkout = $this->asApiUser($employer)
+            ->postJson("/api/v1/employer/applicants/{$application->id}/hiring-fee/checkout")
+            ->assertCreated();
+
+        $this->deliverPaystackSuccess($checkout->json('data.hiring_fee.reference'), $checkout->json('data.hiring_fee.amount'), 'NGN');
+
+        $this->asApiUser($seeker)
+            ->postJson("/api/v1/seeker/applications/{$application->id}/decline-offer")
+            ->assertOk()
+            ->assertJsonPath('data.status', 'withdrawn');
+
+        // The employer paid and committed to the hire, so the fee stands; but a
+        // decline must leave the vacancy openable rather than closed forever.
+        $this->assertSame('withdrawn', $application->refresh()->status->value);
+        $this->assertSame('open', $job->refresh()->status->value);
+        $this->assertSame(
+            PaymentStatus::Succeeded,
+            HiringFee::where('application_id', $application->id)->firstOrFail()->status
+        );
+
+        // Declining twice is not a second decision.
+        $this->asApiUser($seeker)
+            ->postJson("/api/v1/seeker/applications/{$application->id}/decline-offer")
+            ->assertStatus(409)
+            ->assertJsonPath('error_code', 'no_offer');
+    }
+
+    public function test_a_seeker_cannot_accept_an_offer_that_was_never_confirmed(): void
+    {
+        $employer = $this->employer();
+        $seeker = $this->seeker();
+        $application = $this->makeApplication($this->makeJob($employer->company, ['level' => 'mid']), $seeker, ['status' => 'offer']);
+
+        // The employer can make an offer without paying. Accepting it would let
+        // a seeker walk into a hire the employer never committed money to, so
+        // the endpoint insists on the fee having settled first.
+        $this->asApiUser($seeker)
+            ->postJson("/api/v1/seeker/applications/{$application->id}/accept-offer")
+            ->assertStatus(409)
+            ->assertJsonPath('error_code', 'no_confirmed_offer');
+
+        $this->assertSame('offer', $application->refresh()->status->value);
+    }
+
+    public function test_upsells_are_offered_once_the_hire_is_accepted(): void
+    {
+        $employer = $this->employer();
+        $seeker = $this->seeker();
+        $application = $this->makeApplication($this->makeJob($employer->company, ['level' => 'mid']), $seeker, ['status' => 'offer']);
+
+        $checkout = $this->asApiUser($employer)
+            ->postJson("/api/v1/employer/applicants/{$application->id}/hiring-fee/checkout")
+            ->assertCreated();
+
+        $this->deliverPaystackSuccess($checkout->json('data.hiring_fee.reference'), $checkout->json('data.hiring_fee.amount'), 'NGN');
+
+        // Paid but not accepted: nothing to sell. Selling interview coaching to
+        // someone who has not decided to take the job is worse for them.
+        $this->asApiUser($seeker)
+            ->getJson("/api/v1/seeker/applications/{$application->id}/upsells")
+            ->assertOk()
+            ->assertJsonPath('data.items', []);
+
+        $this->asApiUser($seeker)
+            ->postJson("/api/v1/seeker/applications/{$application->id}/upsells/checkout", ['sku' => 'interview_prep'])
+            ->assertStatus(422)
+            ->assertJsonPath('error_code', 'upsell_unavailable');
+
+        $this->asApiUser($seeker)
+            ->postJson("/api/v1/seeker/applications/{$application->id}/accept-offer")
+            ->assertOk();
+
+        $this->asApiUser($seeker)
+            ->getJson("/api/v1/seeker/applications/{$application->id}/upsells")
+            ->assertOk()
+            ->assertJsonPath('data.items.0.sku', 'interview_prep')
+            ->assertJsonPath('data.items.0.purchased', false)
+            ->assertJsonPath('data.items.0.amount', 15_000_00);
+    }
+
+    public function test_one_seeker_cannot_buy_an_add_on_against_another_seekers_application(): void
+    {
+        $employer = $this->employer();
+        $owner = $this->seeker();
+        $application = $this->makeApplication($this->makeJob($employer->company, ['level' => 'mid']), $owner, ['status' => 'hired']);
+
+        // 404 rather than 403: a 403 would confirm the application exists.
+        $this->asApiUser($this->seeker())
+            ->getJson("/api/v1/seeker/applications/{$application->id}/upsells")
+            ->assertNotFound();
+
+        $this->asApiUser($this->seeker())
+            ->postJson("/api/v1/seeker/applications/{$application->id}/upsells/checkout", ['sku' => 'interview_prep'])
+            ->assertNotFound();
+
+        $this->assertSame(0, JobSeekerUpsell::count());
+    }
+
+    public function test_a_seeker_add_on_returns_to_the_application_not_the_employer_billing_page(): void
+    {
+        $employer = $this->employer();
+        $seeker = $this->seeker();
+        $application = $this->makeApplication($this->makeJob($employer->company, ['level' => 'mid']), $seeker, ['status' => 'hired']);
+
+        $checkout = $this->asApiUser($seeker)
+            ->postJson("/api/v1/seeker/applications/{$application->id}/upsells/checkout", ['sku' => 'interview_prep'])
+            ->assertCreated();
+
+        $reference = $checkout->json('data.upsell.reference');
+
+        // A seeker has no company, no invoice and no billing page. Sending their
+        // return here used to dump them on an employer screen they cannot use, so
+        // the add-on looked lost the moment checkout completed.
+        $this->get("/billing/return/{$reference}")
+            ->assertRedirect(FrontendUrl::to("/seeker/applications/{$application->id}?upsell_return=1"));
+    }
+
+    public function test_an_employer_payment_still_returns_to_employer_billing(): void
+    {
+        $employer = $this->employer();
+        $seeker = $this->seeker();
+        $application = $this->makeApplication($this->makeJob($employer->company, ['level' => 'mid']), $seeker, ['status' => 'offer']);
+
+        $checkout = $this->asApiUser($employer)
+            ->postJson("/api/v1/employer/applicants/{$application->id}/hiring-fee/checkout")
+            ->assertCreated();
+
+        $reference = $checkout->json('data.hiring_fee.reference');
+
+        // The billing page lists the fee, but the employer needs to land on the
+        // applicant to see the offer confirmed and to be told it is now waiting
+        // on the candidate. Billing alone left them with no idea it had worked.
+        $this->get("/billing/return/{$reference}")
+            ->assertRedirect(FrontendUrl::to("/employer/applicants/{$application->id}?fee_return=1"));
+    }
+
+    public function test_a_plan_subscription_returns_to_employer_billing(): void
+    {
+        $employer = $this->employer();
+
+        $payment = Payment::create([
+            'user_id' => $employer->id,
+            'company_id' => $employer->company->id,
+            'purpose' => PaymentPurpose::Subscription,
+            'gateway' => PaymentGateway::Paystack,
+            'status' => PaymentStatus::Pending,
+            'amount' => 25_000_00,
+            'currency' => 'NGN',
+            'billing_period' => 'monthly',
+            'reference' => 'sub_'.Str::random(10),
+        ]);
+
+        // A plan payment has no application, so it keeps the original billing
+        // destination. Only a hiring fee is rerouted to the applicant.
+        $this->get("/billing/return/{$payment->reference}")
+            ->assertRedirect(FrontendUrl::to("/employer/billing?reference={$payment->reference}"));
     }
 
     public function test_a_replayed_webhook_does_not_hire_anybody_twice(): void
@@ -443,10 +700,14 @@ class HiringFeeTest extends ApiTestCase
         $this->asApiUser($employer)
             ->getJson("/api/v1/employer/applicants/{$application->id}/hiring-fee/status")
             ->assertOk()
-            ->assertJsonPath('data.hired', true)
+            // `hired` is false because the seeker has not accepted yet, even
+            // though the money is collected. The employer must not read this as
+            // a failed reconciliation.
+            ->assertJsonPath('data.hired', false)
+            ->assertJsonPath('data.application_status', 'offer_confirmed_pending_acceptance')
             ->assertJsonPath('data.hiring_fee.status', 'succeeded');
 
-        $this->assertSame('hired', $application->refresh()->status->value);
+        $this->assertSame('offer_confirmed_pending_acceptance', $application->refresh()->status->value);
     }
 
     public function test_reconciliation_refuses_a_mismatched_amount(): void

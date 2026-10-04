@@ -3,6 +3,8 @@ import whiteLogo from '../assets/white logo.png'
 import AdminNotificationBell from '../components/admin/AdminNotificationBell'
 import ErrorBoundary from '../components/common/ErrorBoundary'
 import SessionGate from '../components/common/SessionGate'
+import UserAvatar from '../components/common/UserAvatar'
+import DashboardLogoutButton from '../components/common/DashboardLogoutButton'
 import { useAuth } from '../context/AuthContext'
 
 export default function AdminLayout() {
@@ -140,6 +142,7 @@ export default function AdminLayout() {
           <Link to="/" className="hh-dashboard-nav-link text-danger">
             <i className="bi bi-box-arrow-right" /> Exit to Website
           </Link>
+          <DashboardLogoutButton />
         </div>
       </aside>
 
@@ -149,17 +152,17 @@ export default function AdminLayout() {
           <div className="d-flex align-items-center gap-3">
             <AdminNotificationBell />
             <div className="d-flex align-items-center gap-2 hh-topbar-user">
-              <span className="hh-avatar hh-avatar-sm hh-avatar-soft" aria-hidden="true">
-                SB
-              </span>
+              <UserAvatar
+                name={user?.name}
+                avatarUrl={user?.avatar_url}
+                className="hh-avatar hh-avatar-sm hh-avatar-soft"
+              />
               <div className="hh-topbar-user-meta d-none d-xxl-block">
-                <div className="hh-topbar-user-name">Sarah Bello</div>
+                <div className="hh-topbar-user-name">{user?.name || 'Administrator'}</div>
                 <div className="hh-topbar-user-role">Super Admin</div>
               </div>
             </div>
-            <Link to="/login" className="hh-topbar-icon hh-tip-bottom hh-tip-end" data-tooltip="Log out" aria-label="Log out">
-              <i className="bi bi-box-arrow-right" aria-hidden="true" />
-            </Link>
+            <DashboardLogoutButton compact />
             <span className="hh-badge hh-badge-accent">Admin Mode</span>
           </div>
         </header>

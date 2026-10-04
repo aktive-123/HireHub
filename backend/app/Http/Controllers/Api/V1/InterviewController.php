@@ -34,7 +34,7 @@ class InterviewController extends ApiController
         $perPage = min(50, max(1, (int) $request->input('per_page', 20)));
 
         $paginator = Interview::where('company_id', $company->id)
-            ->with(['job:id,title,slug', 'seeker:id,name,email,phone'])
+            ->with(['job:id,title,slug', 'seeker:id,name,email,phone,avatar_url,profile_picture'])
             ->when($request->filled('status'), fn ($q) => $q->whereIn('status', explode(',', $request->input('status'))))
             ->when($request->filled('q'), fn ($q) => $q->whereHas('seeker', fn ($s) => $s->where('name', 'like', '%'.$request->input('q').'%'))
                 ->orWhereHas('job', fn ($j) => $j->where('title', 'like', '%'.$request->input('q').'%')))
@@ -53,7 +53,7 @@ class InterviewController extends ApiController
     {
         $this->authorize('view', $interview);
 
-        $interview->load(['job:id,title,slug', 'seeker:id,name,email,phone', 'application:id,job_id']);
+        $interview->load(['job:id,title,slug', 'seeker:id,name,email,phone,avatar_url,profile_picture', 'application:id,job_id']);
 
         return $this->success(new InterviewResource($interview), 'Interview retrieved.');
     }
@@ -105,7 +105,7 @@ class InterviewController extends ApiController
             return $interview;
         });
 
-        $interview->load(['job:id,title,slug', 'seeker:id,name,email,phone']);
+        $interview->load(['job:id,title,slug', 'seeker:id,name,email,phone,avatar_url,profile_picture']);
 
         Notifier::send($interview->seeker, [
             'category' => 'interviews',
@@ -135,7 +135,7 @@ class InterviewController extends ApiController
 
         $interview->update($validated);
 
-        return $this->success(new InterviewResource($interview->load(['job:id,title,slug', 'seeker:id,name,email,phone'])), 'Interview updated.');
+        return $this->success(new InterviewResource($interview->load(['job:id,title,slug', 'seeker:id,name,email,phone,avatar_url,profile_picture'])), 'Interview updated.');
     }
 
     public function updateStatus(Request $request, Interview $interview)
@@ -168,7 +168,7 @@ class InterviewController extends ApiController
             'subject' => 'Interview '.$validated['status'].' — '.($interview->job?->title ?? 'HireHub'),
         ]);
 
-        return $this->success(new InterviewResource($interview->load(['job:id,title,slug', 'seeker:id,name,email,phone'])), 'Interview status updated.');
+        return $this->success(new InterviewResource($interview->load(['job:id,title,slug', 'seeker:id,name,email,phone,avatar_url,profile_picture'])), 'Interview status updated.');
     }
 
     public function destroy(Request $request, Interview $interview)
@@ -185,7 +185,7 @@ class InterviewController extends ApiController
         $perPage = min(50, max(1, (int) $request->input('per_page', 20)));
 
         $paginator = Interview::where('seeker_id', $request->user()->id)
-            ->with(['job:id,title,slug', 'seeker:id,name,email,phone'])
+            ->with(['job:id,title,slug', 'seeker:id,name,email,phone,avatar_url,profile_picture'])
             ->when($request->filled('status'), fn ($q) => $q->whereIn('status', explode(',', $request->input('status'))))
             ->orderByDesc('scheduled_at')
             ->paginate($perPage);

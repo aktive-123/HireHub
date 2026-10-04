@@ -15,9 +15,12 @@ use App\Models\Profile;
 use App\Models\SavedJob;
 use App\Services\HiringFeeService;
 use App\Services\Upsell\UpsellCatalogue;
+use App\Support\Address;
 use App\Support\Notifier;
+use App\Support\Phone;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
@@ -36,12 +39,17 @@ class SeekerController extends ApiController
             'stats' => [
                 ['key' => 'applications', 'label' => 'Applications', 'value' => $applications->count(), 'tone' => 'primary'],
                 ['key' => 'active', 'label' => 'Active', 'value' => $active, 'tone' => 'info'],
+                // Counted separately from `active` because it is the only status
+                // that is waiting on the seeker rather than on the employer. An
+                // offer sitting unanswered is a role they are one tap from, and
+                // burying it in the applications total is how it goes stale.
+                ['key' => 'awaiting_response', 'label' => 'Needs your answer', 'value' => $statusCounts[ApplicationStatus::OfferConfirmedPendingAcceptance->value] ?? 0, 'tone' => 'warning'],
                 ['key' => 'interview', 'label' => 'Interviews', 'value' => $statusCounts['interview'] ?? 0, 'tone' => 'warning'],
                 ['key' => 'hired', 'label' => 'Hired', 'value' => $statusCounts['hired'] ?? 0, 'tone' => 'success'],
                 ['key' => 'saved_jobs', 'label' => 'Saved jobs', 'value' => SavedJob::where('seeker_id', $user->id)->count(), 'tone' => 'secondary'],
             ],
             'recent_applications' => ApplicationResource::collection(
-                $applications->sortByDesc('applied_at')->take(5)->load(['job.company:id,slug,name,logo_text,logo_bg,logo_color,is_verified', 'seeker:id,name,email,phone'])
+                $applications->sortByDesc('applied_at')->take(5)->load(['job.company:id,slug,name,logo_text,logo_bg,logo_color,is_verified', 'seeker:id,name,email,phone,avatar_url,profile_picture'])
             ),
         ], 'Dashboard retrieved.');
     }
@@ -49,23 +57,39 @@ class SeekerController extends ApiController
     public function applications(Request $request)
     {
         $perPage = min(50, max(1, (int) $request->input('per_page', 20)));
-        $paginator = Application::where('seeker_id', $request->user()->id)
+        $seekerId = $request->user()->id;
+
+        $paginator = Application::where('seeker_id', $seekerId)
             ->when($request->filled('status'), fn ($q) => $q->whereIn('status', explode(',', $request->input('status'))))
-            ->with(['job.company:id,slug,name,logo_text,logo_bg,logo_color,is_verified', 'seeker:id,name,email,phone'])
+            ->with(['job.company:id,slug,name,logo_text,logo_bg,logo_color,is_verified', 'seeker:id,name,email,phone,avatar_url,profile_picture'])
             ->orderByDesc('applied_at')
             ->paginate($perPage);
+
+        // Unfiltered tallies alongside the filtered page. Without these the
+        // status tabs can only count the rows that survived the active filter,
+        // so every other tab reads "0" the moment one is selected.
+        $statusCounts = Application::where('seeker_id', $seekerId)
+            ->selectRaw('status, COUNT(*) as aggregate')
+            ->groupBy('status')
+            ->pluck('aggregate', 'status');
 
         return $this->success(
             ApplicationResource::collection($paginator->items()),
             'Applications retrieved.',
             200,
-            ['current_page' => $paginator->currentPage(), 'per_page' => $paginator->perPage(), 'last_page' => $paginator->lastPage(), 'total' => $paginator->total()]
+            [
+                'current_page' => $paginator->currentPage(),
+                'per_page' => $paginator->perPage(),
+                'last_page' => $paginator->lastPage(),
+                'total' => $paginator->total(),
+                'status_counts' => $statusCounts,
+            ]
         );
     }
 
     public function application(Request $request, $id)
     {
-        $application = Application::with(['job.company:id,slug,name,logo_text,logo_bg,logo_color,is_verified', 'seeker:id,name,email,phone', 'seeker.profile.experiences', 'seeker.profile.educations'])
+        $application = Application::with(['job.company:id,slug,name,logo_text,logo_bg,logo_color,is_verified', 'seeker:id,name,email,phone,avatar_url,profile_picture', 'seeker.profile.experiences', 'seeker.profile.educations'])
             ->where('seeker_id', $request->user()->id)
             ->findOrFail($id);
 
@@ -85,7 +109,7 @@ class SeekerController extends ApiController
      */
     public function acceptOffer(Request $request, $id)
     {
-        $application = Application::with(['job.company:id,slug,name,logo_text,logo_bg,logo_color,is_verified', 'seeker:id,name,email,phone', 'seeker.profile'])
+        $application = Application::with(['job.company:id,slug,name,logo_text,logo_bg,logo_color,is_verified', 'seeker:id,name,email,phone,avatar_url,profile_picture', 'seeker.profile'])
             ->where('seeker_id', $request->user()->id)
             ->findOrFail($id);
 
@@ -112,9 +136,9 @@ class SeekerController extends ApiController
         $application = app(HiringFeeService::class)->completeHire($application);
 
         return $this->success(
-            new ApplicationResource($application->load(['job.company:id,slug,name,logo_text,logo_bg,logo_color,is_verified', 'seeker:id,name,email,phone'])),
+            new ApplicationResource($application->load(['job.company:id,slug,name,logo_text,logo_bg,logo_color,is_verified', 'seeker:id,name,email,phone,avatar_url,profile_picture'])),
             'Offer accepted. You are hired.',
-            null,
+            200,
             ['upsells' => UpsellCatalogue::availableFor($application)]
         );
     }
@@ -149,7 +173,11 @@ class SeekerController extends ApiController
 
         $job = $application->job;
 
-        $employer = $job?->company?->user;
+        // Re-read through the relation: the query above selects the company
+        // with an explicit column list that has no `user_id`, so reading
+        // `$job->company->user` off that partial model resolves to null and the
+        // employer would never learn their offer was declined.
+        $employer = $job?->company()->with('user')->first()?->user;
 
         if ($employer) {
             Notifier::send($employer, [
@@ -164,7 +192,7 @@ class SeekerController extends ApiController
         }
 
         return $this->success(
-            new ApplicationResource($application->fresh(['job.company:id,slug,name,logo_text,logo_bg,logo_color,is_verified', 'seeker:id,name,email,phone'])),
+            new ApplicationResource($application->fresh(['job.company:id,slug,name,logo_text,logo_bg,logo_color,is_verified', 'seeker:id,name,email,phone,avatar_url,profile_picture'])),
             'Offer declined.'
         );
     }
@@ -226,7 +254,7 @@ class SeekerController extends ApiController
         return $this->success(
             new ApplicationResource($application->load([
                 'job.company:id,slug,name,logo_text,logo_bg,logo_color,is_verified',
-                'seeker:id,name,email,phone',
+                'seeker:id,name,email,phone,avatar_url,profile_picture',
                 'seeker.profile.experiences',
                 'seeker.profile.educations',
             ])),
@@ -276,9 +304,13 @@ class SeekerController extends ApiController
         return $this->success([
             'name' => $user->name,
             'email' => $user->email,
+            'avatar_url' => $user->profilePictureUrl(),
             'phone' => $user->phone,
             'headline' => $user->headline ?? $profile?->headline,
             'location' => $profile?->location,
+            'address_line' => $profile?->address_line,
+            'city' => $profile?->city,
+            'state' => $profile?->state,
             'summary' => $profile?->summary,
             'years_experience' => $profile?->years_experience,
             'notice_period' => $profile?->notice_period,
@@ -292,9 +324,10 @@ class SeekerController extends ApiController
     {
         $validated = $request->validate([
             'name' => ['sometimes', 'string', 'max:255'],
-            'phone' => ['nullable', 'string', 'max:255'],
+            'phone' => Phone::rules(required: false),
             'headline' => ['nullable', 'string', 'max:255'],
             'location' => ['nullable', 'string', 'max:255'],
+            ...Address::rules(required: false, streetRequired: false),
             'summary' => ['nullable', 'string'],
             'years_experience' => ['nullable', 'string', 'max:255'],
             'notice_period' => ['nullable', 'string', 'max:255'],
@@ -311,11 +344,21 @@ class SeekerController extends ApiController
             $user->update(['name' => $validated['name']]);
         }
         if (isset($validated['phone'])) {
-            $user->update(['phone' => $validated['phone']]);
+            $user->update(['phone' => Phone::normalize($validated['phone'])]);
         }
 
         $profile = Profile::firstOrCreate(['user_id' => $user->id]);
-        $profile->fill(array_filter($validated, fn ($key) => in_array($key, ['headline', 'location', 'summary', 'years_experience', 'notice_period', 'skills', 'certifications', 'portfolio'], true), ARRAY_FILTER_USE_KEY));
+        $profile->fill(array_filter($validated, fn ($key) => in_array($key, ['headline', 'location', 'address_line', 'city', 'state', 'summary', 'years_experience', 'notice_period', 'skills', 'certifications', 'portfolio'], true), ARRAY_FILTER_USE_KEY));
+
+        // A client that only knows how to post the old free-text `location` — the
+        // pre-existing edit profile form, for instance — still gets it stored, so
+        // deriving `location` is confined to the requests that actually sent a
+        // city or a state. Deriving it unconditionally would blank the location
+        // of every account whose editor has not been updated yet.
+        if ($request->hasAny(['city', 'state'])) {
+            $profile->location = Address::location($profile->city, $profile->state) ?? $profile->location;
+        }
+
         $profile->save();
 
         return $this->success(null, 'Profile updated.');
@@ -418,8 +461,26 @@ class SeekerController extends ApiController
     {
         $profile = Profile::firstOrCreate(['user_id' => $request->user()->id]);
 
-        if (! $profile->cv_path || ! Storage::disk('local')->exists($profile->cv_path)) {
-            return $this->error('No CV uploaded.', 404);
+        // Split the two refusals for the same reason as the employer's copy: a
+        // seeker who never uploaded anything should see "No CV uploaded", while a
+        // path with no file behind it is a real inconsistency worth surfacing.
+        if (! $profile->cv_path) {
+            return $this->error('No CV uploaded.', 404, null, null, 'cv_not_uploaded');
+        }
+
+        if (! Storage::disk('local')->exists($profile->cv_path)) {
+            Log::warning('A CV path is recorded but the file is missing from the local disk.', [
+                'user_id' => $request->user()->id,
+                'cv_path' => $profile->cv_path,
+            ]);
+
+            return $this->error(
+                'Your CV is on record but the file could not be found. Please upload it again.',
+                404,
+                null,
+                null,
+                'cv_file_missing'
+            );
         }
 
         // The `local` disk lives outside the web root and this response is

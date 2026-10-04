@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Link, useParams } from 'react-router-dom'
+import { Link, useParams, useSearchParams } from 'react-router-dom'
 import { employerApi } from '../../services/api'
 import { useApiData } from '../../hooks/useApiData'
 import PageHeader from '../../components/ui/PageHeader'
@@ -13,27 +13,38 @@ import FormSelect from '../../components/ui/FormSelect'
 import Alert from '../../components/ui/Alert'
 import LoadingState from '../../components/ui/LoadingState'
 import HiringFeeModal from '../../components/employer/HiringFeeModal'
+import UserAvatar from '../../components/common/UserAvatar'
 
+// `hired` is deliberately not here. It is not a status an employer chooses: it
+// happens when the hiring fee settles *and* the candidate accepts. Offering it in
+// a dropdown only ever produced a 409 from the server, or worse, a promise the
+// employer could not keep.
 const MOVE_OPTIONS = [
   { value: 'new', label: 'Applied' },
   { value: 'shortlisted', label: 'Shortlisted' },
   { value: 'interview', label: 'Interview' },
-  { value: 'hired', label: 'Hired' },
   { value: 'rejected', label: 'Rejected' },
 ]
 
 export default function EmployerApplicantDetailsPage() {
   const { id } = useParams()
+  const [searchParams, setSearchParams] = useSearchParams()
   const { data: candidate, loading, error, reload } = useApiData(() => employerApi.applicant(id), [id])
   const [nextStatus, setNextStatus] = useState('new')
   const [updated, setUpdated] = useState(false)
   const [updateError, setUpdateError] = useState(false)
   const [downloading, setDownloading] = useState(false)
   const [cvError, setCvError] = useState(null)
+  const [refreshing, setRefreshing] = useState(false)
   // Populated only from a `hiring_fee_required` refusal, so the modal's figures
   // are the server's own quote rather than anything computed in the browser.
   const [feeQuote, setFeeQuote] = useState(null)
   const [feeOpen, setFeeOpen] = useState(false)
+
+  // Read on the first render, then scrubbed from the URL, for the same reason the
+  // seeker page does it that way: the modal needs the flag but the address bar
+  // should not keep re-opening the modal on refresh.
+  const [feeReturned] = useState(() => searchParams.get('fee_return') === '1')
 
   useEffect(() => {
     if (candidate?.status) setNextStatus(candidate.status)
@@ -45,11 +56,31 @@ export default function EmployerApplicantDetailsPage() {
   // branches below return before the page body renders, and a hook called
   // after them would run a different number of times depending on the request.
   useEffect(() => {
-    const params = new URLSearchParams(window.location.search)
-    if (params.get('fee_return') !== '1' || !candidate?.id) return
+    if (!searchParams.has('fee_return')) return
+    const next = new URLSearchParams(searchParams)
+    next.delete('fee_return')
+    setSearchParams(next, { replace: true })
+  }, [searchParams, setSearchParams])
+
+  useEffect(() => {
+    if (!feeReturned || !candidate?.id) return
     setFeeQuote(null)
     setFeeOpen(true)
-  }, [candidate?.id])
+  }, [feeReturned, candidate?.id])
+
+  const AWAITING_CANDIDATE = candidate?.status === 'offer_confirmed_pending_acceptance'
+
+  // The candidate's answer lands on a webhook, not on a push channel, so the only
+  // way to see it is to ask again. Cheap, and better than an employer refreshing
+  // by hand and still seeing a stale status.
+  const handleRefresh = async () => {
+    setRefreshing(true)
+    try {
+      await reload()
+    } finally {
+      setRefreshing(false)
+    }
+  }
 
   const downloadCv = async () => {
     setDownloading(true)
@@ -57,10 +88,15 @@ export default function EmployerApplicantDetailsPage() {
     try {
       await employerApi.downloadCv(id)
     } catch (err) {
-      // The endpoint answers 404 with a message when the candidate never
-      // uploaded a CV, so surface the server's wording rather than a generic
-      // "download failed".
-      setCvError(err?.message || 'This candidate has not uploaded a CV.')
+      // Branch on the code, not the prose: `cv_not_uploaded` is a normal state
+      // for a candidate who never attached one, and `cv_file_missing` is a real
+      // inconsistency on our side. Both arrive as 404, so only the code tells
+      // them apart, and the message is the server's own wording either way.
+      if (err?.code === 'cv_not_uploaded') {
+        setCvError('This candidate has not uploaded a CV.')
+        return
+      }
+      setCvError(err?.message || 'Could not download the CV. Please try again.')
     } finally {
       setDownloading(false)
     }
@@ -136,9 +172,11 @@ export default function EmployerApplicantDetailsPage() {
 
   // Runs once the gateway has confirmed the charge. The transition was already
   // made server-side, so this only has to redraw what the page is showing.
+  // Payment does not hire: the application is now awaiting the candidate's
+  // answer, which is what the employer should see.
   const handleFeePaid = async () => {
     setUpdated(true)
-    setNextStatus('hired')
+    setNextStatus('offer_confirmed_pending_acceptance')
     window.scrollTo({ top: 0, behavior: 'smooth' })
     await reload()
   }
@@ -162,7 +200,8 @@ export default function EmployerApplicantDetailsPage() {
           <Reveal>
             {updated && (
               <Alert variant="success" dismissible onDismiss={() => setUpdated(false)} className="hh-mb-4">
-                Candidate moved to <strong>{MOVE_OPTIONS.find((o) => o.value === nextStatus)?.label}</strong>.
+                Payment received. The offer is now with{' '}
+                <strong>{candidate.name}</strong> and the application is awaiting their answer.
               </Alert>
             )}
             {updateError && (
@@ -175,9 +214,11 @@ export default function EmployerApplicantDetailsPage() {
           <Reveal>
             <Card className="hh-card-body hh-mb-4">
               <div className="hh-profile-head">
-                <span className="hh-avatar hh-avatar-lg" aria-hidden="true">
-                  {candidate.name.charAt(0)}
-                </span>
+                <UserAvatar
+                  name={candidate.name}
+                  avatarUrl={candidate.avatar_url}
+                  className="hh-avatar hh-avatar-lg"
+                />
                 <div className="hh-profile-head-main">
                   <h2 className="hh-profile-name hh-mb-1">{candidate.name}</h2>
                   <div className="hh-profile-title-line">
@@ -190,14 +231,29 @@ export default function EmployerApplicantDetailsPage() {
                   <p className="hh-settings-desc hh-mt-2">Applied to <strong>{candidate.job}</strong> on {candidate.applied}. Notice: {candidate.notice}.</p>
                 </div>
                 <div className="hh-profile-head-actions">
-                  <Button
-                    variant="outline"
-                    icon="bi-download"
-                    onClick={downloadCv}
-                    disabled={downloading}
-                  >
-                    {downloading ? 'Preparing…' : 'Download CV'}
-                  </Button>
+                  {/* The API already sends `has_cv`. Rendering an enabled button
+                      without it guaranteed a 404 for every candidate who never
+                      uploaded one, and the employer had no way to tell that apart
+                      from a broken download. */}
+                  {candidate.has_cv ? (
+                    <Button
+                      variant="outline"
+                      icon="bi-download"
+                      onClick={downloadCv}
+                      disabled={downloading}
+                    >
+                      {downloading ? 'Preparing…' : 'Download CV'}
+                    </Button>
+                  ) : (
+                    <Button
+                      variant="outline"
+                      icon="bi-file-earmark-x"
+                      disabled
+                      data-tooltip="This candidate has not uploaded a CV"
+                    >
+                      No CV uploaded
+                    </Button>
+                  )}
                   {candidate.email ? (
                     <Button
                       variant="primary"
@@ -334,23 +390,45 @@ export default function EmployerApplicantDetailsPage() {
 
               <Reveal delay={40}>
                 <Card className="hh-card-body">
-                  <div className="hh-card-title-md hh-mb-3">Recruitment action</div>
-                  <form onSubmit={handleMove}>
-                    <FormSelect
-                      label="Move candidate to"
-                      options={MOVE_OPTIONS}
-                      value={nextStatus}
-                      onChange={(e) => setNextStatus(e.target.value)}
-                    />
-                    <Button type="submit" variant="primary" icon="bi-arrow-right" block>
-                      Move candidate
-                    </Button>
-                  </form>
+                  <div className="hh-card-title-md hh-mb-3">
+                    {AWAITING_CANDIDATE ? 'Offer awaiting an answer' : 'Recruitment action'}
+                  </div>
 
-                  {candidate.status !== 'hired' && (
+                  {AWAITING_CANDIDATE ? (
                     <>
+                      <p className="small text-secondary mb-3">
+                        You have paid the placement fee, so this offer is confirmed. {candidate.name} has been
+                        notified and decides whether to take the role — moving them to another status now would
+                        not refund the fee, so the options are hidden until they reply.
+                      </p>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        icon="bi-arrow-repeat"
+                        block
+                        onClick={handleRefresh}
+                        disabled={refreshing}
+                      >
+                        {refreshing ? 'Checking…' : 'Check for an answer'}
+                      </Button>
+                    </>
+                  ) : (
+                    <>
+                      <form onSubmit={handleMove}>
+                        <FormSelect
+                          label="Move candidate to"
+                          options={MOVE_OPTIONS}
+                          value={nextStatus}
+                          onChange={(e) => setNextStatus(e.target.value)}
+                        />
+                        <Button type="submit" variant="primary" icon="bi-arrow-right" block>
+                          Move candidate
+                        </Button>
+                      </form>
+
                       <p className="small text-secondary hh-mt-3 hh-mb-2">
-                        Marking a candidate as hired requires the one-off placement fee to be paid first.
+                        Making an offer requires the one-off placement fee to be paid first. Once paid, the
+                        candidate accepts or declines — you cannot mark them hired yourself.
                       </p>
                       <Button
                         type="button"
@@ -377,6 +455,7 @@ export default function EmployerApplicantDetailsPage() {
         isOpen={feeOpen}
         applicationId={candidate.id}
         quote={feeQuote}
+        justReturned={feeReturned}
         onClose={() => setFeeOpen(false)}
         onPaid={handleFeePaid}
       />

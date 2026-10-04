@@ -1,9 +1,10 @@
 import { useMemo, useState } from 'react'
+import { useSearchParams } from 'react-router-dom'
 import { seekerApi } from '../../services/api'
 import { useApiData } from '../../hooks/useApiData'
 import PageHeader from '../../components/ui/PageHeader'
 import Reveal from '../../components/ui/Reveal'
-import Badge from '../../components/ui/Badge'
+import StatusBadge from '../../components/ui/StatusBadge'
 import EmptyState from '../../components/ui/EmptyState'
 import LoadingState from '../../components/ui/LoadingState'
 import Pagination from '../../components/ui/Pagination'
@@ -12,28 +13,21 @@ import Button from '../../components/ui/Button'
 
 const PAGE_SIZE = 6
 
+// `offer_confirmed_pending_acceptance` gets its own tab because it is the only
+// status waiting on the seeker rather than on the employer. Burying it inside
+// "All" behind an unlabelled badge is how an offer sits unread until it looks
+// stale. "Closed" groups rejected and withdrawn, because to the seeker a
+// declined offer and a rejected application are the same outcome.
 const FILTERS = [
-  { value: 'all', label: 'All' },
-  { value: 'new', label: 'New' },
-  { value: 'reviewing', label: 'Under Review' },
-  { value: 'shortlisted', label: 'Shortlisted' },
-  { value: 'interview', label: 'Interview' },
-  { value: 'offer', label: 'Offer' },
-  { value: 'hired', label: 'Hired' },
-  { value: 'rejected', label: 'Rejected' },
+  { value: 'all', label: 'All', statuses: null },
+  { value: 'new', label: 'New', statuses: ['new'] },
+  { value: 'reviewing', label: 'Under Review', statuses: ['reviewing'] },
+  { value: 'shortlisted', label: 'Shortlisted', statuses: ['shortlisted'] },
+  { value: 'interview', label: 'Interview', statuses: ['interview'] },
+  { value: 'offer_confirmed_pending_acceptance', label: 'Needs your answer', statuses: ['offer_confirmed_pending_acceptance'] },
+  { value: 'hired', label: 'Hired', statuses: ['hired'] },
+  { value: 'closed', label: 'Closed', statuses: ['rejected', 'withdrawn'] },
 ]
-
-const STATUS_VARIANT = {
-  new: 'secondary',
-  reviewing: 'info',
-  'under-review': 'info',
-  shortlisted: 'primary',
-  interview: 'warning',
-  offer: 'accent',
-  hired: 'success',
-  rejected: 'danger',
-  withdrawn: 'secondary',
-}
 
 function normalizeApp(app) {
   return {
@@ -52,20 +46,50 @@ function normalizeApp(app) {
 }
 
 export default function SeekerApplicationsPage() {
-  const [filter, setFilter] = useState('all')
+  const [searchParams, setSearchParams] = useSearchParams()
+
+  // The tab lives in the URL so the dashboard's "Needs your answer" card can
+  // deep-link into the offer queue, and so a refresh keeps the seeker on the
+  // filter they were reading.
+  const requested = searchParams.get('status')
+  const activeValue = FILTERS.some((f) => f.value === requested && f.value !== 'all')
+    ? requested
+    : null
+  const activeTab = activeValue ?? 'all'
+  const filterLabel = FILTERS.find((f) => f.value === activeTab)?.label ?? 'All'
+  const statusParam = activeValue
+    ? FILTERS.find((f) => f.value === activeValue).statuses.join(',')
+    : null
+
   const [page, setPage] = useState(1)
 
   const { data, loading, error, reload } = useApiData(
-    () => seekerApi.applications(filter === 'all' ? {} : { status: filter }),
-    [filter]
+    () => seekerApi.applications(statusParam ? { status: statusParam } : {}),
+    [statusParam]
   )
 
-  const applications = useMemo(() => (data ?? []).map(normalizeApp), [data])
+  const applications = useMemo(() => (data?.items ?? []).map(normalizeApp), [data])
 
-  const filtered = useMemo(
-    () => (filter === 'all' ? applications : applications.filter((a) => a.status === filter)),
-    [applications, filter]
-  )
+  // Server already applied the status filter; this only guards the grouped
+  // "Closed" tab so a mixed response still renders a single consistent list.
+  const filtered = useMemo(() => {
+    if (!activeValue) return applications
+    const group = FILTERS.find((f) => f.value === activeValue)?.statuses ?? []
+    return applications.filter((a) => group.includes(a.status))
+  }, [applications, activeValue])
+
+  const counts = useMemo(() => {
+    const source = data?.statusCounts
+    if (!source || Object.keys(source).length === 0) {
+      // Older backend without status_counts: fall back to counting the rows we
+      // happen to have, which is right on the "All" tab and undercounts others.
+      return applications.reduce((acc, a) => {
+        acc[a.status] = (acc[a.status] ?? 0) + 1
+        return acc
+      }, {})
+    }
+    return source
+  }, [data?.statusCounts, applications])
 
   const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE))
   const visible = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE)
@@ -114,19 +138,27 @@ export default function SeekerApplicationsPage() {
           />
 
           <div className="hh-tabs hh-mb-4" role="tablist" aria-label="Filter by application status">
-            {FILTERS.map(({ value, label }) => (
+            {FILTERS.map(({ value, label, statuses: group }) => (
               <button
                 key={value}
                 type="button"
                 role="tab"
-                aria-selected={filter === value}
-                className={`hh-tab ${filter === value ? 'is-active' : ''}`}
-                onClick={() => { setFilter(value); setPage(1) }}
+                aria-selected={activeTab === value}
+                className={`hh-tab ${activeTab === value ? 'is-active' : ''}`}
+                onClick={() => {
+                  setPage(1)
+                  if (value === 'all') {
+                    searchParams.delete('status')
+                  } else {
+                    searchParams.set('status', value)
+                  }
+                  setSearchParams(searchParams, { replace: true })
+                }}
               >
                 {label}
-                {value !== 'all' && (
+                {group && (
                   <span className="hh-btn-badge ms-1">
-                    {applications.filter((a) => a.status === value).length}
+                    {group.reduce((sum, s) => sum + (Number(counts[s]) || 0), 0)}
                   </span>
                 )}
               </button>
@@ -156,11 +188,21 @@ export default function SeekerApplicationsPage() {
                       </div>
                     </div>
                     <div className="hh-app-action">
-                      <Badge variant={STATUS_VARIANT[status] || 'secondary'}>
-                        {status.replace('-', ' ')}
-                      </Badge>
+                      {/* The canonical badge, not a local colour map: the raw
+                          `status.replace('-', ' ')` this used to render produced
+                          "offer confirmed pending acceptance" in a colour this
+                          page invented, and nothing at all for a withdrawn
+                          application. */}
+                      <StatusBadge
+                        status={status}
+                        label={
+                          status === 'offer_confirmed_pending_acceptance'
+                            ? 'Awaiting your acceptance'
+                            : undefined
+                        }
+                      />
                       <Button to={`/seeker/applications/${id}`} variant="outline" size="sm">
-                        View application
+                        {status === 'offer_confirmed_pending_acceptance' ? 'Review offer' : 'View application'}
                       </Button>
                     </div>
                   </div>
@@ -169,10 +211,20 @@ export default function SeekerApplicationsPage() {
             ) : (
               <EmptyState
                 icon="inbox"
-                title="No applications here"
-                text="Try a different status filter, or browse jobs to apply to new roles."
+                title={activeTab === 'all' ? 'No applications here' : `Nothing in ${filterLabel.toLowerCase()}`}
+                text={
+                  activeTab === 'all'
+                    ? "Try a different status filter, or browse jobs to apply to new roles."
+                    : 'Try another status filter, or browse jobs to apply to new roles.'
+                }
                 action={
-                  <Button to="/seeker/browse-jobs" variant="primary" pill>Browse jobs</Button>
+                  activeTab === 'all' ? (
+                    <Button to="/seeker/browse-jobs" variant="primary" pill>Browse jobs</Button>
+                  ) : (
+                    <Button onClick={() => { searchParams.delete('status'); setSearchParams(searchParams, { replace: true }) }} variant="outline" pill>
+                      Show all applications
+                    </Button>
+                  )
                 }
               />
             )}

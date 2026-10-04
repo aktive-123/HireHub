@@ -17,6 +17,7 @@ class InterviewResource extends JsonResource
                 'name' => $this->seeker?->name,
                 'email' => $this->seeker?->email,
                 'phone' => $this->seeker?->phone,
+                'avatar_url' => $this->seeker?->profilePictureUrl(),
             ],
             'role' => $this->job?->title,
             'job' => [

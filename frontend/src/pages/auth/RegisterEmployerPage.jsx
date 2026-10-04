@@ -7,7 +7,14 @@ import Alert from '../../components/ui/Alert'
 import PasswordStrength from '../../components/ui/PasswordStrength'
 import ValidationChecklist from '../../components/ui/ValidationChecklist'
 import { GoogleIcon, LinkedInIcon } from '../../components/common/SocialIcons'
-import { authApi, apiErrorMessage } from '../../services/api'
+import { authApi, apiErrorMessage, apiFieldErrors } from '../../services/api'
+import {
+  DIAL_CODE,
+  NIGERIAN_STATES,
+  PHONE_PLACEHOLDER,
+  hasValue,
+  phoneError,
+} from '../../constants/nigeria'
 
 const ROLE_LINKS = [
   { key: 'seeker', to: '/register/job-seeker', label: 'Job Seeker' },
@@ -25,16 +32,38 @@ export default function RegisterEmployerPage() {
   const [showPassword, setShowPassword] = useState(false)
   const [agreed, setAgreed] = useState(false)
   const [error, setError] = useState('')
+  const [errors, setErrors] = useState({})
   const [password, setPassword] = useState('')
   const [email, setEmail] = useState('')
   const [fullName, setFullName] = useState('')
   const [companyName, setCompanyName] = useState('')
   const [companySize, setCompanySize] = useState('')
+  const [phone, setPhone] = useState('')
+  const [street, setStreet] = useState('')
+  const [city, setCity] = useState('')
+  const [state, setState] = useState('')
   const [loading, setLoading] = useState(false)
 
   const CURRENT_ROLE = 'employer'
   const emailValid = EMAIL_RE.test(email.trim())
+  const phoneValid = phoneError(phone) === null
   const termsError = Boolean(error) && !agreed
+
+  const validate = () => {
+    const next = {}
+    const phoneProblem = phoneError(phone)
+
+    if (phoneProblem) next.phone = phoneProblem
+    if (!hasValue(street)) {
+      next.address_line = 'Please enter your company street address.'
+    } else if (street.trim().length < 5) {
+      next.address_line = 'Please enter a longer company street address.'
+    }
+    if (!hasValue(city)) next.city = 'Please enter your company city.'
+    if (!hasValue(state)) next.state = 'Please select your company state.'
+
+    return next
+  }
 
   const handleSubmit = async (e) => {
     e.preventDefault()
@@ -42,6 +71,14 @@ export default function RegisterEmployerPage() {
 
     if (!agreed) {
       setError('Please accept the Terms of Service and Privacy Policy to continue.')
+      return
+    }
+
+    const nextErrors = validate()
+    setErrors(nextErrors)
+
+    if (Object.values(nextErrors).some(Boolean)) {
+      setError('Please correct the highlighted fields and try again.')
       return
     }
 
@@ -53,6 +90,10 @@ export default function RegisterEmployerPage() {
         company_name: companyName,
         work_email: email,
         company_size: companySize || null,
+        phone,
+        address_line: street,
+        city,
+        state,
         password,
         password_confirmation: password,
       })
@@ -67,10 +108,15 @@ export default function RegisterEmployerPage() {
       )
     } catch (err) {
       setError(apiErrorMessage(err))
+      setErrors(apiFieldErrors(err))
     } finally {
       setLoading(false)
     }
   }
+
+  /** Clears a field's error as soon as the user starts fixing it. */
+  const clearError = (field) => () =>
+    setErrors((prev) => (prev[field] ? { ...prev, [field]: undefined } : prev))
 
   return (
     <div className="hh-auth-card">
@@ -146,6 +192,75 @@ export default function RegisterEmployerPage() {
                 items={[{ ok: emailValid, label: 'Enter a valid email address' }]}
               />
             )}
+          </div>
+
+          <div className="hh-auth-field-group">
+            <FormInput
+              label="Company phone number"
+              id="em-phone"
+              type="tel"
+              icon="telephone"
+              placeholder={PHONE_PLACEHOLDER}
+              autoComplete="tel-national"
+              helperText={`Nigerian number, starting with ${DIAL_CODE}`}
+              error={errors.phone}
+              required
+              value={phone}
+              onChange={(e) => {
+                setPhone(e.target.value)
+                clearError('phone')()
+              }}
+            />
+            {phone && (
+              <ValidationChecklist
+                ariaLabel="Phone number requirements"
+                items={[{ ok: phoneValid, label: 'Enter a valid Nigerian phone number' }]}
+              />
+            )}
+          </div>
+
+          <FormInput
+            label="Company street address"
+            id="em-street"
+            icon="geo-alt"
+            placeholder="12 Admiralty Way, Lekki Phase 1"
+            autoComplete="street-address"
+            error={errors.address_line}
+            required
+            value={street}
+            onChange={(e) => {
+              setStreet(e.target.value)
+              clearError('address_line')()
+            }}
+          />
+
+          <div className="hh-auth-names">
+            <FormInput
+              label="Company city"
+              id="em-city"
+              placeholder="Lagos"
+              autoComplete="address-level2"
+              error={errors.city}
+              required
+              value={city}
+              onChange={(e) => {
+                setCity(e.target.value)
+                clearError('city')()
+              }}
+            />
+            <FormSelect
+              label="Company state"
+              id="em-state"
+              options={NIGERIAN_STATES}
+              placeholder="Select state"
+              error={errors.state}
+              required
+              value={state}
+              onChange={(e) => {
+                setState(e.target.value)
+                clearError('state')()
+              }}
+            />
           </div>
 
           <div className="hh-auth-names">

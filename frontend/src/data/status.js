@@ -34,6 +34,12 @@ closed: 'secondary',
   pending: 'warning',
   interview: 'warning',
   review: 'warning',
+  reviewing: 'warning',
+  // The employer has paid and the offer is with the candidate. Orange, not
+  // green: nothing is complete until the seeker accepts, and colouring it as
+  // "hired" would read as a filled vacancy that can still be declined.
+  offer_confirmed_pending_acceptance: 'warning',
+  withdrawn: 'secondary',
   flagged: 'danger',
   hired: 'success',
   confirmed: 'success',
@@ -79,6 +85,12 @@ export const STATUS_LABEL = {
   pending: 'Pending',
   interview: 'Interview',
   review: 'Under review',
+  reviewing: 'Under review',
+  // Neutral wording, because this map is shared: the employer sees the same badge
+  // the seeker does. "Awaiting your acceptance" is only correct on the seeker's
+  // own screens, so those pages pass an explicit label instead.
+  offer_confirmed_pending_acceptance: 'Awaiting response',
+  withdrawn: 'Withdrawn',
   flagged: 'Flagged',
   hired: 'Hired',
   confirmed: 'Confirmed',

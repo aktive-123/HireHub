@@ -789,6 +789,40 @@
   letter-spacing: 0.02em;
 }
 
+.hh-avatar-editable {
+  isolation: isolate;
+}
+
+.hh-avatar-editable:hover .hh-avatar-camera-overlay,
+.hh-avatar-editable:focus-visible .hh-avatar-camera-overlay {
+  opacity: 1;
+}
+
+.hh-avatar-editable:focus-visible {
+  outline: 3px solid var(--hh-primary);
+  outline-offset: 3px;
+}
+
+.hh-avatar-camera-overlay {
+  position: absolute;
+  z-index: 2;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  border-radius: inherit;
+  background: rgba(15, 23, 42, 0.58);
+  color: #fff;
+  font-size: 1.25em;
+  line-height: 1;
+  opacity: 0;
+  transition: opacity 160ms ease;
+  pointer-events: none;
+}
+
+.hh-avatar-editable:focus-visible .hh-avatar-camera-overlay {
+  opacity: 1;
+}
+
 .hh-avatar-sm {
   font-size: var(--hh-type-card-title-size);
   font-weight: var(--hh-type-card-title-weight);

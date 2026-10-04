@@ -10,6 +10,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Support\Facades\Storage;
 use Laravel\Sanctum\HasApiTokens;
 
 class User extends Authenticatable
@@ -78,6 +79,13 @@ class User extends Authenticatable
     public function revokeTokens(): void
     {
         $this->tokens()->delete();
+    }
+
+    public function profilePictureUrl(): ?string
+    {
+        return $this->profile_picture
+            ? Storage::disk('public')->url($this->profile_picture)
+            : $this->avatar_url;
     }
 
     public function hasVerifiedEmail(): bool

@@ -10,8 +10,10 @@ use App\Models\ActivityLog;
 use App\Models\Company;
 use App\Models\Profile;
 use App\Models\User;
+use App\Support\Address;
 use App\Support\LoginThrottle;
 use App\Support\Otp;
+use App\Support\Phone;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
@@ -56,6 +58,8 @@ class AuthController extends ApiController
                 'company_name' => ['required', 'string', 'max:255'],
                 'work_email' => ['required', 'string', 'email', 'max:255', Rule::unique('users', 'email')],
                 'company_size' => ['nullable', 'string', 'max:255'],
+                'phone' => Phone::rules(),
+                ...Address::rules(streetRequired: true),
                 'password' => $passwordRules,
             ]);
 
@@ -63,6 +67,10 @@ class AuthController extends ApiController
                 'name' => $validated['full_name'],
                 'email' => mb_strtolower($validated['work_email']),
                 'password' => $validated['password'],
+                // The company's contact number, stored on the account because the
+                // person registering is the company contact. Normalised here so
+                // the canonical form does not depend on how it was typed.
+                'phone' => Phone::normalize($validated['phone']),
             ]);
 
             // Privilege columns are assigned explicitly, never filled from
@@ -82,6 +90,12 @@ class AuthController extends ApiController
                 'slug' => Str::slug($validated['company_name']).'-'.strtolower(Str::random(6)),
                 'name' => $validated['company_name'],
                 'size' => $validated['company_size'] ?? null,
+                'address_line' => $validated['address_line'] ?? null,
+                'city' => $validated['city'],
+                'state' => $validated['state'],
+                // Derived rather than typed, so every site that reads a company
+                // location shows the same spelling of the same place.
+                'location' => Address::location($validated['city'], $validated['state']),
             ]);
 
             // New companies start unverified and pending review. A signup can
@@ -92,6 +106,11 @@ class AuthController extends ApiController
                 'first_name' => ['required', 'string', 'max:255'],
                 'last_name' => ['required', 'string', 'max:255'],
                 'email' => ['required', 'string', 'email', 'max:255', Rule::unique('users', 'email')],
+                'phone' => Phone::rules(),
+                // City and state are required because job matching filters on
+                // them; the street line is not, because a seeker's address is
+                // only ever shown to an employer they apply to.
+                ...Address::rules(streetRequired: false),
                 'password' => $passwordRules,
             ]);
 
@@ -99,6 +118,7 @@ class AuthController extends ApiController
                 'name' => trim($validated['first_name'].' '.$validated['last_name']),
                 'email' => mb_strtolower($validated['email']),
                 'password' => $validated['password'],
+                'phone' => Phone::normalize($validated['phone']),
             ]);
 
             $user->forceFill([
@@ -107,7 +127,13 @@ class AuthController extends ApiController
                 'email_verified_at' => null,
             ])->save();
 
-            Profile::create(['user_id' => $user->id]);
+            Profile::create([
+                'user_id' => $user->id,
+                'address_line' => $validated['address_line'] ?? null,
+                'city' => $validated['city'],
+                'state' => $validated['state'],
+                'location' => Address::location($validated['city'], $validated['state']),
+            ]);
         }
 
         ActivityLog::record($user, 'auth.registered', $user);

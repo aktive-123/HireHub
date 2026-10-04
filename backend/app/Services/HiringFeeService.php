@@ -548,7 +548,15 @@ class HiringFeeService
 
         // The employer paid for this hire at the offer stage, so the acceptance
         // that completes it is the one thing they are waiting on.
-        $employer = $job?->company?->user;
+        //
+        // Re-read through the relation rather than trusting `$job->company`:
+        // callers eager-load the company with a column list for the response
+        // payload (`job.company:id,slug,name,...`), and that list has no
+        // `user_id`. Reading `$job->company->user` off a partially selected
+        // model resolves the foreign key as null, so the employer is silently
+        // never told their candidate accepted. Querying the relation sidesteps
+        // whatever the caller happened to select.
+        $employer = $job?->company()->with('user')->first()?->user;
 
         if ($employer) {
             Notifier::send($employer, [

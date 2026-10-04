@@ -6,8 +6,11 @@ import Reveal from '../../components/ui/Reveal'
 import Card from '../../components/ui/Card'
 import Button from '../../components/ui/Button'
 import FormInput from '../../components/ui/FormInput'
+import FormSelect from '../../components/ui/FormSelect'
 import LoadingState from '../../components/ui/LoadingState'
 import Alert from '../../components/ui/Alert'
+import ProfilePhotoCard from '../../components/common/ProfilePhotoCard'
+import { DIAL_CODE, NIGERIAN_STATES, PHONE_PLACEHOLDER } from '../../constants/nigeria'
 
 // The form is seeded from the API rather than hard-coded sample values, so a
 // candidate always edits their own record. These are the only fields the
@@ -18,6 +21,9 @@ const BLANK = {
   headline: '',
   location: '',
   phone: '',
+  address_line: '',
+  city: '',
+  state: '',
   years_experience: '',
   notice_period: '',
   summary: '',
@@ -44,6 +50,9 @@ export default function SeekerEditProfilePage() {
       headline: data?.headline ?? '',
       location: data?.location ?? '',
       phone: data?.phone ?? '',
+      address_line: data?.address_line ?? '',
+      city: data?.city ?? '',
+      state: data?.state ?? '',
       years_experience: data?.years_experience ?? '',
       notice_period: data?.notice_period ?? '',
       summary: data?.summary ?? '',
@@ -76,6 +85,9 @@ export default function SeekerEditProfilePage() {
       headline: values.headline,
       location: values.location,
       phone: values.phone,
+      address_line: values.address_line,
+      city: values.city,
+      state: values.state,
       years_experience: values.years_experience,
       notice_period: values.notice_period,
       summary: values.summary,
@@ -153,6 +165,9 @@ export default function SeekerEditProfilePage() {
           <Reveal>
             <Card className="hh-card-body hh-mb-4">
               <div className="hh-card-title-md hh-mb-4">Personal information</div>
+              <div className="hh-mb-4">
+                <ProfilePhotoCard embedded />
+              </div>
               <div className="row g-3">
                 <div className="col-12 col-md-6">
                   <FormInput
@@ -198,8 +213,42 @@ export default function SeekerEditProfilePage() {
                     label="Phone number"
                     type="tel"
                     name="phone"
+                    placeholder={PHONE_PLACEHOLDER}
+                    helperText={`Nigerian number, starting with ${DIAL_CODE}`}
                     value={values.phone}
                     onChange={setField('phone')}
+                    disabled={saving}
+                  />
+                </div>
+                <div className="col-12">
+                  <FormInput
+                    label="Street address"
+                    name="address_line"
+                    placeholder="12 Admiralty Way, Lekki Phase 1"
+                    helperText="Only shared with employers you apply to."
+                    value={values.address_line}
+                    onChange={setField('address_line')}
+                    disabled={saving}
+                  />
+                </div>
+                <div className="col-12 col-md-6">
+                  <FormInput
+                    label="City"
+                    name="city"
+                    placeholder="Lagos"
+                    value={values.city}
+                    onChange={setField('city')}
+                    disabled={saving}
+                  />
+                </div>
+                <div className="col-12 col-md-6">
+                  <FormSelect
+                    label="State"
+                    name="state"
+                    options={NIGERIAN_STATES}
+                    placeholder="Select state"
+                    value={values.state}
+                    onChange={setField('state')}
                     disabled={saving}
                   />
                 </div>

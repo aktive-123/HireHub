@@ -22,7 +22,7 @@ class ApplicationController extends ApiController
         $query = $this->scopeToCaller(Application::query(), $request)
             ->with([
                 'job.company:id,slug,name,logo_text,logo_bg,logo_color,is_verified',
-                'seeker:id,name,email,phone',
+                'seeker:id,name,email,phone,avatar_url,profile_picture',
                 'seeker.profile.experiences',
                 'seeker.profile.educations',
             ]);
@@ -69,7 +69,7 @@ class ApplicationController extends ApiController
 
         $application->load([
             'job.company:id,slug,name,logo_text,logo_bg,logo_color,is_verified',
-            'seeker:id,name,email,phone',
+            'seeker:id,name,email,phone,avatar_url,profile_picture',
             'seeker.profile.experiences',
             'seeker.profile.educations',
         ]);

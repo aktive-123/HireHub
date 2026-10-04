@@ -12,6 +12,12 @@ import LoadingState from '../../components/ui/LoadingState'
 export default function EmployerCompanyProfilePage() {
   const { data: company, loading, error, reload } = useApiData(() => employerApi.company(), [])
 
+  // The full address as one line, kept out of `location` so the city-and-state
+  // string every filter reads stays a single value.
+  const addressLine = [company?.address_line, company?.city, company?.state]
+    .filter(Boolean)
+    .join(', ')
+
   if (loading) {
     return (
       <section className="hh-section-space bg-white">
@@ -95,6 +101,9 @@ export default function EmployerCompanyProfilePage() {
                   <ul className="hh-meta-list hh-mt-2">
                     <li><i className="bi bi-diagram-3" aria-hidden="true" /><span>{company.industry}</span></li>
                     <li><i className="bi bi-geo-alt" aria-hidden="true" /><span>{company.location}</span></li>
+                    {addressLine && (
+                      <li><i className="bi bi-building" aria-hidden="true" /><span>{addressLine}</span></li>
+                    )}
                     <li><i className="bi bi-people" aria-hidden="true" /><span>{company.size}</span></li>
                     <li><i className="bi bi-calendar3" aria-hidden="true" /><span>Founded {company.founded}</span></li>
                     <li><i className="bi bi-globe2" aria-hidden="true" /><a href={company.website} target="_blank" rel="noreferrer">{company.website}</a></li>

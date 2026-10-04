@@ -8,7 +8,8 @@ import Button from '../../components/ui/Button'
 import Badge from '../../components/ui/Badge'
 import EmptyState from '../../components/ui/EmptyState'
 import LoadingState from '../../components/ui/LoadingState'
-import { initials } from '../../utils/format'
+import { formatPhone } from '../../constants/nigeria'
+import UserAvatar from '../../components/common/UserAvatar'
 
 const SOCIALS = [
   { platform: 'LinkedIn', value: 'linkedin.com/in/sarahobi', icon: 'linkedin', base: 'https://www.linkedin.com/in/' },
@@ -47,6 +48,16 @@ export default function SeekerProfilePage() {
   const headline = profileData.headline || 'Frontend Developer'
   const location = profileData.location || 'Lagos, Nigeria'
   const years = profileData.years_experience
+  const phone = profileData.phone
+  // Shown to the account holder only. This is the seeker's own console, so the
+  // street address is fine here; the public-facing seeker resource leaves it out.
+  const contactAddress = [
+    profileData.address_line,
+    profileData.city,
+    profileData.state,
+  ]
+    .filter(Boolean)
+    .join(', ')
   const skills = profileData.skills ?? []
   const certifications = profileData.certifications ?? []
   const portfolio = profileData.portfolio ?? []
@@ -110,7 +121,11 @@ export default function SeekerProfilePage() {
           <Reveal>
             <Card className="hh-card-body hh-mb-4">
               <div className="hh-profile-head">
-                <span className="hh-avatar hh-avatar-lg hh-avatar-soft" aria-hidden="true">{initials(name)}</span>
+                <UserAvatar
+                  name={name}
+                  avatarUrl={profileData.avatar_url}
+                  className="hh-avatar hh-avatar-lg hh-avatar-soft"
+                />
                 <div className="hh-profile-head-main">
                   <h2 className="hh-profile-name">{name}</h2>
                   <div className="hh-profile-title-line">
@@ -119,6 +134,9 @@ export default function SeekerProfilePage() {
                   </div>
                   <div className="hh-app-meta">
                     <span><i className="bi bi-geo-alt hh-me-1" aria-hidden="true" />{location}</span>
+                    {phone && (
+                      <span><i className="bi bi-telephone hh-me-1" aria-hidden="true" />{formatPhone(phone)}</span>
+                    )}
                     <span><i className="bi bi-clock hh-me-1" aria-hidden="true" />{years ? `${years} year${Number(years) === 1 ? '' : 's'} of experience` : 'Experience'}</span>
                     <span><i className="bi bi-briefcase hh-me-1" aria-hidden="true" />12 applications</span>
                   </div>
@@ -259,9 +277,32 @@ export default function SeekerProfilePage() {
               <div className="hh-progress hh-mt-4">
                 <div className="hh-progress-bar" style={{ width: '75%' }} />
               </div>
-            </Card>
-          </Reveal>
-        </div>
+</Card>
+              </Reveal>
+
+              <Reveal delay={220}>
+                <Card className="hh-card-body">
+                  <div className="hh-profile-card-title hh-card-title-md">
+                    <i className="bi bi-telephone" aria-hidden="true" /> Contact details
+                  </div>
+                  <ul className="hh-meta-list">
+                    <li>
+                      <i className="bi bi-telephone" aria-hidden="true" />
+                      <span>Phone: </span>
+                      {phone || 'Not added yet'}
+                    </li>
+                    <li>
+                      <i className="bi bi-geo-alt" aria-hidden="true" />
+                      <span>Address: </span>
+                      {contactAddress || 'Not added yet'}
+                    </li>
+                  </ul>
+                  <Button to="/seeker/profile/edit" variant="outline" size="sm" className="mt-3">
+                    Edit contact details
+                  </Button>
+                </Card>
+              </Reveal>
+            </div>
       </section>
     </>
   )

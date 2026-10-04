@@ -2,11 +2,19 @@ import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import Button from '../../components/ui/Button'
 import FormInput from '../../components/ui/FormInput'
+import FormSelect from '../../components/ui/FormSelect'
 import Alert from '../../components/ui/Alert'
 import PasswordStrength from '../../components/ui/PasswordStrength'
 import ValidationChecklist from '../../components/ui/ValidationChecklist'
 import { GoogleIcon, LinkedInIcon } from '../../components/common/SocialIcons'
-import { authApi, apiErrorMessage } from '../../services/api'
+import { authApi, apiErrorMessage, apiFieldErrors } from '../../services/api'
+import {
+  DIAL_CODE,
+  NIGERIAN_STATES,
+  PHONE_PLACEHOLDER,
+  hasValue,
+  phoneError,
+} from '../../constants/nigeria'
 
 const ROLE_LINKS = [
   { key: 'seeker', to: '/register/job-seeker', label: 'Job Seeker' },
@@ -22,15 +30,41 @@ export default function RegisterJobSeekerPage() {
   const [showPassword, setShowPassword] = useState(false)
   const [agreed, setAgreed] = useState(false)
   const [error, setError] = useState('')
+  const [errors, setErrors] = useState({})
   const [password, setPassword] = useState('')
   const [email, setEmail] = useState('')
   const [firstName, setFirstName] = useState('')
   const [lastName, setLastName] = useState('')
+  const [phone, setPhone] = useState('')
+  const [street, setStreet] = useState('')
+  const [city, setCity] = useState('')
+  const [state, setState] = useState('')
   const [loading, setLoading] = useState(false)
 
   const CURRENT_ROLE = 'seeker'
   const emailValid = EMAIL_RE.test(email.trim())
+  const phoneValid = phoneError(phone) === null
   const termsError = Boolean(error) && !agreed
+
+  /**
+   * The same checks the server runs, so the form can say which field is wrong
+   * rather than showing one banner and leaving the user to guess.
+   */
+  const validate = () => {
+    const next = {}
+    const phoneProblem = phoneError(phone)
+
+    if (phoneProblem) next.phone = phoneProblem
+    if (!hasValue(street)) {
+      next.address_line = 'Please enter your street address.'
+    } else if (street.trim().length < 5) {
+      next.address_line = 'Please enter a longer street address.'
+    }
+    if (!hasValue(city)) next.city = 'Please enter your city.'
+    if (!hasValue(state)) next.state = 'Please select your state.'
+
+    return next
+  }
 
   const handleSubmit = async (e) => {
     e.preventDefault()
@@ -41,6 +75,14 @@ export default function RegisterJobSeekerPage() {
       return
     }
 
+    const nextErrors = validate()
+    setErrors(nextErrors)
+
+    if (Object.values(nextErrors).some(Boolean)) {
+      setError('Please correct the highlighted fields and try again.')
+      return
+    }
+
     setLoading(true)
     try {
       const payload = await authApi.register({
@@ -48,6 +90,10 @@ export default function RegisterJobSeekerPage() {
         first_name: firstName,
         last_name: lastName,
         email,
+        phone,
+        address_line: street,
+        city,
+        state,
         password,
         password_confirmation: password,
       })
@@ -63,10 +109,15 @@ export default function RegisterJobSeekerPage() {
       )
     } catch (err) {
       setError(apiErrorMessage(err))
+      setErrors(apiFieldErrors(err))
     } finally {
       setLoading(false)
     }
   }
+
+  /** Clears a field's error as soon as the user starts fixing it. */
+  const clearError = (field) => () =>
+    setErrors((prev) => (prev[field] ? { ...prev, [field]: undefined } : prev))
 
   return (
     <div className="hh-auth-card">
@@ -142,6 +193,75 @@ export default function RegisterJobSeekerPage() {
                 items={[{ ok: emailValid, label: 'Enter a valid email address' }]}
               />
             )}
+          </div>
+
+          <div className="hh-auth-field-group">
+            <FormInput
+              label="Phone number"
+              id="js-phone"
+              type="tel"
+              icon="telephone"
+              placeholder={PHONE_PLACEHOLDER}
+              autoComplete="tel-national"
+              helperText={`Nigerian number, starting with ${DIAL_CODE}`}
+              error={errors.phone}
+              required
+              value={phone}
+              onChange={(e) => {
+                setPhone(e.target.value)
+                clearError('phone')()
+              }}
+            />
+            {phone && (
+              <ValidationChecklist
+                ariaLabel="Phone number requirements"
+                items={[{ ok: phoneValid, label: 'Enter a valid Nigerian phone number' }]}
+              />
+            )}
+          </div>
+
+          <FormInput
+            label="Street address"
+            id="js-street"
+            icon="geo-alt"
+            placeholder="12 Admiralty Way, Lekki Phase 1"
+            autoComplete="street-address"
+            error={errors.address_line}
+            required
+            value={street}
+            onChange={(e) => {
+              setStreet(e.target.value)
+              clearError('address_line')()
+            }}
+          />
+
+          <div className="hh-auth-names">
+            <FormInput
+              label="City"
+              id="js-city"
+              placeholder="Lagos"
+              autoComplete="address-level2"
+              error={errors.city}
+              required
+              value={city}
+              onChange={(e) => {
+                setCity(e.target.value)
+                clearError('city')()
+              }}
+            />
+            <FormSelect
+              label="State"
+              id="js-state"
+              options={NIGERIAN_STATES}
+              placeholder="Select state"
+              error={errors.state}
+              required
+              value={state}
+              onChange={(e) => {
+                setState(e.target.value)
+                clearError('state')()
+              }}
+            />
           </div>
 
           <div className="hh-auth-field-group hh-auth-password">

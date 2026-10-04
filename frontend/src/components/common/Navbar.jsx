@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Link, NavLink, useNavigate } from 'react-router-dom'
 import logoImg from '../../assets/HIREHUBlogo.png'
 import { useAuth } from '../../context/AuthContext'
+import UserAvatar from './UserAvatar'
 
 export default function Navbar() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
@@ -115,9 +116,11 @@ export default function Navbar() {
                     title={user?.name || undefined}
                     aria-label={user?.name || undefined}
                   >
-                    <span className="hh-avatar hh-avatar-sm hh-avatar-soft" aria-hidden="true">
-                      {user?.name ? user.name.charAt(0).toUpperCase() : user?.email?.charAt(0).toUpperCase()}
-                    </span>
+                    <UserAvatar
+                      name={user?.name || user?.email}
+                      avatarUrl={user?.avatar_url}
+                      className="hh-avatar hh-avatar-sm hh-avatar-soft"
+                    />
                     <span className="hh-user-name">
                       {user?.name?.split(' ')[0] || 'Dashboard'}
                     </span>

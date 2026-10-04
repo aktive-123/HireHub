@@ -72,6 +72,28 @@ export function apiErrorMessage(err, fallback = 'Something went wrong. Please tr
   return err?.payload?.message || fallback
 }
 
+/**
+ * Laravel's 422 `errors` bag flattened to one message per field, ready to
+ * spread into per-field `error` props.
+ *
+ * `apiErrorMessage` collapses the whole bag to a single string, which is right
+ * for a form that shows one banner and wrong for one that marks the offending
+ * input — the user is left to hunt for which field the sentence referred to.
+ *
+ * @returns {Record<string, string>}
+ */
+export function apiFieldErrors(err) {
+  const errors = err?.payload?.errors
+  if (!errors || typeof errors !== 'object' || Array.isArray(errors)) return {}
+
+  return Object.fromEntries(
+    Object.entries(errors).map(([key, value]) => [
+      key,
+      Array.isArray(value) ? value[0] ?? '' : String(value ?? ''),
+    ]),
+  )
+}
+
 export const apiClient = {
   baseUrl: API_BASE_URL,
 
@@ -92,6 +114,94 @@ export const apiClient = {
     })
   },
 
+  /**
+   * Turn a non-2xx response into the Error every caller in the app expects.
+   *
+   * Extracted from `request()` so the binary-download path can share it. That
+   * path used to call `xhr()` and hand the raw Response straight to a file
+   * saver, which threw its own hardcoded "Download failed with status 404" and
+   * threw away the server's wording. A candidate with no CV on file is not a
+   * bug, and the API already says so in plain language.
+   */
+  async buildError(res) {
+    const hadToken = Boolean(getAuthToken())
+    if ((res.status === 401 || res.status === 419) && hadToken) {
+      // The token is no longer accepted, so nothing signed-in can work until
+      // the user signs in again. Drop the dead session and let AuthContext
+      // route to /login rather than leaving every page in an error state.
+      clearSession()
+      if (typeof window !== 'undefined') window.dispatchEvent(new Event('hh:session-expired'))
+    }
+    const error = new Error(messageForStatus(res.status))
+    error.status = res.status
+    // Exposed because a 429 without it leaves the UI guessing how long to
+    // wait, which is the one thing the rate limiter exists to tell it. The
+    // API sends it on every throttled response.
+    const retryAfter = Number(res.headers.get('Retry-After'))
+    if (Number.isFinite(retryAfter) && retryAfter > 0) {
+      error.retryAfter = retryAfter
+    }
+    try {
+      error.payload = await res.json()
+    } catch {
+      error.payload = {}
+    }
+    // Prefer the server's own wording, but only for statuses where it is
+    // genuinely more specific than the generic copy above. For auth failures
+    // the framework default is literally "Unauthenticated.", which is both
+    // less useful and more alarming than saying the session expired.
+    //
+    // A plan refusal is also trusted on a 403: its message names the real
+    // allowance ("you have used all 10 job posts on your Professional plan"),
+    // which is far more actionable than the generic permission wording, and
+    // the server, not this mapping, is the authority on that number.
+    const PLAN_CODES = new Set(['plan_limit_reached', 'plan_upgrade_required'])
+    // 402 is the hiring-fee refusal. Its message names the one thing the
+    // employer has to do next ("confirm and pay the hiring fee"), so it is
+    // more actionable than anything the generic map can offer.
+    const TRUST_SERVER_MESSAGE = new Set([400, 402, 404, 409, 413, 422])
+    const code = error.payload?.error_code
+    if ((TRUST_SERVER_MESSAGE.has(res.status) || PLAN_CODES.has(code)) && error.payload?.message) {
+      error.message = error.payload.message
+    }
+    // Copied onto the error so a component can branch on *why* it was refused
+    // without pattern-matching prose that is free to be reworded. A 403
+    // carrying a plan code is the signal that opens the upgrade modal — the
+    // client never decides a limit was reached on its own.
+    if (code) {
+      error.code = code
+      // The server sends the authoritative usage block with a plan refusal,
+      // so the paywall can quote the real numbers instead of refetching.
+      if (error.payload.data?.usage) {
+        error.usage = error.payload.data.usage
+      }
+    }
+    return error
+  },
+
+  /**
+   * Fetch a binary body (a PDF, a CV) with the same error handling as JSON.
+   *
+   * Returns the raw Response so the caller can stream it to a file or a blob
+   * URL, but only ever for a 2xx. Anything else throws the Error built above,
+   * which carries the server's message and `error_code`.
+   */
+  async binary(path, options = {}) {
+    let res
+    try {
+      res = await apiClient.xhr(path, options)
+    } catch (cause) {
+      const error = new Error(UNREACHABLE_MESSAGE)
+      error.status = 0
+      error.cause = cause
+      throw error
+    }
+    if (!res.ok) {
+      throw await apiClient.buildError(res)
+    }
+    return res
+  },
+
   async request(path, options = {}) {
     let res
     try {
@@ -106,59 +216,7 @@ export const apiClient = {
     }
 
     if (!res.ok) {
-      const hadToken = Boolean(getAuthToken())
-      if ((res.status === 401 || res.status === 419) && hadToken) {
-        // The token is no longer accepted, so nothing signed-in can work until
-        // the user signs in again. Drop the dead session and let AuthContext
-        // route to /login rather than leaving every page in an error state.
-        clearSession()
-        if (typeof window !== 'undefined') window.dispatchEvent(new Event('hh:session-expired'))
-      }
-      const error = new Error(messageForStatus(res.status))
-      error.status = res.status
-      // Exposed because a 429 without it leaves the UI guessing how long to
-      // wait, which is the one thing the rate limiter exists to tell it. The
-      // API sends it on every throttled response.
-      const retryAfter = Number(res.headers.get('Retry-After'))
-      if (Number.isFinite(retryAfter) && retryAfter > 0) {
-        error.retryAfter = retryAfter
-      }
-      try {
-        error.payload = await res.json()
-      } catch {
-        error.payload = {}
-      }
-      // Prefer the server's own wording, but only for statuses where it is
-      // genuinely more specific than the generic copy above. For auth failures
-      // the framework default is literally "Unauthenticated.", which is both
-      // less useful and more alarming than saying the session expired.
-      //
-      // A plan refusal is also trusted on a 403: its message names the real
-      // allowance ("you have used all 10 job posts on your Professional plan"),
-      // which is far more actionable than the generic permission wording, and
-      // the server, not this mapping, is the authority on that number.
-      const PLAN_CODES = new Set(['plan_limit_reached', 'plan_upgrade_required'])
-      // 402 is the hiring-fee refusal. Its message names the one thing the
-      // employer has to do next ("confirm and pay the hiring fee"), so it is
-      // more actionable than anything the generic map can offer.
-      const TRUST_SERVER_MESSAGE = new Set([400, 402, 404, 409, 413, 422])
-      const code = error.payload?.error_code
-      if ((TRUST_SERVER_MESSAGE.has(res.status) || PLAN_CODES.has(code)) && error.payload?.message) {
-        error.message = error.payload.message
-      }
-      // Copied onto the error so a component can branch on *why* it was refused
-      // without pattern-matching prose that is free to be reworded. A 403
-      // carrying a plan code is the signal that opens the upgrade modal — the
-      // client never decides a limit was reached on its own.
-      if (code) {
-        error.code = code
-        // The server sends the authoritative usage block with a plan refusal,
-        // so the paywall can quote the real numbers instead of refetching.
-        if (error.payload.data?.usage) {
-          error.usage = error.payload.data.usage
-        }
-      }
-      throw error
+      throw await apiClient.buildError(res)
     }
     const text = await res.text()
     return text ? JSON.parse(text) : null

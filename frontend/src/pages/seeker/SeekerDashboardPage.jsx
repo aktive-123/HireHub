@@ -6,26 +6,15 @@ import { useApiData } from '../../hooks/useApiData'
 import PageHeader from '../../components/ui/PageHeader'
 import SectionHeading from '../../components/ui/SectionHeading'
 import Reveal from '../../components/ui/Reveal'
-import Badge from '../../components/ui/Badge'
+import StatusBadge from '../../components/ui/StatusBadge'
 import Card from '../../components/ui/Card'
 import Button from '../../components/ui/Button'
 import EmptyState from '../../components/ui/EmptyState'
 import LoadingState from '../../components/ui/LoadingState'
 import JobCard from '../../components/ui/JobCard'
+import UserAvatar from '../../components/common/UserAvatar'
 
 const PROFILE_COMPLETION = 75
-
-const STATUS_VARIANT = {
-  new: 'secondary',
-  reviewing: 'info',
-  'under-review': 'info',
-  shortlisted: 'primary',
-  interview: 'warning',
-  offer: 'accent',
-  hired: 'success',
-  rejected: 'danger',
-  withdrawn: 'secondary',
-}
 
 const STAT_ICONS = {
   applications: 'bi-file-earmark-text',
@@ -33,6 +22,7 @@ const STAT_ICONS = {
   interview: 'bi-camera-video',
   hired: 'bi-check2-circle',
   active: 'bi-briefcase',
+  awaiting_response: 'bi-envelope-exclamation',
 }
 
 export default function SeekerDashboardPage() {
@@ -42,11 +32,6 @@ export default function SeekerDashboardPage() {
   // Was hardcoded to a demo persona, so every signed-in seeker was greeted as
   // "Sarah" and shown her initials.
   const firstName = user?.name?.trim()?.split(/\s+/)[0] || 'there'
-  const initials = (user?.name?.trim()?.split(/\s+/).slice(0, 2) || [])
-    .map((part) => part[0] || '')
-    .join('')
-    .toUpperCase() || 'U'
-
   const jobs = useApiData(() => jobsApi.list({ per_page: 50 }), [])
 
   const recent = useMemo(
@@ -77,6 +62,12 @@ export default function SeekerDashboardPage() {
       (dashboard?.stats ?? []).map((stat) => ({
         ...stat,
         icon: STAT_ICONS[stat.key] || 'bi-clipboard-data',
+        // Only offers get a destination. A stat card that navigates somewhere
+        // is only helpful when there is something to go see.
+        to:
+          stat.key === 'awaiting_response' && stat.value > 0
+            ? `/seeker/applications?status=${encodeURIComponent('offer_confirmed_pending_acceptance')}`
+            : null,
       })),
     [dashboard]
   )
@@ -121,7 +112,7 @@ export default function SeekerDashboardPage() {
           <Reveal>
             <div className="hh-toolbar hh-toolbar-between hh-mb-4">
               <div className="hh-welcome-id">
-                <span className="hh-avatar hh-avatar-soft" aria-hidden="true">{initials}</span>
+                <UserAvatar name={user?.name} avatarUrl={user?.avatar_url} className="hh-avatar hh-avatar-soft" />
                 <PageHeader
                   eyebrow="JOB SEEKER DASHBOARD"
                   title={`Welcome back, ${firstName}`}
@@ -135,19 +126,30 @@ export default function SeekerDashboardPage() {
           </Reveal>
 
           <div className="row g-4 hh-mb-5">
-            {stats.map((stat, idx) => (
-              <div className="col-12 col-sm-6 col-lg-3" key={stat.key}>
-                <Reveal delay={idx * 60}>
-                  <Card className="hh-stat-card hh-card-hover">
-                    <div className={`hh-stat-icon hh-stat-icon-${stat.tone}`}>
-                      <i className={`bi ${stat.icon}`} aria-hidden="true" />
-                    </div>
-                    <div className="hh-stat-value">{stat.value}</div>
-                    <div className="hh-stat-label">{stat.label}</div>
-                  </Card>
-                </Reveal>
-              </div>
-            ))}
+            {stats.map((stat, idx) => {
+              const card = (
+                <Card className="hh-stat-card hh-card-hover">
+                  <div className={`hh-stat-icon hh-stat-icon-${stat.tone}`}>
+                    <i className={`bi ${stat.icon}`} aria-hidden="true" />
+                  </div>
+                  <div className="hh-stat-value">{stat.value}</div>
+                  <div className="hh-stat-label">{stat.label}</div>
+                </Card>
+              )
+              return (
+                <div className="col-12 col-sm-6 col-lg-4" key={stat.key}>
+                  <Reveal delay={idx * 60}>
+                    {stat.to ? (
+                      <Link to={stat.to} className="d-block text-decoration-none">
+                        {card}
+                      </Link>
+                    ) : (
+                      card
+                    )}
+                  </Reveal>
+                </div>
+              )
+            })}
           </div>
 
           <div className="row g-4">
@@ -178,11 +180,16 @@ export default function SeekerDashboardPage() {
                           </div>
                         </div>
                         <div className="hh-app-action">
-                          <Badge variant={STATUS_VARIANT[status] || 'secondary'}>
-                            {status.replace('-', ' ')}
-                          </Badge>
+                          <StatusBadge
+                            status={status}
+                            label={
+                              status === 'offer_confirmed_pending_acceptance'
+                                ? 'Awaiting your acceptance'
+                                : undefined
+                            }
+                          />
                           <Button to={`/seeker/applications/${id}`} variant="outline" size="sm">
-                            View
+                            {status === 'offer_confirmed_pending_acceptance' ? 'Review offer' : 'View'}
                           </Button>
                         </div>
                       </div>

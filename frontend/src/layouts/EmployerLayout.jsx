@@ -3,6 +3,8 @@ import ErrorBoundary from '../components/common/ErrorBoundary'
 import SessionGate from '../components/common/SessionGate'
 import PlanUsageIndicator from '../components/employer/PlanUsageIndicator'
 import PlanPaywallModal from '../components/employer/PlanPaywallModal'
+import UserAvatar from '../components/common/UserAvatar'
+import DashboardLogoutButton from '../components/common/DashboardLogoutButton'
 import whiteLogo from '../assets/white logo.png'
 import { useAuth } from '../context/AuthContext'
 
@@ -16,13 +18,6 @@ export default function EmployerLayout() {
   }
   if (!bootstrapped) return <SessionGate />
   const userName = user?.name || 'Employer'
-  const userInitials =
-    userName
-      .split(' ')
-      .filter(Boolean)
-      .slice(0, 2)
-      .map((part) => part.charAt(0).toUpperCase())
-      .join('') || 'EM'
   return (
     <div className="hh-dashboard-layout">
       <aside className="hh-dashboard-sidebar">
@@ -133,6 +128,7 @@ export default function EmployerLayout() {
             <i className="bi bi-box-arrow-right" />
             <span className="hh-dashboard-nav-label">Exit to Website</span>
           </Link>
+          <DashboardLogoutButton />
         </div>
       </aside>
 
@@ -144,16 +140,18 @@ export default function EmployerLayout() {
               <i className="bi bi-bell" aria-hidden="true" />
             </Link>
             <div className="d-flex align-items-center gap-2 hh-topbar-user">
-              <span className="hh-avatar hh-avatar-sm hh-avatar-soft" aria-hidden="true">{userInitials}</span>
+              <UserAvatar
+                name={userName}
+                avatarUrl={user?.avatar_url}
+                className="hh-avatar hh-avatar-sm hh-avatar-soft"
+              />
               <div className="hh-topbar-user-meta d-none d-xl-block">
                 <div className="hh-topbar-user-name">{userName}</div>
                 <div className="hh-topbar-user-role">Employer</div>
               </div>
             </div>
             <span className="hh-badge hh-badge-accent">Employer</span>
-            <Link to="/login" className="hh-topbar-icon hh-tip-bottom hh-tip-end" data-tooltip="Log out" aria-label="Log out">
-              <i className="bi bi-box-arrow-right" aria-hidden="true" />
-            </Link>
+            <DashboardLogoutButton compact />
           </div>
         </header>
 

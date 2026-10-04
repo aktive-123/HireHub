@@ -3,7 +3,8 @@ import whiteLogo from '../assets/white logo.png'
 import { useAuth } from '../context/AuthContext'
 import ErrorBoundary from '../components/common/ErrorBoundary'
 import SessionGate from '../components/common/SessionGate'
-import { initials } from '../utils/format'
+import UserAvatar from '../components/common/UserAvatar'
+import DashboardLogoutButton from '../components/common/DashboardLogoutButton'
 
 const PAGE_META = [
   { pattern: /^\/seeker\/applications\/.+/, title: 'Application Details' },
@@ -140,14 +141,17 @@ export default function SeekerLayout() {
               <span className="position-absolute top-0 start-100 translate-middle p-1 bg-danger border border-light rounded-circle" />
             </Link>
             <div className="hh-user-chip">
-              <span className="hh-avatar hh-avatar-sm hh-avatar-soft" aria-hidden="true">
-                {initials(userName)}
-              </span>
+              <UserAvatar
+                name={userName}
+                avatarUrl={user?.avatar_url}
+                className="hh-avatar hh-avatar-sm hh-avatar-soft"
+              />
               <div className="hh-user-chip-meta">
                 <span className="hh-user-name">{userName}</span>
                 <span className="hh-badge hh-badge-primary hh-badge-sm">Job Seeker</span>
               </div>
             </div>
+            <DashboardLogoutButton compact />
           </div>
         </header>
 

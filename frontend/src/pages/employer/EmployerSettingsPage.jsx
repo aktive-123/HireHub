@@ -8,8 +8,10 @@ import FormSelect from '../../components/ui/FormSelect'
 import Alert from '../../components/ui/Alert'
 import ConfirmDialog from '../../components/ui/ConfirmDialog'
 import SessionSecurityCard from '../../components/common/SessionSecurityCard'
+import ProfilePhotoCard from '../../components/common/ProfilePhotoCard'
 import { authApi } from '../../services/api'
 import { useAccountSettings } from '../../hooks/useAccountSettings'
+import { DIAL_CODE, PHONE_PLACEHOLDER } from '../../constants/nigeria'
 
 // Only IANA identifiers are offered. The settings endpoint validates against
 // PHP's timezone_identifiers_list(), so the previous 'WAT' and 'GMT' options
@@ -121,6 +123,8 @@ export default function EmployerSettingsPage() {
             subtitle="Manage your account information, security, and preferences."
           />
 
+          <ProfilePhotoCard />
+
           <Reveal>
             {message ? (
               <Alert variant="success" dismissible onDismiss={clearMessage} className="hh-mb-4">
@@ -164,6 +168,8 @@ export default function EmployerSettingsPage() {
                       <FormInput
                         label="Phone number"
                         type="tel"
+                        placeholder={PHONE_PLACEHOLDER}
+                        helperText={`Nigerian number, starting with ${DIAL_CODE}`}
                         value={settings.phone ?? ''}
                         onChange={(e) => update({ phone: e.target.value })}
                         disabled={saving}

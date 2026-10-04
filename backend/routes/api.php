@@ -192,6 +192,8 @@ Route::middleware(['auth:sanctum'])->prefix('v1')->group(function (): void {
     // --- Account settings (self-scoped, any role) ---
     Route::get('settings', [SettingsController::class, 'show']);
     Route::patch('settings', [SettingsController::class, 'update'])->middleware('throttle:write');
+    Route::post('settings/profile-picture', [SettingsController::class, 'uploadProfilePicture'])->middleware('throttle:write');
+    Route::delete('settings/profile-picture', [SettingsController::class, 'deleteProfilePicture'])->middleware('throttle:write');
     Route::patch('auth/password', [SettingsController::class, 'updatePassword'])->middleware('throttle:write');
     Route::post('account/deactivate', [SettingsController::class, 'deactivate'])->middleware('throttle:write');
     Route::post('account/reactivate', [SettingsController::class, 'reactivate'])->middleware('throttle:write');

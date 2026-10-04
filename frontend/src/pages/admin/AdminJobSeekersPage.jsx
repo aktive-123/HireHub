@@ -146,7 +146,7 @@ ${detail}`)) return
               ]}
               rows={visible.map((user) => ({
                 id: user.id,
-                seeker: <UserCell name={user.name} meta={user.email} />,
+                seeker: <UserCell name={user.name} meta={user.email} avatarUrl={user.avatar_url} />,
                 location: user.location,
                 years: `${user.years} yrs`,
                 applications: user.applications,

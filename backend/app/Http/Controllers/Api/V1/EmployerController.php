@@ -18,12 +18,14 @@ use App\Models\Category;
 use App\Models\Company;
 use App\Models\Job;
 use App\Services\HiringFeeService;
+use App\Support\Address;
 use App\Support\Notifier;
 use Carbon\CarbonPeriod;
 use Illuminate\Http\Request;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
@@ -353,7 +355,7 @@ class EmployerController extends ApiController
 
         $paginator = Application::whereHas('job', fn ($q) => $q->where('company_id', $company->id))
             ->when($request->filled('status'), fn ($q) => $q->whereIn('status', explode(',', $request->input('status'))))
-            ->with(['job.company:id,slug,name,logo_text,logo_bg,logo_color,is_verified', 'seeker:id,name,email,phone', 'seeker.profile.experiences', 'seeker.profile.educations'])
+            ->with(['job.company:id,slug,name,logo_text,logo_bg,logo_color,is_verified', 'seeker:id,name,email,phone,avatar_url,profile_picture', 'seeker.profile.experiences', 'seeker.profile.educations'])
             ->orderByDesc('applied_at')
             ->paginate($perPage);
 
@@ -371,7 +373,7 @@ class EmployerController extends ApiController
 
         $application->load([
             'job.company:id,slug,name,logo_text,logo_bg,logo_color,is_verified',
-            'seeker:id,name,email,phone',
+            'seeker:id,name,email,phone,avatar_url,profile_picture',
             'seeker.profile.experiences',
             'seeker.profile.educations',
         ]);
@@ -516,17 +518,33 @@ class EmployerController extends ApiController
                 'hiring_fee' => null,
                 'application_status' => $application->status?->value,
                 'hired' => false,
+                'awaiting_candidate' => false,
             ], 'No hiring fee has been raised for this application.');
         }
 
         $fee = $this->hiringFees->reconcile($fee);
         $application->refresh();
 
+        // Payment settles the employer's commitment, not the hire. The candidate
+        // still has to accept, so "paid" and "hired" are reported separately and
+        // the employer is told which of the two they are looking at.
+        $hired = $application->status === ApplicationStatus::Hired;
+        $awaitingCandidate = $fee->isSettled()
+            && $application->status === ApplicationStatus::OfferConfirmedPendingAcceptance;
+
+        $message = match (true) {
+            $hired => 'Candidate accepted — this hire is complete.',
+            $awaitingCandidate => 'Hiring fee paid. Waiting for the candidate to accept the offer.',
+            $fee->isSettled() => 'Hiring fee paid.',
+            default => 'Hiring fee is not yet settled.',
+        };
+
         return $this->success([
             'hiring_fee' => new HiringFeeResource($fee),
             'application_status' => $application->status?->value,
-            'hired' => $application->status === ApplicationStatus::Hired,
-        ], $fee->isSettled() ? 'Hiring fee paid — this candidate is hired.' : 'Hiring fee is not yet settled.');
+            'hired' => $hired,
+            'awaiting_candidate' => $awaitingCandidate,
+        ], $message);
     }
 
     /**
@@ -575,8 +593,31 @@ class EmployerController extends ApiController
 
         $cvPath = $application->cv_path ?? $application->seeker?->profile?->cv_path;
 
-        if (! $cvPath || ! Storage::disk('local')->exists($cvPath)) {
-            return $this->error('This candidate has not uploaded a CV.', 404);
+        // 404 is correct here: there is no resource at this path. What the client
+        // cannot do is guess whether that means "this candidate never uploaded
+        // one" (normal, not a bug) or "the file is missing from disk" (a real
+        // problem). `cv_not_uploaded` is the honest code for the first, so the
+        // UI can say "No CV uploaded" instead of surfacing a bare failure.
+        if (! $cvPath) {
+            return $this->error('This candidate has not uploaded a CV.', 404, null, null, 'cv_not_uploaded');
+        }
+
+        if (! Storage::disk('local')->exists($cvPath)) {
+            // A path in the database with no file behind it is a genuine
+            // inconsistency, so it is reported as one rather than as the
+            // candidate's omission.
+            Log::warning('A CV path is recorded but the file is missing from the local disk.', [
+                'application_id' => $application->id,
+                'cv_path' => $cvPath,
+            ]);
+
+            return $this->error(
+                'This candidate has a CV on record but the file could not be found. Please contact HireHub support.',
+                404,
+                null,
+                null,
+                'cv_file_missing'
+            );
         }
 
         ActivityLog::record($request->user(), PlanEntitlements::CV_VIEW_ACTION, $application, request: $request);
@@ -700,6 +741,7 @@ class EmployerController extends ApiController
             'name' => ['sometimes', 'string', 'max:255'],
             'industry' => ['nullable', 'string', 'max:255'],
             'location' => ['nullable', 'string', 'max:255'],
+            ...Address::rules(required: false, streetRequired: false),
             'size' => ['nullable', 'string', 'max:255'],
             'founded' => ['nullable', 'integer', 'between:1600,2100'],
             'website' => ['nullable', 'url', 'max:255'],
@@ -712,6 +754,14 @@ class EmployerController extends ApiController
             $company->slug = Str::slug($validated['name']).'-'.$company->id;
         }
         $company->fill($validated);
+
+        // Only the request that carried a city or a state re-derives location.
+        // A company whose editor still posts the old free-text location keeps it,
+        // and a partial edit of, say, only the tagline cannot blank it.
+        if ($request->hasAny(['city', 'state'])) {
+            $company->location = Address::location($company->city, $company->state) ?? $company->location;
+        }
+
         $company->save();
 
         return $this->success(new CompanyResource($company), 'Company updated.');

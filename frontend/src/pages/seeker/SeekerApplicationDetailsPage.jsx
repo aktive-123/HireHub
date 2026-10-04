@@ -1,76 +1,200 @@
-import { useMemo } from 'react'
-import { useParams } from 'react-router-dom'
+import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useParams, useSearchParams } from 'react-router-dom'
 import { seekerApi } from '../../services/api'
 import { useApiData } from '../../hooks/useApiData'
 import PageHeader from '../../components/ui/PageHeader'
 import Reveal from '../../components/ui/Reveal'
-import Badge from '../../components/ui/Badge'
+import StatusBadge from '../../components/ui/StatusBadge'
 import Card from '../../components/ui/Card'
 import Button from '../../components/ui/Button'
+import Alert from '../../components/ui/Alert'
+import ConfirmDialog from '../../components/ui/ConfirmDialog'
 import EmptyState from '../../components/ui/EmptyState'
 import LoadingState from '../../components/ui/LoadingState'
-import { formatSalaryAmount, formatSalaryPeriod } from '../../utils/jobs'
+import UpsellModal from '../../components/seeker/UpsellModal'
 
+// The seeker-visible stages, in the order they happen. `offer` is deliberately
+// absent: it is the employer's unconfirmed offer, and the seeker's own timeline
+// only starts paying attention once the employer has committed the hiring fee.
 const STAGES = [
-  { key: 'applied', label: 'Application Submitted' },
-  { key: 'under-review', label: 'Application Under Review' },
+  { key: 'new', label: 'Application submitted' },
+  { key: 'reviewing', label: 'Under review' },
   { key: 'shortlisted', label: 'Shortlisted' },
   { key: 'interview', label: 'Interview' },
-  { key: 'offer', label: 'Offer' },
+  { key: 'offer_confirmed_pending_acceptance', label: 'Offer confirmed' },
+  { key: 'hired', label: 'Hired' },
 ]
 
-const STATUS_VARIANT = {
-  applied: 'secondary',
-  'under-review': 'info',
-  shortlisted: 'primary',
-  interview: 'warning',
-  offer: 'accent',
-  hired: 'success',
-  rejected: 'danger',
+// Every status that ends the pipeline, and the copy that explains it. Without
+// this the seeker sees "Withdrawn" on an offer they declined and has no idea
+// whether to expect anything further.
+const TERMINAL_COPY = {
+  rejected:
+    'This application was closed by the employer. There is nothing further to do here, but you can keep applying to other roles.',
+  withdrawn:
+    'You declined this offer, so the application is closed. The role stays open with the employer, and nothing further is expected from you.',
 }
 
-const STATUS_DATE = {
-  applied: 'September 12',
-  'under-review': 'September 14',
-  shortlisted: 'September 16',
-  interview: 'September 21',
-  offer: 'September 28',
+/**
+ * How the seeker should read the current state, and what they can do about it.
+ *
+ * The single most important case is `offer_confirmed_pending_acceptance`: the
+ * employer has already paid the hiring fee, which confirms the offer, but the
+ * hire only completes when the seeker accepts. That makes accepting the most
+ * consequential button in the product, so it gets a real confirmation dialog
+ * rather than a direct call.
+ */
+function useNextStep(status) {
+  return useMemo(() => {
+    switch (status) {
+      case 'offer_confirmed_pending_acceptance':
+        return {
+          title: 'You have an offer to accept',
+          body: 'This employer has confirmed the offer and paid the placement fee, so the role is yours if you want it. Accepting closes the listing and notifies the employer. Declining is final and the placement fee is not refunded, because the employer committed to the hire.',
+          primary: { label: 'Accept offer', icon: 'bi-check-lg' },
+          secondary: { label: 'Decline offer', icon: 'bi-x-lg' },
+          canAct: true,
+        }
+      case 'hired':
+        return {
+          title: 'You are hired',
+          body: 'You accepted this offer, so the role is filled and the listing has closed. The employer will contact you with onboarding details.',
+          primary: { label: 'Add interview prep', icon: 'bi-stars' },
+          secondary: null,
+          canAct: false,
+        }
+      case 'interview':
+        return {
+          title: 'Interview stage',
+          body: 'Your interview has been scheduled. Review the details and confirm your availability.',
+          primary: { label: 'View interview details', icon: 'bi-camera-video', to: '/seeker/notifications' },
+          secondary: null,
+          canAct: false,
+        }
+      case 'withdrawn':
+      case 'rejected':
+        return {
+          title: 'This application is closed',
+          body: TERMINAL_COPY[status],
+          primary: { label: 'Browse more roles', icon: 'bi-search', to: '/jobs' },
+          secondary: null,
+          canAct: false,
+        }
+      default:
+        return {
+          title: "What's next?",
+          body: 'Keep this application moving by staying responsive to employer messages.',
+          primary: null,
+          secondary: null,
+          canAct: false,
+        }
+    }
+  }, [status])
 }
 
 export default function SeekerApplicationDetailsPage() {
   const { id } = useParams()
+  const [searchParams, setSearchParams] = useSearchParams()
   const { data: application, loading, error, reload } = useApiData(
     () => seekerApi.application(id),
     [id]
   )
 
-  const job = useMemo(() => {
-    const app = application || {}
-    return {
-      ...app,
-      title: app.job,
-      location: app.location,
-      employment_type: app.employment_type || 'Full-time',
-      workplace: app.workplace || 'On-site',
-      salary: app.salary ?? null,
-      category: app.category || 'General',
-      company:
-        typeof app.company === 'string' ? { name: app.company } : (app.company ?? {}),
-    }
-  }, [application])
+  const [confirming, setConfirming] = useState(null)
+  const [busy, setBusy] = useState(false)
+  const [actionError, setActionError] = useState(null)
+  const [notice, setNotice] = useState('')
+  const [upsells, setUpsells] = useState(null)
+
+  // The gateway returns here after a paid add-on. Read during the first render
+  // rather than in an effect: this is a fresh page load off the redirect, the
+  // flag is present exactly once, and the URL is scrubbed immediately afterwards
+  // so a refresh does not reopen the modal over whatever the seeker does next.
+  const [justReturned] = useState(() => searchParams.get('upsell_return') === '1')
+  const [upsellOpen, setUpsellOpen] = useState(justReturned)
+
+  useEffect(() => {
+    if (!searchParams.has('upsell_return')) return
+    const next = new URLSearchParams(searchParams)
+    next.delete('upsell_return')
+    setSearchParams(next, { replace: true })
+  }, [searchParams, setSearchParams])
 
   const status = application?.status || ''
-  const stageIndex = Math.max(0, STAGES.findIndex((s) => s.key === status))
   const isHired = status === 'hired'
-  const isRejected = status === 'rejected'
+  const isClosed = status === 'rejected' || status === 'withdrawn'
+  const canAct = status === 'offer_confirmed_pending_acceptance'
+  const nextStep = useNextStep(status)
 
-  const timeline = STAGES.map((stage, idx) => {
-    let state = 'is-pending'
-    if (idx < stageIndex) state = 'is-complete'
-    if (idx === stageIndex && !isHired && !isRejected) state = 'is-current'
-    if (isHired && idx === STAGES.length - 1) state = 'is-complete'
-    return { ...stage, state }
-  })
+  const timeline = useMemo(() => {
+    const currentIndex = STAGES.findIndex((stage) => stage.key === status)
+
+    return STAGES.map((stage, index) => {
+      let state = 'is-pending'
+
+      if (isHired) {
+        // Everything is behind us once the seeker is hired.
+        state = 'is-complete'
+      } else if (isClosed) {
+        // The pipeline stopped early: everything up to where it stopped
+        // happened, and nothing after it will.
+        state = currentIndex === -1 ? 'is-pending' : index <= currentIndex ? 'is-complete' : 'is-pending'
+      } else if (currentIndex !== -1) {
+        if (index < currentIndex) state = 'is-complete'
+        if (index === currentIndex) state = 'is-current'
+      }
+
+      return { ...stage, state }
+    })
+  }, [status, isHired, isClosed])
+
+  const handleAccept = async () => {
+    setBusy(true)
+    setActionError(null)
+
+    try {
+      const result = await seekerApi.acceptOffer(id)
+      setConfirming(null)
+      setNotice('Offer accepted. You are hired — the employer has been notified.')
+      // The accept response carries the catalogue for exactly this moment, so
+      // the add-on offer can appear without another round trip. Left null means
+      // "nothing for sale", which the modal renders as an empty state.
+      setUpsells(result.upsells ?? [])
+      setUpsellOpen(true)
+      await reload()
+    } catch (err) {
+      setActionError(err?.message || 'We could not record your acceptance. Please try again.')
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  const handleDecline = async () => {
+    setBusy(true)
+    setActionError(null)
+
+    try {
+      await seekerApi.declineOffer(id)
+      setConfirming(null)
+      setNotice('Offer declined. The employer has been told.')
+      await reload()
+    } catch (err) {
+      setActionError(err?.message || 'We could not record that. Please try again.')
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  // Stable identities: the upsell modal restarts its poll whenever these change,
+  // and inline arrows would restart it on every render of this page.
+  const handleUpsellClose = useCallback(() => {
+    setUpsellOpen(false)
+    setUpsells(null)
+  }, [])
+
+  const handleUpsellPurchased = useCallback(() => {
+    reload()
+  }, [reload])
 
   if (loading) {
     return (
@@ -105,6 +229,25 @@ export default function SeekerApplicationDetailsPage() {
     )
   }
 
+  if (!application) {
+    return (
+      <section className="hh-section-space bg-white">
+        <div className="page-container">
+          <EmptyState
+            icon="file-earmark-x"
+            title="Application not found"
+            text="This application may have been removed, or the link is incorrect."
+          />
+          <div className="text-center hh-mt-4">
+            <Button to="/seeker/applications" variant="outline">Back to applications</Button>
+          </div>
+        </div>
+      </section>
+    )
+  }
+
+  const companyName = typeof application.company === 'string' ? application.company : application.company?.name
+
   return (
     <>
       <section className="hh-section-space bg-white">
@@ -115,6 +258,18 @@ export default function SeekerApplicationDetailsPage() {
             subtitle="Review your application and follow its progress."
           />
 
+          {notice && (
+            <Alert variant="success" dismissible onDismiss={() => setNotice('')} className="hh-mb-4">
+              {notice}
+            </Alert>
+          )}
+
+          {actionError && (
+            <Alert variant="danger" dismissible onDismiss={() => setActionError(null)} className="hh-mb-4">
+              {actionError}
+            </Alert>
+          )}
+
           <div className="row g-4">
             <div className="col-12 col-lg-8">
               <Reveal>
@@ -123,24 +278,37 @@ export default function SeekerApplicationDetailsPage() {
                     <div
                       className="hh-app-logo"
                       style={{
-                        background: job.company?.logoBg || 'var(--hh-bg-soft)',
-                        color: job.company?.logoColor || 'var(--hh-primary)',
+                        background: 'var(--hh-bg-soft)',
+                        color: 'var(--hh-primary)',
                       }}
                     >
-                      {job.company?.logoText || job.company?.name?.charAt(0)}
+                      {String(companyName ?? '?').charAt(0)}
                     </div>
                     <div className="hh-app-info">
-                      <span className="hh-app-title">{job.title}</span>
-                      <div className="hh-app-company">{job.company?.name}</div>
+                      <span className="hh-app-title">{application.job}</span>
+                      <div className="hh-app-company">{companyName}</div>
                       <div className="hh-app-meta">
-                        <span><i className="bi bi-geo-alt hh-me-1" aria-hidden="true" />{job.location}</span>
-                        <span><i className="bi bi-clock hh-me-1" aria-hidden="true" />Full-time</span>
+                        {application.location ? (
+                          <span>
+                            <i className="bi bi-geo-alt hh-me-1" aria-hidden="true" />
+                            {application.location}
+                          </span>
+                        ) : null}
+                        <span>
+                          <i className="bi bi-clock hh-me-1" aria-hidden="true" />
+                          Applied {application.applied}
+                        </span>
                       </div>
                     </div>
                     <div className="hh-app-action">
-                      <Badge variant={STATUS_VARIANT[status] || 'secondary'}>
-                        {status.replace('-', ' ')}
-                      </Badge>
+                      <StatusBadge
+                        status={status}
+                        label={
+                          status === 'offer_confirmed_pending_acceptance'
+                            ? 'Awaiting your acceptance'
+                            : undefined
+                        }
+                      />
                     </div>
                   </div>
                 </Card>
@@ -155,16 +323,59 @@ export default function SeekerApplicationDetailsPage() {
                         <span className="hh-timeline-marker" aria-hidden="true" />
                         <div className="hh-timeline-title">{stage.label}</div>
                         {stage.state === 'is-current' && (
-                          <div className="hh-timeline-desc">This is where your application currently stands.</div>
+                          <div className="hh-timeline-desc">
+                            This is where your application currently stands.
+                          </div>
                         )}
-                        {stage.state !== 'is-pending' && STATUS_DATE[stage.key] && (
-                          <div className="hh-timeline-meta">{STATUS_DATE[stage.key]}</div>
+                        {/* Real dates come off the application record. The
+                            previous version hardcoded "September 12" and friends,
+                            which rendered on every application regardless of when
+                            it was actually submitted. */}
+                        {stage.state === 'is-current' && application.status_changed_label && (
+                          <div className="hh-timeline-meta">
+                            Since {application.status_changed_label}
+                          </div>
                         )}
                       </li>
                     ))}
                   </ol>
                 </Card>
               </Reveal>
+
+              {canAct && (
+                <Reveal delay={120}>
+                  <Card className="hh-card-body hh-mt-4 hh-mb-4 hh-border-primary">
+                    <div className="hh-profile-card-title">
+                      <i className="bi bi-envelope-check-fill" aria-hidden="true" />
+                      <span className="hh-card-title-md hh-mb-0">Action needed</span>
+                    </div>
+                    <p className="hh-settings-desc">
+                      {companyName} has paid the placement fee and confirmed your offer for{' '}
+                      <strong>{application.job}</strong>. This role is not filled until you accept.
+                    </p>
+                    <div className="d-flex flex-column flex-sm-row gap-2">
+                      <Button
+                        variant="primary"
+                        icon="bi-check-lg"
+                        pill
+                        onClick={() => setConfirming('accept')}
+                        disabled={busy}
+                      >
+                        Accept offer
+                      </Button>
+                      <Button
+                        variant="outline"
+                        icon="bi-x-lg"
+                        pill
+                        onClick={() => setConfirming('decline')}
+                        disabled={busy}
+                      >
+                        Decline offer
+                      </Button>
+                    </div>
+                  </Card>
+                </Reveal>
+              )}
             </div>
 
             <div className="col-12 col-lg-4">
@@ -172,40 +383,59 @@ export default function SeekerApplicationDetailsPage() {
                 <Card className="hh-card-body hh-mb-4">
                   <div className="hh-card-title-md hh-mb-3">Role snapshot</div>
                   <ul className="hh-meta-list">
-                    <li><i className="bi bi-briefcase" aria-hidden="true" /><span>{job.employment_type || 'Full-time'}</span></li>
-                    <li><i className="bi bi-laptop" aria-hidden="true" /><span>{job.workplace || 'On-site'}</span></li>
-                    <li><i className="bi bi-cash-stack" aria-hidden="true" /><span>{formatSalaryAmount(job.salary)} · {formatSalaryPeriod(job.salary)}</span></li>
-                    <li><i className="bi bi-tag" aria-hidden="true" /><span>{job.category || 'General'}</span></li>
+                    {application.match != null && (
+                      <li>
+                        <i className="bi bi-graph-up-arrow" aria-hidden="true" />
+                        <span>{application.match}% match</span>
+                      </li>
+                    )}
+                    <li>
+                      <i className="bi bi-cash-stack" aria-hidden="true" />
+                      <span>Applied {application.applied}</span>
+                    </li>
+                    <li>
+                      <i className="bi bi-file-earmark-person" aria-hidden="true" />
+                      <span>{application.has_cv ? 'CV attached' : 'No CV attached'}</span>
+                    </li>
                   </ul>
                 </Card>
               </Reveal>
 
               <Reveal delay={180}>
                 <Card className="hh-card-body">
-                  <div className="hh-card-title-md hh-mb-3">What's next?</div>
-                  {status === 'interview' ? (
-                    <p className="hh-settings-desc hh-mb-4">Your interview has been scheduled. Review the details and confirm your availability.</p>
-                  ) : status === 'offer' ? (
-                    <p className="hh-settings-desc hh-mb-4">Congratulations! An offer is waiting. Review the terms and respond before the deadline.</p>
-                  ) : status === 'hired' ? (
-                    <p className="hh-settings-desc hh-mb-4">You're hired. The employer will reach out with onboarding details.</p>
-                  ) : (
-                    <p className="hh-settings-desc hh-mb-4">Keep this application moving by staying responsive to employer messages.</p>
-                  )}
+                  <div className="hh-card-title-md hh-mb-3">{nextStep.title}</div>
+                  <p className="hh-settings-desc hh-mb-4">{nextStep.body}</p>
+
                   <div className="d-flex flex-column gap-2">
-                    {status === 'interview' && (
-                      <Button to="/seeker/notifications" variant="primary" icon="bi-camera-video" block pill>
-                        View interview details
+                    {/* Only surfaced on a page that has not already put the same
+                        action above; the detail card is the fallback column. */}
+                    {canAct ? null : nextStep.primary &&
+                      nextStep.primary.to ? (
+                        <Button to={nextStep.primary.to} variant="primary" icon={nextStep.primary.icon} block pill>
+                          {nextStep.primary.label}
+                        </Button>
+                      ) : null}
+
+                    {isHired && (
+                      <Button
+                        variant="primary"
+                        icon="bi-stars"
+                        block
+                        pill
+                        onClick={() => {
+                          setUpsells(null)
+                          setUpsellOpen(true)
+                        }}
+                      >
+                        Add interview prep
                       </Button>
                     )}
-                    {status === 'offer' && (
-                      <Button to="/seeker/notifications" variant="primary" icon="bi-check-lg" block pill>
-                        Respond to offer
+
+                    {application.job_slug && (
+                      <Button to={`/jobs/${application.job_slug}`} variant="outline" icon="bi-eye" block pill>
+                        View job posting
                       </Button>
                     )}
-                    <Button to={`/jobs/${job.job_slug || job.job_id}`} variant="outline" icon="bi-eye" block pill>
-                      View job posting
-                    </Button>
                   </div>
                 </Card>
               </Reveal>
@@ -213,6 +443,46 @@ export default function SeekerApplicationDetailsPage() {
           </div>
         </div>
       </section>
+
+      <ConfirmDialog
+        isOpen={confirming === 'accept'}
+        title="Accept this offer?"
+        message={`Accepting confirms you will take the role at ${companyName ?? 'this company'}. The listing closes immediately and the employer is notified.`}
+        confirmLabel="Yes, accept the offer"
+        cancelLabel="Not yet"
+        variant="primary"
+        busy={busy}
+        error={actionError}
+        onConfirm={handleAccept}
+        onCancel={() => {
+          setConfirming(null)
+          setActionError(null)
+        }}
+      />
+
+      <ConfirmDialog
+        isOpen={confirming === 'decline'}
+        title="Decline this offer?"
+        message="This is final. The employer keeps the placement fee they already paid, so it is not refunded, and the application closes."
+        confirmLabel="Yes, decline"
+        cancelLabel="Keep the offer"
+        busy={busy}
+        error={actionError}
+        onConfirm={handleDecline}
+        onCancel={() => {
+          setConfirming(null)
+          setActionError(null)
+        }}
+      />
+
+      <UpsellModal
+        isOpen={upsellOpen}
+        applicationId={id}
+        items={upsells}
+        justReturned={justReturned}
+        onClose={handleUpsellClose}
+        onPurchased={handleUpsellPurchased}
+      />
     </>
   )
 }

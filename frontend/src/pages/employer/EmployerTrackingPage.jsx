@@ -9,6 +9,7 @@ import EmptyState from '../../components/ui/EmptyState'
 import Reveal from '../../components/ui/Reveal'
 import Alert from '../../components/ui/Alert'
 import HiringFeeModal from '../../components/employer/HiringFeeModal'
+import UserAvatar from '../../components/common/UserAvatar'
 
 const STAGES = [
   { key: 'applied', label: 'Applied', icon: 'bi-inbox', tone: 'secondary' },
@@ -178,9 +179,11 @@ export default function EmployerTrackingPage() {
                           return (
                             <div className="hh-kanban-card" key={candidate.id}>
                               <div className="d-flex align-items-center gap-2">
-                                <span className="hh-avatar hh-avatar-sm hh-avatar-soft" aria-hidden="true">
-                                  {candidate.name.charAt(0)}
-                                </span>
+                                <UserAvatar
+                                  name={candidate.name}
+                                  avatarUrl={candidate.avatar_url}
+                                  className="hh-avatar hh-avatar-sm hh-avatar-soft"
+                                />
                                 <div className="hh-kanban-card-main">
                                   <div className="hh-kanban-card-name">{candidate.name}</div>
                                   <div className="hh-kanban-card-meta">{candidate.role}</div>

@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom'
+import UserAvatar from '../common/UserAvatar'
 
 function getInitials(name = '') {
   return name
@@ -17,6 +18,7 @@ export default function UserCell({
   logoText,
   logoBg,
   logoColor,
+  avatarUrl,
   square = false,
 }) {
   const initials = logoText || getInitials(name)
@@ -27,13 +29,22 @@ export default function UserCell({
 
   return (
     <div className="hh-applicant-cell">
-      <span
-        className={`hh-avatar hh-avatar-xs hh-avatar-soft ${square ? 'hh-avatar-square' : ''}`}
-        style={style}
-        aria-hidden="true"
-      >
-        {initials}
-      </span>
+      {avatarUrl ? (
+        <UserAvatar
+          name={name}
+          avatarUrl={avatarUrl}
+          className="hh-avatar hh-avatar-xs hh-avatar-soft"
+          square={square}
+        />
+      ) : (
+        <span
+          className={`hh-avatar hh-avatar-xs hh-avatar-soft ${square ? 'hh-avatar-square' : ''}`}
+          style={style}
+          aria-hidden="true"
+        >
+          {initials}
+        </span>
+      )}
       <div className="hh-applicant-meta">
         {to ? (
           <Link to={to} className="hh-applicant-name">

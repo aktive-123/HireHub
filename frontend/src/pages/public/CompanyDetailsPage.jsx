@@ -46,6 +46,13 @@ export default function CompanyDetailsPage() {
 
   const foundedFrom = company.founded || null
 
+  // The street line is shown on its own row rather than folded into the
+  // location above it, which stays the single city-and-state string the rest of
+  // the site filters on. Companies that have not filled it in yet get no row.
+  const addressLine = [company.address_line, company.city, company.state]
+    .filter(Boolean)
+    .join(', ')
+
   return (
     <>
       <PageHero images={heroSlides} deep>
@@ -206,6 +213,13 @@ export default function CompanyDetailsPage() {
                       <span>Location: </span>
                       {company.location}
                     </li>
+                    {addressLine && (
+                      <li>
+                        <i className="bi bi-building" aria-hidden="true" />
+                        <span>Address: </span>
+                        {addressLine}
+                      </li>
+                    )}
                     <li>
                       <i className="bi bi-people" aria-hidden="true" />
                       <span>Company size: </span>

@@ -126,6 +126,7 @@ class AdminController extends ApiController
             'id' => $user->id,
             'name' => $user->name,
             'email' => $user->email,
+            'avatar_url' => $user->profilePictureUrl(),
             'phone' => $user->phone,
             'role' => $user->role->value,
             'role_label' => $user->role->label(),
@@ -413,7 +414,7 @@ class AdminController extends ApiController
     {
         $perPage = min(50, max(1, (int) $request->input('per_page', 20)));
 
-        $paginator = Application::with(['job.company:id,slug,name,logo_text,logo_bg,logo_color,is_verified', 'seeker:id,name,email,phone', 'seeker.profile.experiences', 'seeker.profile.educations'])
+        $paginator = Application::with(['job.company:id,slug,name,logo_text,logo_bg,logo_color,is_verified', 'seeker:id,name,email,phone,avatar_url,profile_picture', 'seeker.profile.experiences', 'seeker.profile.educations'])
             ->when($request->filled('status'), fn ($q) => $q->whereIn('status', explode(',', $request->input('status'))))
             ->when($request->filled('q'), fn ($q) => $q->whereHas('seeker', fn ($s) => $s->where('name', 'like', '%'.$request->input('q').'%'))->orWhereHas('job', fn ($j) => $j->where('title', 'like', '%'.$request->input('q').'%')))
             ->orderByDesc('applied_at')
@@ -438,7 +439,7 @@ class AdminController extends ApiController
     {
         $application->load([
             'job.company:id,slug,name,logo_text,logo_bg,logo_color,is_verified',
-            'seeker:id,name,email,phone,avatar_url',
+            'seeker:id,name,email,phone,avatar_url,profile_picture',
             'seeker.profile.experiences',
             'seeker.profile.educations',
         ]);
@@ -474,7 +475,7 @@ class AdminController extends ApiController
             'subject' => 'Application update — '.($application->job?->title ?? 'a job'),
         ]);
 
-        $application->load(['job.company:id,slug,name,logo_text,logo_bg,logo_color,is_verified', 'seeker:id,name,email,phone']);
+        $application->load(['job.company:id,slug,name,logo_text,logo_bg,logo_color,is_verified', 'seeker:id,name,email,phone,avatar_url,profile_picture']);
 
         return $this->success(new ApplicationResource($application), 'Application status updated.');
     }

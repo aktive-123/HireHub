@@ -11,6 +11,7 @@ import Alert from '../../components/ui/Alert'
 import EmptyState from '../../components/ui/EmptyState'
 import LoadingState from '../../components/ui/LoadingState'
 import { publicJobCategories } from '../../data/jobs'
+import { NIGERIAN_STATES } from '../../constants/nigeria'
 
 const INDUSTRY_OPTIONS = publicJobCategories.map((c) => c.name)
 const SIZE_OPTIONS = [
@@ -32,6 +33,9 @@ export default function EmployerEditCompanyPage() {
     industry: '',
     size: '',
     location: '',
+    address_line: '',
+    city: '',
+    state: '',
     website: '',
     tagline: '',
     about: '',
@@ -52,6 +56,9 @@ export default function EmployerEditCompanyPage() {
         industry: company.industry ?? '',
         size: company.size ?? '',
         location: company.location ?? '',
+        address_line: company.address_line ?? '',
+        city: company.city ?? '',
+        state: company.state ?? '',
         website: company.website ?? '',
         tagline: company.tagline ?? '',
         about: company.description ?? '',
@@ -69,6 +76,9 @@ export default function EmployerEditCompanyPage() {
         name: values.name,
         industry: values.industry,
         location: values.location,
+        address_line: values.address_line,
+        city: values.city,
+        state: values.state,
         size: values.size,
         founded: company?.founded,
         website: values.website,
@@ -190,9 +200,35 @@ export default function EmployerEditCompanyPage() {
                       placeholder="Select company size"
                     />
                   </div>
-                  <div className="col-12 col-md-6">
-                    <FormInput label="Location" value={values.location} onChange={(e) => set('location', e.target.value)} required />
-                  </div>
+<div className="col-12 col-md-6">
+                  <FormInput label="Location" value={values.location} onChange={(e) => set('location', e.target.value)} required />
+                </div>
+                <div className="col-12">
+                  <FormInput
+                    label="Street address"
+                    value={values.address_line}
+                    onChange={(e) => set('address_line', e.target.value)}
+                    placeholder="12 Admiralty Way, Lekki Phase 1"
+                    helperText="Shown on your public company profile."
+                  />
+                </div>
+                <div className="col-12 col-md-6">
+                  <FormInput
+                    label="City"
+                    value={values.city}
+                    onChange={(e) => set('city', e.target.value)}
+                    placeholder="Lagos"
+                  />
+                </div>
+                <div className="col-12 col-md-6">
+                  <FormSelect
+                    label="State"
+                    options={NIGERIAN_STATES}
+                    value={values.state}
+                    onChange={(e) => set('state', e.target.value)}
+                    placeholder="Select state"
+                  />
+                </div>
                   <div className="col-12 col-md-6">
                     <FormInput label="Website" type="url" value={values.website} onChange={(e) => set('website', e.target.value)} />
                   </div>

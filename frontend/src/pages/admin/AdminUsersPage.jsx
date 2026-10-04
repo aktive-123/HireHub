@@ -144,7 +144,7 @@ export default function AdminUsersPage() {
               ]}
               rows={visible.map((user) => ({
                 id: user.id,
-                user: <UserCell name={user.name} meta={user.email} />,
+                user: <UserCell name={user.name} meta={user.email} avatarUrl={user.avatar_url} />,
                 role: (
                   <Badge variant={ROLE_VARIANT[user.role]} sm>
                     {ROLE_LABELS[user.role]}

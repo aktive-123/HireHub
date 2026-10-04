@@ -314,6 +314,9 @@ class SecurityTest extends ApiTestCase
             'first_name' => 'Brand',
             'last_name' => 'New',
             'email' => 'brand-new@example.com',
+            'phone' => '08012345678',
+            'city' => 'Lagos',
+            'state' => 'Lagos',
             'password' => 'secret123',
             'password_confirmation' => 'secret123',
         ])->assertCreated();
@@ -664,6 +667,9 @@ class SecurityTest extends ApiTestCase
             'first_name' => 'Ada',
             'last_name' => 'Obi',
             'email' => 'ada@example.com',
+            'phone' => '08012345678',
+            'city' => 'Lagos',
+            'state' => 'Lagos',
             'password' => 'secret123',
             'password_confirmation' => 'secret123',
         ]);

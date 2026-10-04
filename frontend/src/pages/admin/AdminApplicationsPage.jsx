@@ -153,7 +153,7 @@ export default function AdminApplicationsPage() {
               ]}
               rows={visible.map((app) => ({
                 id: app.id,
-                applicant: <UserCell name={app.applicant} meta={app.email} />,
+                applicant: <UserCell name={app.applicant} meta={app.email} avatarUrl={app.avatar_url} />,
                 job: (
                   <>
                     <span className="hh-fw-medium">{app.job}</span>

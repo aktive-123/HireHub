@@ -15,6 +15,7 @@ import Button from '../../components/ui/Button'
 import Alert from '../../components/ui/Alert'
 import LoadingState from '../../components/ui/LoadingState'
 import Reveal from '../../components/ui/Reveal'
+import UserAvatar from '../../components/common/UserAvatar'
 
 const PAGE_SIZE = 8
 
@@ -246,9 +247,11 @@ export default function EmployerApplicantsPage() {
                 id: a.id,
                 applicant: (
                   <div className="hh-applicant-cell">
-                    <span className="hh-avatar hh-avatar-xs hh-avatar-soft" aria-hidden="true">
-                      {getInitials(a.name)}
-                    </span>
+                    <UserAvatar
+                      name={a.name}
+                      avatarUrl={a.avatar_url}
+                      className="hh-avatar hh-avatar-xs hh-avatar-soft"
+                    />
                     <div className="hh-applicant-meta">
                       <Link to={`/employer/applicants/${a.id}`} className="hh-applicant-name">
                         {a.name}
