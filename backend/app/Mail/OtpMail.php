@@ -12,10 +12,9 @@ use Illuminate\Queue\SerializesModels;
 /**
  * Carries a one-time password.
  *
- * Queued rather than sent inline: the code is on a ten-minute clock, and a
- * slow SMTP handshake must not eat into it or block the signup request. The
- * queue is also what keeps a mail provider outage from turning registration
- * into a 500.
+ * Sent inline by the OTP service: queueing would leave short-lived codes
+ * stranded when the host has no worker. Transport failures are handled by
+ * Otp::deliverSafely so signup can report a delivery failure cleanly.
  */
 class OtpMail extends Mailable
 {

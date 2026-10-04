@@ -634,14 +634,15 @@ class SecurityTest extends ApiTestCase
     {
         Mail::fake();
         config(['mail.enabled' => true]);
+        config(['queue.default' => 'database']);
 
         User::factory()->create(['email' => 'real@example.com', 'password' => 'secret123']);
 
         $this->postJson('/api/v1/auth/forgot-password', ['email' => 'real@example.com'])->assertOk();
 
-        // A code that is generated but never handed to the transport strands
-        // the user, so this asserts the code actually leaves the application.
-        Mail::assertQueued(OtpMail::class, 1);
+        // OTP delivery must not depend on a queue worker being provisioned.
+        Mail::assertSent(OtpMail::class, 1);
+        Mail::assertNotQueued(OtpMail::class);
     }
 
     public function test_a_code_is_never_written_to_the_log_once_mail_works(): void

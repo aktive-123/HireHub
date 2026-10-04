@@ -337,6 +337,8 @@ class Otp
             return;
         }
 
-        Mail::to($email)->queue($mail);
+        // OTPs expire quickly. Send them in this request so delivery does not
+        // depend on a separate queue worker being provisioned by the host.
+        Mail::to($email)->send($mail);
     }
 }
