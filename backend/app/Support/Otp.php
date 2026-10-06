@@ -9,7 +9,6 @@ use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Str;
 use RuntimeException;
@@ -350,24 +349,23 @@ class Otp
             return;
         }
 
-        if ($purpose === OtpCode::PURPOSE_RESET) {
-            $this->deliverPasswordResetViaBrevoApi($mail, $email, $name);
-            $transport = 'brevo_api';
-        } else {
-            // OTPs expire quickly. Send them in this request so delivery does not
-            // depend on a separate queue worker being provisioned by the host.
-            Mail::to($email)->send($mail);
-            $transport = (string) config('mail.default');
-        }
+        // Every OTP — signup verification and password reset alike — goes over
+        // Brevo's HTTPS API rather than the configured mailer. Splitting them
+        // meant two credentials to keep in sync, and when the SMTP one drifted
+        // on production only the signup flow noticed, because resets had
+        // already moved to the API: one transport, one credential, no queue
+        // worker, and no dependence on the mailer being healthy for the rest
+        // of the application's mail.
+        $this->deliverViaBrevoApi($mail, $email, $name);
 
         Log::channel('stderr')->info('HireHub OTP accepted by the mail transport.', [
             'event' => 'otp.mail.accepted',
             'purpose' => $purpose,
-            'transport' => $transport,
+            'transport' => 'brevo_api',
         ]);
     }
 
-    private function deliverPasswordResetViaBrevoApi(OtpMail $mail, string $email, ?string $name): void
+    private function deliverViaBrevoApi(OtpMail $mail, string $email, ?string $name): void
     {
         $apiKey = config('services.brevo.api_key');
 
@@ -403,7 +401,7 @@ class Otp
                 ->post('https://api.brevo.com/v3/smtp/email', [
                     'sender' => $sender,
                     'to' => [$recipient],
-                    'subject' => $envelope->subject ?? 'HireHub password reset code',
+                    'subject' => $envelope->subject ?? 'HireHub one-time code',
                     'htmlContent' => $mail->render(),
                     'textContent' => $mail->renderText(),
                 ]);

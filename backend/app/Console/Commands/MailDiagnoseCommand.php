@@ -2,9 +2,8 @@
 
 namespace App\Console\Commands;
 
-use App\Mail\OtpMail;
+use App\Support\Otp;
 use Illuminate\Console\Command;
-use Illuminate\Support\Facades\Mail;
 use Throwable;
 
 /**
@@ -14,7 +13,8 @@ use Throwable;
  * The requirement for this project is that one-time passwords reach a real
  * inbox rather than the log file. That is easy to believe and hard to confirm
  * by reading .env, so this command reports each setting, explains what is
- * missing, and can send a genuine OTP email through the configured transport.
+ * missing, and can send a genuine OTP email through the same path a real code
+ * takes — the Brevo API, not the configured mailer.
  */
 class MailDiagnoseCommand extends Command
 {
@@ -91,15 +91,18 @@ class MailDiagnoseCommand extends Command
         $this->line("  Sending a real test [{$purpose}] email to <info>{$recipient}</info> …");
         $this->newLine();
 
+        // Otp::deliver() with mail disabled writes the code to the log and
+        // returns without raising, so without this guard the command would
+        // claim a delivery that never happened.
+        if (! config('mail.enabled')) {
+            $this->line('  <fg=red>FAILED</> MAIL_ENABLED is false — the code would only be written to the log.');
+            $this->newLine();
+
+            return self::FAILURE;
+        }
+
         try {
-            Mail::to($recipient)->send(new OtpMail(
-                code: $code,
-                purpose: $purpose,
-                recipientName: 'Diagnostics',
-                expiresInMinutes: (int) config('otp.ttl_minutes', 10),
-                appName: (string) config('app.name'),
-                supportUrl: rtrim((string) config('app.frontend_url', config('app.url')), '/').'/contact',
-            ));
+            (new Otp)->deliver($code, $recipient, $purpose, 'Diagnostics');
         } catch (Throwable $e) {
             $this->line("  <fg=red>FAILED</> {$e->getMessage()}");
             $this->newLine();
@@ -157,6 +160,15 @@ class MailDiagnoseCommand extends Command
 
         if ($transport === 'mailgun' && ! config('mail.mailers.mailgun.secret')) {
             $problems[] = 'MAIL_MAILGUN_SECRET is not set.';
+        }
+
+        // One-time passwords never touch the configured mailer: Otp::deliver()
+        // sends every code over the Brevo HTTP API and authenticates with
+        // BREVO_API_KEY, so a healthy SMTP setup says nothing about whether
+        // codes arrive — and without this key no code can be sent at all, no
+        // matter how healthy the mailer looks.
+        if ($enabled && ! config('services.brevo.api_key')) {
+            $problems[] = 'BREVO_API_KEY is not set. One-time password emails are delivered through the Brevo API rather than the configured mailer, so no code can be sent even though this mailer is healthy.';
         }
 
         if ($mailer === 'failover' && in_array('log', (array) config('mail.mailers.failover.mailers', []), true)) {

@@ -2,6 +2,8 @@
 
 namespace Tests\Feature;
 
+use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Mail;
 use Tests\TestCase;
 
 /**
@@ -21,10 +23,53 @@ class MailDiagnoseTest extends TestCase
             'mail.mailers.smtp.username' => 'account@smtp-brevo.com',
             'mail.from.address' => 'no-reply@hirehub.test',
             'mail.from.name' => 'HireHub',
+            // One-time passwords bypass the SMTP mailer and go through the
+            // Brevo API, so "healthy" has to include this key or the command
+            // is right to complain.
+            'services.brevo.api_key' => 'xkeysib-test-key',
         ]);
 
         $this->artisan('mail:diagnose')
             ->assertExitCode(0);
+    }
+
+    /**
+     * The gap this exists for. A fully working SMTP setup reports "healthy"
+     * while every one-time password fails, because codes are delivered over
+     * the Brevo HTTP API with a different credential — so the mailer can be
+     * perfect and members still report that no code ever arrives.
+     */
+    public function test_it_flags_a_missing_brevo_key_even_when_smtp_is_healthy(): void
+    {
+        config([
+            'mail.enabled' => true,
+            'mail.default' => 'smtp',
+            'mail.mailers.smtp.host' => 'smtp-relay.brevo.com',
+            'mail.mailers.smtp.username' => 'account@smtp-brevo.com',
+            'mail.from.address' => 'no-reply@hirehub.test',
+            'services.brevo.api_key' => null,
+        ]);
+
+        $this->artisan('mail:diagnose')
+            ->expectsOutputToContain('BREVO_API_KEY is not set')
+            ->assertExitCode(1);
+    }
+
+    /**
+     * A disabled mailer already fails the command, so a missing Brevo key is not
+     * a second thing to report — it would only bury the first.
+     */
+    public function test_it_does_not_also_complain_about_brevo_when_mail_is_off(): void
+    {
+        config([
+            'mail.enabled' => false,
+            'mail.default' => 'log',
+            'services.brevo.api_key' => null,
+        ]);
+
+        $this->artisan('mail:diagnose')
+            ->doesntExpectOutputToContain('BREVO_API_KEY')
+            ->assertExitCode(1);
     }
 
     /**
@@ -58,6 +103,7 @@ class MailDiagnoseTest extends TestCase
             'mail.enabled' => true,
             'mail.default' => 'resend',
             'mail.from.address' => 'onboarding@resend.dev',
+            'services.brevo.api_key' => 'xkeysib-test-key',
         ]);
 
         $this->artisan('mail:diagnose')
@@ -104,12 +150,69 @@ class MailDiagnoseTest extends TestCase
             'mail.mailers.smtp.host' => 'smtp-relay.brevo.com',
             'mail.mailers.smtp.username' => 'account@smtp-brevo.com',
             'mail.from.address' => 'no-reply@hirehub.test',
+            'services.brevo.api_key' => 'xkeysib-test-key',
         ]);
 
-        \Illuminate\Support\Facades\Mail::fake();
+        Mail::fake();
 
         $this->artisan('mail:diagnose')->assertExitCode(0);
 
-        \Illuminate\Support\Facades\Mail::assertNothingSent();
+        Mail::assertNothingSent();
+    }
+
+    /**
+     * The --to send has to take the same route as a real code, or the command
+     * would prove the wrong thing: a green test send over SMTP while every
+     * actual code goes over the Brevo API and fails.
+     */
+    public function test_a_real_send_goes_through_the_brevo_api_like_a_real_code(): void
+    {
+        config([
+            'mail.enabled' => true,
+            'mail.default' => 'smtp',
+            'mail.mailers.smtp.host' => 'smtp-relay.brevo.com',
+            'mail.mailers.smtp.username' => 'account@smtp-brevo.com',
+            'mail.from.address' => 'no-reply@hirehub.test',
+            'mail.from.name' => 'HireHub',
+            'services.brevo.api_key' => 'xkeysib-test-key',
+        ]);
+
+        Mail::fake();
+        Http::preventStrayRequests();
+        Http::fake([
+            'https://api.brevo.com/v3/smtp/email' => Http::response(['messageId' => 'fake-message-id'], 201),
+        ]);
+
+        $this->artisan('mail:diagnose', ['--to' => 'ops@hirehub.test', '--purpose' => 'verify'])
+            ->assertExitCode(0);
+
+        Http::assertSent(fn ($request): bool => $request->url() === 'https://api.brevo.com/v3/smtp/email'
+            && ($request->data()['to'][0]['email'] ?? null) === 'ops@hirehub.test');
+        Mail::assertNothingSent();
+    }
+
+    /**
+     * With mail disabled Otp::deliver() writes the code to the log and returns
+     * without raising, so the command must say so rather than report a delivery
+     * that never happened.
+     */
+    public function test_a_real_send_fails_loudly_when_mail_is_disabled(): void
+    {
+        config([
+            'mail.enabled' => false,
+            'mail.default' => 'log',
+            'mail.from.address' => 'no-reply@hirehub.test',
+            'services.brevo.api_key' => 'xkeysib-test-key',
+        ]);
+
+        Mail::fake();
+        Http::preventStrayRequests();
+
+        $this->artisan('mail:diagnose', ['--to' => 'ops@hirehub.test'])
+            ->expectsOutputToContain('MAIL_ENABLED is false — the code would only be written to the log.')
+            ->assertExitCode(1);
+
+        Http::assertNothingSent();
+        Mail::assertNothingSent();
     }
 }

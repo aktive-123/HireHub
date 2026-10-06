@@ -4,7 +4,6 @@ namespace Tests\Feature;
 
 use App\Enums\AccountStatus;
 use App\Enums\UserRole;
-use App\Mail\OtpMail;
 use App\Models\OtpCode;
 use App\Models\User;
 use App\Support\Otp;
@@ -19,11 +18,6 @@ use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Laravel\Sanctum\PersonalAccessToken;
 use RuntimeException;
-use Symfony\Component\Mailer\Envelope;
-use Symfony\Component\Mailer\Exception\TransportException;
-use Symfony\Component\Mailer\SentMessage as SymfonySentMessage;
-use Symfony\Component\Mailer\Transport\TransportInterface;
-use Symfony\Component\Mime\RawMessage;
 use Tests\ApiTestCase;
 use Tests\InteractsWithOtp;
 use UnexpectedValueException;
@@ -702,7 +696,7 @@ class SecurityTest extends ApiTestCase
 
     public function test_a_gateway_that_rejects_the_send_does_not_break_registration(): void
     {
-        $this->useFailingMailTransport();
+        $this->useFailingBrevoApi();
 
         $response = $this->postJson('/api/v1/auth/register', [
             'first_name' => 'Ada',
@@ -735,7 +729,7 @@ class SecurityTest extends ApiTestCase
             'status' => AccountStatus::Pending,
         ]);
 
-        $this->useFailingMailTransport();
+        $this->useFailingBrevoApi();
 
         // Correct password, unverified address, dead gateway. The answer is the
         // same 403 the flow gives in every other case — the exception must not
@@ -758,7 +752,7 @@ class SecurityTest extends ApiTestCase
             'status' => AccountStatus::Pending,
         ]);
 
-        $this->useFailingMailTransport();
+        $this->useFailingBrevoApi();
 
         $this->postJson('/api/v1/auth/login', [
             'email' => 'pending@example.com',
@@ -826,13 +820,18 @@ class SecurityTest extends ApiTestCase
         $this->assertDatabaseMissing('otp_codes', ['email' => $recipient]);
     }
 
-    public function test_email_verification_keeps_using_the_existing_mailer(): void
+    public function test_email_verification_code_is_sent_through_the_brevo_api(): void
     {
         Mail::fake();
         Http::preventStrayRequests();
+        Http::fake([
+            'https://api.brevo.com/v3/smtp/email' => Http::response(['messageId' => 'fake-message-id'], 201),
+        ]);
+        $apiKey = Str::random(48);
         config([
             'mail.enabled' => true,
             'queue.default' => 'database',
+            'services.brevo.api_key' => $apiKey,
         ]);
 
         $user = $this->seeker([
@@ -845,8 +844,19 @@ class SecurityTest extends ApiTestCase
             ->postJson('/api/v1/auth/email/verification-notification')
             ->assertOk();
 
-        Mail::assertSent(OtpMail::class, fn (OtpMail $mail): bool => $mail->purpose === OtpCode::PURPOSE_VERIFY);
-        Http::assertNothingSent();
+        // The signup code rides the same API as a password-reset code, so a
+        // broken SMTP mailer can never take registration down with it.
+        Http::assertSent(function (ClientRequest $request) use ($apiKey): bool {
+            $payload = $request->data();
+
+            return $request->url() === 'https://api.brevo.com/v3/smtp/email'
+                && $request->hasHeader('api-key', $apiKey)
+                && ($payload['to'][0]['email'] ?? null) === 'verify@example.com'
+                && str_contains($payload['subject'] ?? '', 'verify your email address')
+                && str_contains($payload['htmlContent'] ?? '', 'Verify your email address');
+        });
+
+        Mail::assertNothingSent();
     }
 
     public function test_a_refused_send_answers_the_resend_with_503_not_a_throttle(): void
@@ -858,7 +868,7 @@ class SecurityTest extends ApiTestCase
             'status' => AccountStatus::Pending,
         ]);
 
-        $this->useFailingMailTransport();
+        $this->useFailingBrevoApi();
         $this->asApiUser($user);
 
         $response = $this->postJson('/api/v1/auth/email/verification-notification');
@@ -872,31 +882,25 @@ class SecurityTest extends ApiTestCase
     }
 
     /**
-     * Point the application at a transport that refuses every message, which is
+     * Point OTP delivery at a provider that refuses every message, which is
      * what an unverified sender domain, a revoked API key or a provider outage
-     * looks like from inside the app.
+     * looks like from inside the app. One-time passwords go over the Brevo
+     * HTTP API, so the refusal arrives as an HTTP error body rather than an
+     * SMTP reply.
      */
-    private function useFailingMailTransport(string $failureMessage = 'The example.com domain is not verified.'): void
+    private function useFailingBrevoApi(string $failureMessage = 'The example.com domain is not verified.'): void
     {
-        Mail::extend('failing', fn (array $config = []) => new class($failureMessage) implements TransportInterface
-        {
-            public function __construct(private readonly string $failureMessage) {}
-
-            public function send(RawMessage $message, ?Envelope $envelope = null): ?SymfonySentMessage
-            {
-                throw new TransportException($this->failureMessage);
-            }
-
-            public function __toString(): string
-            {
-                return 'failing://';
-            }
-        });
+        Http::preventStrayRequests();
+        Http::fake([
+            'https://api.brevo.com/v3/smtp/email' => Http::response([
+                'code' => 'invalid_parameter',
+                'message' => $failureMessage,
+            ], 400),
+        ]);
 
         config([
             'mail.enabled' => true,
-            'mail.default' => 'failing',
-            'mail.mailers.failing' => ['transport' => 'failing'],
+            'services.brevo.api_key' => Str::random(48),
         ]);
     }
 

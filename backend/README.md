@@ -249,7 +249,7 @@ once `config:cache` is in play):
 | `FRONTEND_URL` | Origin for verification, reset and payment-return links. |
 | `PAYMENT_GATEWAY`, `PAYMENT_CURRENCY`, and that gateway's keys | Without them subscriptions cannot be bought and hires cannot be confirmed. See [Payments](#payments). |
 | `APP_DEBUG=false`, `SECURITY_EXPOSE_DEBUG=false` | Never ship stack traces. |
-| `MAIL_ENABLED=true`, `MAIL_MAILER`, provider credentials, `BREVO_API_KEY` | Required for email. Password-reset OTPs use Brevo's HTTPS API; other mail follows the configured Laravel mailer. |
+| `MAIL_ENABLED=true`, `BREVO_API_KEY`, `MAIL_MAILER`, provider credentials | Required for email. One-time password codes (signup verification and password reset) are sent through Brevo's HTTPS API with `BREVO_API_KEY`; newsletters, platform notices and other application mail follow the configured Laravel mailer. |
 
 
 `SESSION_SECURE_COOKIE` defaults to true everywhere except `APP_ENV=local`, where
