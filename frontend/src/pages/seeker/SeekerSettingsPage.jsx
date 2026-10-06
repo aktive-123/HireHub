@@ -9,6 +9,7 @@ import Alert from '../../components/ui/Alert'
 import ConfirmDialog from '../../components/ui/ConfirmDialog'
 import SessionSecurityCard from '../../components/common/SessionSecurityCard'
 import ProfilePhotoCard from '../../components/common/ProfilePhotoCard'
+import ChangePasswordCard from '../../components/common/ChangePasswordCard'
 import { authApi } from '../../services/api'
 import { useAccountSettings } from '../../hooks/useAccountSettings'
 import { DIAL_CODE, PHONE_PLACEHOLDER } from '../../constants/nigeria'
@@ -57,10 +58,6 @@ export default function SeekerSettingsPage() {
     clearMessage,
   } = useAccountSettings()
 
-  const [passwords, setPasswords] = useState({ current: '', next: '', confirm: '' })
-  const [passwordBusy, setPasswordBusy] = useState(false)
-  const [passwordError, setPasswordError] = useState(null)
-  const [passwordDone, setPasswordDone] = useState(false)
   const [confirmDeactivate, setConfirmDeactivate] = useState(false)
   const [deactivating, setDeactivating] = useState(false)
   const [deactivateError, setDeactivateError] = useState(false)
@@ -70,30 +67,6 @@ export default function SeekerSettingsPage() {
   const handleSave = async (event) => {
     event.preventDefault()
     await save()
-  }
-
-  const handleChangePassword = async (event) => {
-    event.preventDefault()
-    setPasswordError(null)
-    setPasswordDone(false)
-    if (passwords.next !== passwords.confirm) {
-      setPasswordError('The new password and its confirmation do not match.')
-      return
-    }
-    setPasswordBusy(true)
-    try {
-      await authApi.changePassword({
-        current_password: passwords.current,
-        password: passwords.next,
-        password_confirmation: passwords.confirm,
-      })
-      setPasswords({ current: '', next: '', confirm: '' })
-      setPasswordDone(true)
-    } catch (err) {
-      setPasswordError(err?.message || 'Could not update your password.')
-    } finally {
-      setPasswordBusy(false)
-    }
   }
 
   const handleDeactivate = async () => {
@@ -285,67 +258,10 @@ export default function SeekerSettingsPage() {
 
           {!loading && (
             <>
-              {/* Separate form: nesting a <form> inside the settings form is
-                  invalid HTML and browsers drop one of the two submit
-                  handlers. */}
+              {/* Its own form: a <form> nested inside the settings form is
+                  invalid HTML and one of the two submit handlers is lost. */}
               <Reveal delay={180}>
-                <Card className="hh-card-body hh-mb-4">
-                  <div className="hh-card-title-md hh-mb-4">Change password</div>
-                  <form onSubmit={handleChangePassword}>
-                    <div className="row g-3">
-                      <div className="col-12 col-md-4">
-                        <FormInput
-                          label="Current password"
-                          type="password"
-                          value={passwords.current}
-                          onChange={(e) => setPasswords((p) => ({ ...p, current: e.target.value }))}
-                          disabled={passwordBusy}
-                          required
-                        />
-                      </div>
-                      <div className="col-12 col-md-4">
-                        <FormInput
-                          label="New password"
-                          type="password"
-                          value={passwords.next}
-                          onChange={(e) => setPasswords((p) => ({ ...p, next: e.target.value }))}
-                          disabled={passwordBusy}
-                          helperText="At least 8 characters."
-                          required
-                        />
-                      </div>
-                      <div className="col-12 col-md-4">
-                        <FormInput
-                          label="Confirm new password"
-                          type="password"
-                          value={passwords.confirm}
-                          onChange={(e) => setPasswords((p) => ({ ...p, confirm: e.target.value }))}
-                          disabled={passwordBusy}
-                          required
-                        />
-                      </div>
-                    </div>
-                    {passwordError ? (
-                      <Alert variant="danger" className="mb-3">
-                        {passwordError}
-                      </Alert>
-                    ) : null}
-                    {passwordDone ? (
-                      <Alert variant="success" className="mb-3">
-                        Password updated. Other devices have been signed out.
-                      </Alert>
-                    ) : null}
-                    <Button
-                      type="submit"
-                      variant="outline"
-                      size="sm"
-                      icon="bi-shield-lock"
-                      disabled={passwordBusy || !passwords.current || !passwords.next}
-                    >
-                      {passwordBusy ? 'Updating…' : 'Update password'}
-                    </Button>
-                  </form>
-                </Card>
+                <ChangePasswordCard />
               </Reveal>
 
               <Reveal delay={200}>

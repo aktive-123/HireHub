@@ -3,6 +3,7 @@ import AdminPageHeader from '../../components/admin/AdminPageHeader'
 import AdminStatGrid from '../../components/admin/AdminStatGrid'
 import UserCell from '../../components/admin/UserCell'
 import RowDetailModal from '../../components/admin/RowDetailModal'
+import ResetPasswordButton from '../../components/admin/ResetPasswordButton'
 import Badge from '../../components/ui/Badge'
 import Alert from '../../components/ui/Alert'
 import StatusBadge from '../../components/ui/StatusBadge'
@@ -77,6 +78,18 @@ ${detail}`)) return
     { key: 'active', label: 'Active Accounts', value: activeCount, icon: 'bi-check-circle', tone: 'success' },
     { key: 'pending', label: 'Pending Review', value: pendingCount, icon: 'bi-hourglass-split', tone: 'warning' },
   ]
+
+  // Mirrors AdminUsersPage: the dialog owns the one-time password, so the page
+  // only acknowledges the event and refreshes the row.
+  const handlePasswordReset = (emp, res) => {
+    setNotice({
+      type: res?.notification_sent ? 'success' : 'warning',
+      message: res?.notification_sent
+        ? `${emp.contact} must set a new password at next sign-in.`
+        : `${emp.contact} must set a new password at next sign-in, but the email could not be sent — share the temporary password directly.`,
+    })
+    setReloadTick((tick) => tick + 1)
+  }
 
   const tabs = [
     { key: 'all', label: 'All', count: employers.length },
@@ -193,6 +206,7 @@ ${detail}`)) return
                     >
                       <i className="bi bi-eye" aria-hidden="true" />
                     </button>
+                    <ResetPasswordButton user={{ id: emp.id, name: emp.contact }} onDone={handlePasswordReset} />
                     <button
                       type="button"
                       className={`hh-icon-btn hh-tip-start ${emp.status === 'suspended' ? 'hh-icon-btn-success' : 'hh-icon-btn-danger'}`}

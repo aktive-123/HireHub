@@ -14,6 +14,7 @@ use App\Http\Resources\V1\AdminJobResource;
 use App\Http\Resources\V1\ApplicationResource;
 use App\Http\Resources\V1\CompanyResource;
 use App\Http\Resources\V1\PaymentResource;
+use App\Mail\PasswordResetByAdminMail;
 use App\Models\ActivityLog;
 use App\Models\Application;
 use App\Models\Category;
@@ -30,14 +31,20 @@ use App\Models\Setting;
 use App\Models\User;
 use App\Services\HiringFeeService;
 use App\Services\Upsell\UpsellCatalogue;
+use App\Support\FrontendUrl;
 use App\Support\Notifier;
+use App\Support\TemporaryPassword;
 use Carbon\CarbonPeriod;
 use Illuminate\Http\Request;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
+use Throwable;
 
 class AdminController extends ApiController
 {
@@ -167,6 +174,102 @@ class AdminController extends ApiController
         ActivityLog::record($request->user(), 'updated user status', $user, request: $request);
 
         return $this->success($this->userShape($user->refresh()), 'User status updated.');
+    }
+
+    /**
+     * Reset a member's password from the console.
+     *
+     * The account stays usable — locking somebody out of the platform on the
+     * strength of one admin's click would be worse than the problem being
+     * solved — but it is confined by RequirePasswordChange until the owner picks
+     * a password of their own. Without that flag the temporary password becomes
+     * a permanent credential the moment it is read out of an email, and the
+     * whole "admin can reset passwords" feature quietly becomes a way to hand
+     * out permanent credentials.
+     *
+     * Three deliberate choices:
+     *
+     *  - The temporary password is returned once, to the admin, and never
+     *    emailed. Mail is a store the platform cannot revoke; this keeps the
+     *    fallback credential in the hands of the person who asked for the reset,
+     *    who can pass it on by whatever channel they trust.
+     *  - The email carries a link to the ordinary recovery flow, so the normal
+     *    path needs no secret at all.
+     *  - Every existing token is revoked. A reset is the remedy for a suspected
+     *    compromise, and leaving the attacker's session alive would defeat it.
+     *
+     * @throws ValidationException
+     */
+    public function resetUserPassword(Request $request, User $user)
+    {
+        $admin = $request->user();
+
+        // An admin resetting another admin would be a privilege-laundering path:
+        // a lower-trust admin could take over a higher-trust account and inherit
+        // everything attached to it. Self-service covers the admin's own needs
+        // through Settings, so there is no legitimate case for this.
+        abort_if($user->isAdmin(), 403, 'Admin accounts must change their own password from settings.');
+
+        $temporary = TemporaryPassword::generate();
+
+        $user->forceFill([
+            'password' => Hash::make($temporary),
+            'must_change_password' => true,
+            // A consumed reset grant belongs to the old password's owner and
+            // could otherwise authorise a change immediately after this reset.
+            'password_reset_grant_hash' => null,
+            'password_reset_grant_expires_at' => null,
+            'remember_token' => Str::random(60),
+        ])->save();
+
+        $user->revokeTokens();
+
+        $mailed = $this->sendResetNotice($user, $admin);
+
+        ActivityLog::record($admin, 'admin.password.reset', $user, 'warning', $request);
+
+        return $this->success([
+            'user' => $this->userShape($user->refresh()),
+            'temporary_password' => $temporary,
+            'notification_sent' => $mailed,
+        ], 'Password reset. Share the temporary password with the user, or ask them to follow the link we emailed.');
+    }
+
+    /**
+     * Tell the member their password was reset.
+     *
+     * Sent in-request rather than queued, for the same reason the one-time
+     * password mail is: the console's Dockerfile supervises no queue worker, so
+     * a queued message on Render would sit in the `jobs` table forever and the
+     * admin would be told it was sent when it was not. A transport failure is
+     * therefore reported as `notification_sent: false` instead of being allowed
+     * to surface as a 500 — the reset itself has already succeeded by then and
+     * must not be undone because a mail server is down.
+     */
+    private function sendResetNotice(User $user, User $admin): bool
+    {
+        if (! config('mail.enabled', false)) {
+            return false;
+        }
+
+        try {
+            Mail::to($user->email)->send(new PasswordResetByAdminMail(
+                recipientName: $user->name,
+                adminName: $admin->name,
+                resetUrl: FrontendUrl::to('/reset-password'),
+                appName: (string) config('app.name'),
+            ));
+
+            return true;
+        } catch (Throwable $e) {
+            Log::channel('stderr')->error('Admin password reset notice could not be delivered.', [
+                'event' => 'admin.password.reset.notice_failed',
+                'user_id' => $user->id,
+                'failure_type' => $e::class,
+            ]);
+
+            return false;
+        }
     }
 
     public function deleteUser(Request $request, User $user)

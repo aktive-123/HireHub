@@ -7,6 +7,8 @@ import FormInput from '../../components/ui/FormInput'
 import FormSelect from '../../components/ui/FormSelect'
 import HiringFeeRatesSection from '../../components/admin/HiringFeeRatesSection'
 import ProfilePhotoCard from '../../components/common/ProfilePhotoCard'
+import ChangePasswordCard from '../../components/common/ChangePasswordCard'
+import SessionSecurityCard from '../../components/common/SessionSecurityCard'
 import { adminApi } from '../../services/api'
 import { useAdminData } from '../../hooks/useAdminData'
 
@@ -154,6 +156,13 @@ export default function AdminSettingsPage() {
         />
 
         <ProfilePhotoCard />
+
+        {/* An admin holds the keys to the whole platform, so its own credentials
+            are the ones most worth being able to rotate without an engineer.
+            Without this the only route was the forgot-password email flow. */}
+        <ChangePasswordCard />
+
+        <SessionSecurityCard />
 
         <Card className="hh-card-body hh-mb-4">
           <h3 className="hh-card-title-md hh-mb-3">General</h3>

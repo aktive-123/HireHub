@@ -1,4 +1,5 @@
 import { Link, NavLink, Navigate, Outlet, useLocation } from 'react-router-dom'
+import RequirePasswordChange from '../components/auth/RequirePasswordChange'
 import whiteLogo from '../assets/white logo.png'
 import { useAuth } from '../context/AuthContext'
 import ErrorBoundary from '../components/common/ErrorBoundary'
@@ -157,7 +158,9 @@ export default function SeekerLayout() {
 
         <main className="hh-dashboard-body" id="main-content">
           <ErrorBoundary>
-            <Outlet />
+            <RequirePasswordChange>
+              <Outlet />
+            </RequirePasswordChange>
           </ErrorBoundary>
         </main>
       </div>

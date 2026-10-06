@@ -2,6 +2,7 @@ import { useState, useMemo } from 'react'
 import AdminPageHeader from '../../components/admin/AdminPageHeader'
 import UserCell from '../../components/admin/UserCell'
 import RowDetailModal from '../../components/admin/RowDetailModal'
+import ResetPasswordButton from '../../components/admin/ResetPasswordButton'
 import Badge from '../../components/ui/Badge'
 import StatusBadge from '../../components/ui/StatusBadge'
 import DataTable from '../../components/ui/DataTable'
@@ -66,6 +67,18 @@ export default function AdminUsersPage() {
     } finally {
       setPendingId(null)
     }
+  }
+
+  // The temporary password lives in the dialog's own state, so the table only
+  // needs to acknowledge the event and reflect the flag on the row badge.
+  const handlePasswordReset = (user, res) => {
+    setNotice({
+      type: res?.notification_sent ? 'success' : 'warning',
+      message: res?.notification_sent
+        ? `${user.name} must set a new password at next sign-in.`
+        : `${user.name} must set a new password at next sign-in, but the email could not be sent — share the temporary password directly.`,
+    })
+    setReloadTick((tick) => tick + 1)
   }
 
   const tabs = [
@@ -164,6 +177,12 @@ export default function AdminUsersPage() {
                     >
                       <i className="bi bi-eye" aria-hidden="true" />
                     </button>
+                    {/* Admins reset themselves from Settings, and the endpoint
+                        refuses other admin accounts, so the control is hidden
+                        rather than shown and failing on click. */}
+                    {user.role !== 'admin' && (
+                      <ResetPasswordButton user={user} onDone={handlePasswordReset} />
+                    )}
                     <button
                       type="button"
                       className={`hh-icon-btn hh-tip-start ${user.status === 'suspended' ? 'hh-icon-btn-success' : 'hh-icon-btn-danger'}`}

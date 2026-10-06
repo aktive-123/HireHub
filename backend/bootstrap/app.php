@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Middleware\EnsureRole;
+use App\Http\Middleware\RequirePasswordChange;
 use App\Http\Middleware\RequiresPlanFeature;
 use App\Http\Middleware\SecurityHeaders;
 use App\Support\ApiExceptionRenderer;
@@ -34,6 +35,15 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->alias([
             'role' => EnsureRole::class,
             'plan' => RequiresPlanFeature::class,
+        ]);
+
+        // Appended to the authenticated api group so an account holding an
+        // admin-issued password can still reach the endpoints that let it fix
+        // itself, and nothing else. Applied as middleware rather than as a check
+        // inside each controller so that a route added later is confined by
+        // default instead of by remembering.
+        $middleware->api(append: [
+            RequirePasswordChange::class,
         ]);
 
         // The Host header decides the origin of every absolute link this API

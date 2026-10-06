@@ -214,6 +214,7 @@ Route::middleware(['auth:sanctum', 'role:admin'])->prefix('v1/admin')->group(fun
     Route::get('dashboard', [AdminController::class, 'dashboard']);
     Route::get('users', [AdminController::class, 'users']);
     Route::patch('users/{user}/status', [AdminController::class, 'updateUserStatus'])->middleware('throttle:write');
+    Route::post('users/{user}/reset-password', [AdminController::class, 'resetUserPassword'])->middleware('throttle:write');
     Route::delete('users/{user}', [AdminController::class, 'deleteUser'])->middleware('throttle:write');
     Route::get('job-seekers', [AdminController::class, 'jobSeekers']);
     Route::get('employers', [AdminController::class, 'employers']);

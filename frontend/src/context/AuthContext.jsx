@@ -128,6 +128,10 @@ export function AuthProvider({ children }) {
       user,
       isAuthenticated: Boolean(user),
       role: user?.role ?? null,
+      // Derived rather than stored separately: the API sets this on the user
+      // record, so the cached session already carries it and a page refresh
+      // keeps the account confined.
+      mustChangePassword: user?.must_change_password === true,
       loading,
       bootstrapped,
       login,

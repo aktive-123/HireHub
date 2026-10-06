@@ -618,6 +618,13 @@ export const adminApi = {
     const res = await apiClient.patch(`/v1/admin/users/${num(id)}/status`, { status })
     return res.data
   },
+  // Issues a temporary password and marks the account as needing to change it.
+  // The returned password is shown to the admin once and never emailed to the
+  // user, so the UI has to hold it rather than re-fetch it.
+  async resetUserPassword(id) {
+    const res = await apiClient.post(`/v1/admin/users/${num(id)}/reset-password`)
+    return res.data
+  },
   async deleteUser(id) {
     return apiClient.delete(`/v1/admin/users/${num(id)}`)
   },

@@ -243,6 +243,10 @@ class VerificationController extends ApiController
         $user->forceFill([
             'password' => Hash::make($validated['password']),
             'remember_token' => Str::random(60),
+            // Choosing a password is what the flag is asking for, whichever way
+            // the owner got here. An admin-issued password that was recovered
+            // through this link is still not the owner's own choice.
+            'must_change_password' => false,
         ])->save();
 
         // Every token was issued under the old password. Leaving them alive

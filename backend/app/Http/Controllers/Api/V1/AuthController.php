@@ -249,6 +249,11 @@ class AuthController extends ApiController
             'token' => $token,
             'token_type' => 'Bearer',
             'user' => new UserResource($user),
+            // Signed in, but on a password an admin chose. The token is valid;
+            // RequirePasswordChange is what confines the account until the
+            // owner replaces it, and this flag is what lets the client show the
+            // change screen instead of a dashboard that will 403 on every call.
+            'must_change_password' => $user->requiresPasswordChange(),
         ], 'Login successful.');
     }
 

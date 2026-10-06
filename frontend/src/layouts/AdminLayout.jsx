@@ -1,4 +1,5 @@
 import { Link, NavLink, Navigate, Outlet } from 'react-router-dom'
+import RequirePasswordChange from '../components/auth/RequirePasswordChange'
 import whiteLogo from '../assets/white logo.png'
 import AdminNotificationBell from '../components/admin/AdminNotificationBell'
 import ErrorBoundary from '../components/common/ErrorBoundary'
@@ -169,7 +170,9 @@ export default function AdminLayout() {
 
         <main className="hh-dashboard-body" id="main-content">
           <ErrorBoundary>
-            <Outlet />
+            <RequirePasswordChange>
+              <Outlet />
+            </RequirePasswordChange>
           </ErrorBoundary>
         </main>
       </div>

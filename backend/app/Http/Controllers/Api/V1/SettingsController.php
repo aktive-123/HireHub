@@ -166,7 +166,13 @@ class SettingsController extends ApiController
             ]);
         }
 
-        $user->forceFill(['password' => Hash::make($validated['password'])])->save();
+        $user->forceFill([
+            'password' => Hash::make($validated['password']),
+            // Satisfying the requirement is what clears it. Left in place, the
+            // account would stay confined to the change-password screen after
+            // having satisfied it, which reads as the change having failed.
+            'must_change_password' => false,
+        ])->save();
 
         $currentTokenId = $request->user()->currentAccessToken()?->id;
 

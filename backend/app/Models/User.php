@@ -23,6 +23,11 @@ class User extends Authenticatable
      * any endpoint that filled them from request input would be a vertical
      * privilege escalation, so they are only ever assigned explicitly by the
      * registration, auth and admin code paths.
+     *
+     * `must_change_password` is absent for a different reason: a user must never
+     * be able to clear it for themselves through a generic settings payload. It
+     * is set only by an admin reset and cleared only by the password change
+     * that satisfies it.
      */
     protected $fillable = [
         'name',
@@ -54,6 +59,7 @@ class User extends Authenticatable
             'role' => UserRole::class,
             'status' => AccountStatus::class,
             'two_factor_enabled' => 'boolean',
+            'must_change_password' => 'boolean',
             'email_preferences' => 'array',
             'notification_preferences' => 'array',
             'privacy_preferences' => 'array',
@@ -91,6 +97,18 @@ class User extends Authenticatable
     public function hasVerifiedEmail(): bool
     {
         return $this->email_verified_at !== null;
+    }
+
+    /**
+     * Whether this account is signed in on a password somebody else chose.
+     *
+     * True only between an admin-issued reset and the owner replacing it, so
+     * the API can withhold normal use of the account until that happens rather
+     * than trusting the user to notice an email.
+     */
+    public function requiresPasswordChange(): bool
+    {
+        return $this->must_change_password === true;
     }
 
     public function isSeeker(): bool

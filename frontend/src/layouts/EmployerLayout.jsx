@@ -1,4 +1,5 @@
 import { Link, NavLink, Navigate, Outlet } from 'react-router-dom'
+import RequirePasswordChange from '../components/auth/RequirePasswordChange'
 import ErrorBoundary from '../components/common/ErrorBoundary'
 import SessionGate from '../components/common/SessionGate'
 import PlanUsageIndicator from '../components/employer/PlanUsageIndicator'
@@ -157,7 +158,9 @@ export default function EmployerLayout() {
 
         <main className="hh-dashboard-body" id="main-content">
           <ErrorBoundary>
-            <Outlet />
+            <RequirePasswordChange>
+              <Outlet />
+            </RequirePasswordChange>
           </ErrorBoundary>
           {/* Mounted once for the whole console: any page that hits a plan
               refusal opens the upgrade prompt without knowing this exists. */}

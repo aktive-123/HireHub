@@ -580,3 +580,15 @@
 .hh-notif-link:hover {
   text-decoration: underline;
 }
+/* One-time temporary password in the admin reset dialog. Set in monospace and
+   given real padding so a 24-character credential stays scannable and does not
+   reflow the copy button next to it as the value changes. */
+.hh-temp-password {
+  display: block;
+  padding: var(--hh-space-3);
+  background: var(--hh-surface-muted, #f5f7fa);
+  border: 1px solid var(--hh-border);
+  border-radius: var(--hh-radius-md, 10px);
+  font-size: var(--hh-type-body-size);
+  user-select: all;
+}
