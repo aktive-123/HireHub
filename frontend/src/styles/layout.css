@@ -258,14 +258,26 @@
   background: transparent;
   border: none;
   color: var(--hh-secondary);
-  font-size: var(--hh-icon-xl);
+  /* The glyph steps to the top of the icon scale rather than to a one-off
+     26px: 24px (--hh-icon-xl) read as undersized next to the 28px CTA on
+     the same row, and an off-scale literal is exactly what the typography
+     audit rejects. --hh-icon-2xl is the next real step up at 32px. */
+  font-size: var(--hh-icon-2xl);
   cursor: pointer;
-  padding: var(--hh-space-1);
+  /* A glyph on its own is not a tap target: even at 32px it is below the
+     44x44px minimum for a touch control. The box is held at 44px so the row
+     height never jumps, and the glyph is centred inside it. */
+  min-width: 44px;
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
 }
 
 @media (max-width: 991.98px) {
   .hh-nav-toggle {
-    display: block;
+    display: inline-flex;
   }
 
   .hh-navbar-nav-collapse {

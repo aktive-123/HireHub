@@ -339,36 +339,36 @@ class ContactDetailsTest extends ApiTestCase
             ->assertJsonPath('data.state', 'Lagos');
     }
 
-/**
+    /**
      * A seeker's street address is a home address. Their own editor reads it
      * back, but the resource that other people see a seeker through must not
      * carry it, now that the column exists.
      */
-public function test_a_seeker_street_address_is_not_published_on_their_public_resource(): void
-{
-    $seeker = $this->seeker();
+    public function test_a_seeker_street_address_is_not_published_on_their_public_resource(): void
+    {
+        $seeker = $this->seeker();
 
-    $this->asApiUser($seeker)->patchJson('/api/v1/seeker/profile', [
-        'address_line' => '9 Private Close',
-        'city' => 'Lagos',
-        'state' => 'Lagos',
-    ])->assertOk();
+        $this->asApiUser($seeker)->patchJson('/api/v1/seeker/profile', [
+            'address_line' => '9 Private Close',
+            'city' => 'Lagos',
+            'state' => 'Lagos',
+        ])->assertOk();
 
-    $this->assertDatabaseHas('profiles', [
-        'user_id' => $seeker->id,
-        'address_line' => '9 Private Close',
-        'location' => 'Lagos, Lagos',
-    ]);
+        $this->assertDatabaseHas('profiles', [
+            'user_id' => $seeker->id,
+            'address_line' => '9 Private Close',
+            'location' => 'Lagos, Lagos',
+        ]);
 
-    $this->getJson('/api/v1/seeker/profile')
-        ->assertOk()
-        ->assertJsonPath('data.address_line', '9 Private Close');
+        $this->getJson('/api/v1/seeker/profile')
+            ->assertOk()
+            ->assertJsonPath('data.address_line', '9 Private Close');
 
-    $public = (new SeekerResource($seeker->fresh()->load('profile')))->toArray(request());
+        $public = (new SeekerResource($seeker->fresh()->load('profile')))->toArray(request());
 
-    $this->assertArrayNotHasKey('address_line', $public);
-    $this->assertSame('Lagos, Lagos', $public['location']);
-}
+        $this->assertArrayNotHasKey('address_line', $public);
+        $this->assertSame('Lagos, Lagos', $public['location']);
+    }
 
     public function test_a_half_filled_address_still_renders_something(): void
     {

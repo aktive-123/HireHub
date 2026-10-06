@@ -615,6 +615,11 @@
   justify-content: center;
   font-size: var(--hh-icon-2xl);
   margin-bottom: var(--hh-space-4);
+  /* The card is a flex column, so this wrapper is a flex item: its
+     `display: inline-flex` is blockified and the default align-self puts it
+     hard against the left edge at every width, not just on phones. The
+     inline-flex alone never centred it. */
+  align-self: center;
   position: relative;
   box-shadow: 0 8px 20px color-mix(in srgb, var(--hh-primary) 15%, transparent);
 }

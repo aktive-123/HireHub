@@ -15,6 +15,18 @@
   overflow: hidden;
 }
 
+/* Sub-page heroes are copy bands, not full-bleed showcases: on phones the
+   shared rhythm above pushed the title below the fold on short pages like
+   Find Jobs. Tighten both the block padding and the min-height at <768px so
+   the whole band sits in one screen. The Home hero (.hh-hero) is deliberately
+   left alone — it carries a search bar and is meant to fill the viewport. */
+@media (max-width: 767.98px) {
+  .hh-page-hero {
+    padding-block: clamp(2rem, 4vw, 2.75rem);
+    min-height: clamp(240px, 30vh, 320px);
+  }
+}
+
 .hh-page-hero > .page-container {
   position: relative;
   z-index: 1;
