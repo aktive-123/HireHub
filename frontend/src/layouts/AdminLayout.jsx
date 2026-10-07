@@ -1,11 +1,11 @@
-import { Link, NavLink, Navigate, Outlet } from 'react-router-dom'
+import { NavLink, Navigate, Outlet } from 'react-router-dom'
 import RequirePasswordChange from '../components/auth/RequirePasswordChange'
-import whiteLogo from '../assets/white logo.png'
 import AdminNotificationBell from '../components/admin/AdminNotificationBell'
 import ErrorBoundary from '../components/common/ErrorBoundary'
 import SessionGate from '../components/common/SessionGate'
 import UserAvatar from '../components/common/UserAvatar'
 import DashboardLogoutButton from '../components/common/DashboardLogoutButton'
+import DashboardShell from './DashboardShell'
 import { useAuth } from '../context/AuthContext'
 
 export default function AdminLayout() {
@@ -22,16 +22,11 @@ export default function AdminLayout() {
   if (!bootstrapped) return <SessionGate />
 
   return (
-    <div className="hh-dashboard-layout">
-      <aside className="hh-dashboard-sidebar">
-        <div className="hh-dashboard-sidebar-header">
-          <Link to="/" className="hh-dashboard-brand" aria-label="HireHub home">
-            <img src={whiteLogo} alt="HireHub" className="hh-dashboard-brand-logo" />
-          </Link>
-          <span className="hh-dashboard-brand-sub">System Administration</span>
-        </div>
-
-        <nav className="hh-dashboard-nav" aria-label="Admin Navigation">
+    <DashboardShell
+      portalName="System Administration"
+      navLabel="Admin Navigation"
+      nav={
+        <>
           <NavLink
             to="/admin"
             end
@@ -137,45 +132,34 @@ export default function AdminLayout() {
           >
             <i className="bi bi-sliders" /> Platform Settings
           </NavLink>
-        </nav>
-
-        <div className="p-3 border-top border-secondary">
-          <Link to="/" className="hh-dashboard-nav-link text-danger">
-            <i className="bi bi-box-arrow-right" /> Exit to Website
-          </Link>
-          <DashboardLogoutButton />
-        </div>
-      </aside>
-
-      <div className="hh-dashboard-content">
-        <header className="hh-dashboard-topbar">
-          <div className="fw-semibold text-secondary">Superadmin Control Center</div>
-          <div className="d-flex align-items-center gap-3">
-            <AdminNotificationBell />
-            <div className="d-flex align-items-center gap-2 hh-topbar-user">
-              <UserAvatar
-                name={user?.name}
-                avatarUrl={user?.avatar_url}
-                className="hh-avatar hh-avatar-sm hh-avatar-soft"
-              />
-              <div className="hh-topbar-user-meta d-none d-xxl-block">
-                <div className="hh-topbar-user-name">{user?.name || 'Administrator'}</div>
-                <div className="hh-topbar-user-role">Super Admin</div>
-              </div>
+        </>
+      }
+      sidebarFooter={<DashboardLogoutButton />}
+      topbarStart={<div className="fw-semibold text-secondary">Superadmin Control Center</div>}
+      topbarActions={
+        <>
+          <AdminNotificationBell />
+          <div className="d-flex align-items-center gap-2 hh-topbar-user">
+            <UserAvatar
+              name={user?.name}
+              avatarUrl={user?.avatar_url}
+              className="hh-avatar hh-avatar-sm hh-avatar-soft"
+            />
+            <div className="hh-topbar-user-meta d-none d-xxl-block">
+              <div className="hh-topbar-user-name">{user?.name || 'Administrator'}</div>
+              <div className="hh-topbar-user-role">Super Admin</div>
             </div>
-            <DashboardLogoutButton compact />
-            <span className="hh-badge hh-badge-accent">Admin Mode</span>
           </div>
-        </header>
-
-        <main className="hh-dashboard-body" id="main-content">
-          <ErrorBoundary>
-            <RequirePasswordChange>
-              <Outlet />
-            </RequirePasswordChange>
-          </ErrorBoundary>
-        </main>
-      </div>
-    </div>
+          <DashboardLogoutButton compact />
+          <span className="hh-badge hh-badge-accent">Admin Mode</span>
+        </>
+      }
+    >
+      <ErrorBoundary>
+        <RequirePasswordChange>
+          <Outlet />
+        </RequirePasswordChange>
+      </ErrorBoundary>
+    </DashboardShell>
   )
 }

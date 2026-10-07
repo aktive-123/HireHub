@@ -22,7 +22,7 @@ const TIMEZONES = [
   { value: 'Africa/Lagos', label: 'Lagos (WAT, UTC+1)' },
   { value: 'Africa/Accra', label: 'Accra (GMT, UTC+0)' },
   { value: 'Africa/Nairobi', label: 'Nairobi (EAT, UTC+3)' },
-  { value: 'UTC', label: 'Coordinated Universal Time (UTC+0)' },
+  { value: 'UTC', label: 'Coordinated Universal Time (UTC)' },
 ]
 
 const EMAIL_PREFS = [

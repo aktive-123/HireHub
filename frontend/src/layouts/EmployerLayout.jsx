@@ -6,7 +6,7 @@ import PlanUsageIndicator from '../components/employer/PlanUsageIndicator'
 import PlanPaywallModal from '../components/employer/PlanPaywallModal'
 import UserAvatar from '../components/common/UserAvatar'
 import DashboardLogoutButton from '../components/common/DashboardLogoutButton'
-import whiteLogo from '../assets/white logo.png'
+import DashboardShell from './DashboardShell'
 import { useAuth } from '../context/AuthContext'
 
 export default function EmployerLayout() {
@@ -20,16 +20,11 @@ export default function EmployerLayout() {
   if (!bootstrapped) return <SessionGate />
   const userName = user?.name || 'Employer'
   return (
-    <div className="hh-dashboard-layout">
-      <aside className="hh-dashboard-sidebar">
-        <div className="hh-dashboard-sidebar-header">
-          <Link to="/" className="hh-dashboard-brand" aria-label="HireHub home">
-            <img src={whiteLogo} alt="HireHub" className="hh-dashboard-brand-logo" />
-          </Link>
-          <span className="hh-dashboard-brand-sub">Employer Portal</span>
-        </div>
-
-        <nav className="hh-dashboard-nav" aria-label="Employer Navigation">
+    <DashboardShell
+      portalName="Employer Portal"
+      navLabel="Employer Navigation"
+      nav={
+        <>
           <NavLink
             to="/employer"
             end
@@ -122,51 +117,39 @@ export default function EmployerLayout() {
             <i className="bi bi-gear-fill" />
             <span className="hh-dashboard-nav-label">Settings</span>
           </NavLink>
-        </nav>
-
-        <div className="p-3 border-top border-secondary">
-          <Link to="/" className="hh-dashboard-nav-link text-danger">
-            <i className="bi bi-box-arrow-right" />
-            <span className="hh-dashboard-nav-label">Exit to Website</span>
+        </>
+      }
+      sidebarFooter={<DashboardLogoutButton />}
+      topbarStart={<div className="fw-semibold text-secondary">Employer Recruiting Center</div>}
+      topbarActions={
+        <>
+          <Link to="/employer/notifications" className="hh-topbar-icon hh-tip-bottom" data-tooltip="Notifications" aria-label="Notifications">
+            <i className="bi bi-bell" aria-hidden="true" />
           </Link>
-          <DashboardLogoutButton />
-        </div>
-      </aside>
-
-      <div className="hh-dashboard-content">
-        <header className="hh-dashboard-topbar">
-          <div className="fw-semibold text-secondary">Employer Recruiting Center</div>
-          <div className="d-flex align-items-center gap-3">
-            <Link to="/employer/notifications" className="hh-topbar-icon hh-tip-bottom" data-tooltip="Notifications" aria-label="Notifications">
-              <i className="bi bi-bell" aria-hidden="true" />
-            </Link>
-            <div className="d-flex align-items-center gap-2 hh-topbar-user">
-              <UserAvatar
-                name={userName}
-                avatarUrl={user?.avatar_url}
-                className="hh-avatar hh-avatar-sm hh-avatar-soft"
-              />
-              <div className="hh-topbar-user-meta d-none d-xl-block">
-                <div className="hh-topbar-user-name">{userName}</div>
-                <div className="hh-topbar-user-role">Employer</div>
-              </div>
+          <div className="d-flex align-items-center gap-2 hh-topbar-user">
+            <UserAvatar
+              name={userName}
+              avatarUrl={user?.avatar_url}
+              className="hh-avatar hh-avatar-sm hh-avatar-soft"
+            />
+            <div className="hh-topbar-user-meta d-none d-xl-block">
+              <div className="hh-topbar-user-name">{userName}</div>
+              <div className="hh-topbar-user-role">Employer</div>
             </div>
-            <span className="hh-badge hh-badge-accent">Employer</span>
-            <DashboardLogoutButton compact />
           </div>
-        </header>
-
-        <main className="hh-dashboard-body" id="main-content">
-          <ErrorBoundary>
-            <RequirePasswordChange>
-              <Outlet />
-            </RequirePasswordChange>
-          </ErrorBoundary>
-          {/* Mounted once for the whole console: any page that hits a plan
-              refusal opens the upgrade prompt without knowing this exists. */}
-          <PlanPaywallModal />
-        </main>
-      </div>
-    </div>
+          <span className="hh-badge hh-badge-accent">Employer</span>
+          <DashboardLogoutButton compact />
+        </>
+      }
+    >
+      <ErrorBoundary>
+        <RequirePasswordChange>
+          <Outlet />
+        </RequirePasswordChange>
+      </ErrorBoundary>
+      {/* Mounted once for the whole console: any page that hits a plan
+          refusal opens the upgrade prompt without knowing this exists. */}
+      <PlanPaywallModal />
+    </DashboardShell>
   )
 }

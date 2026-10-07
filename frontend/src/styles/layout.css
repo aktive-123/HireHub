@@ -589,6 +589,13 @@
   box-shadow: 0 1px 0 rgba(255, 255, 255, 0.9), var(--hh-shadow-sm);
 }
 
+/* The hamburger sits after the actions, so the actions cluster stays pinned to
+   the right-hand edge instead of drifting towards the middle once three items
+   share the line. (At md and up, where the header still fits on one line.) */
+.hh-dashboard-topbar-actions {
+  margin-left: auto;
+}
+
 .hh-dashboard-body {
   padding: var(--hh-space-6);
   flex-grow: 1;
@@ -605,15 +612,67 @@
   padding-block: var(--hh-space-3) var(--hh-space-8);
 }
 
+/* Scrim behind the off-canvas nav. It only ever exists below lg, where the
+   sidebar becomes a drawer; at lg and up it is removed from the layout
+   entirely so it can never intercept a click. */
+.hh-dashboard-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 1070;
+  background: rgba(11, 31, 58, 0.5);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity var(--hh-transition-fast);
+}
+
+.hh-dashboard-backdrop.is-open {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+@media (min-width: 992px) {
+  .hh-dashboard-backdrop {
+    display: none;
+  }
+}
+
+/* The hamburger lives inside the topbar, so raising the topbar while the
+   drawer is open keeps it above the scrim and tappable to close again. The
+   drawer itself sits one step higher (1080) and slides over the header — but
+   its `min(300px, 76vw)` width leaves the right-hand toggle uncovered. */
+.hh-dashboard-topbar.is-nav-open {
+  z-index: 1075;
+}
+
 @media (max-width: 991.98px) {
   .hh-dashboard-layout {
     flex-direction: column;
   }
 
+  /* Sidebar becomes an off-canvas drawer: fixed to the left edge, parked off
+     screen until the topbar hamburger opens it. `visibility` (rather than
+     opacity alone) takes it out of the tab order and the accessibility tree
+     while closed, and it still animates because `visibility` holds its start
+     value for the whole transition. The width is capped against the viewport
+     so the hamburger — pinned to the right edge of the header — is never
+     covered by the drawer. */
   .hh-dashboard-sidebar {
-    width: 100%;
+    position: fixed;
+    inset-block: 0;
+    inset-inline-start: 0;
+    z-index: 1080;
+    width: min(300px, 76vw);
     border-right: none;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    transform: translateX(-100%);
+    visibility: hidden;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    transition: transform var(--hh-transition), visibility var(--hh-transition);
+  }
+
+  .hh-dashboard-sidebar.is-open {
+    transform: none;
+    visibility: visible;
   }
 
   .hh-dashboard-body {
@@ -622,6 +681,49 @@
 
   .hh-dashboard-body > .hh-section-space {
     padding-block: var(--hh-space-2) var(--hh-space-7);
+  }
+}
+
+/* Below md the header no longer fits title + actions + hamburger on one line.
+   Grid (instead of letting flex-wrap decide) keeps the title and the toggle
+   paired on the first line — toggle hard against the top-right corner, the
+   same corner the public navbar puts it in — and gives the bell/chip/logout
+   cluster a full-width line of its own beneath. */
+@media (max-width: 767.98px) {
+  .hh-dashboard-topbar {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    column-gap: var(--hh-space-3);
+    row-gap: var(--hh-space-2);
+    align-items: center;
+  }
+
+  .hh-dashboard-topbar-start {
+    grid-column: 1;
+    grid-row: 1;
+    min-width: 0;
+    overflow: hidden;
+  }
+
+  .hh-dashboard-nav-toggle {
+    grid-column: 2;
+    grid-row: 1;
+    justify-self: end;
+  }
+
+  .hh-dashboard-topbar-actions {
+    grid-column: 1 / -1;
+    grid-row: 2;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    row-gap: var(--hh-space-2);
+  }
+
+  /* The page title already says where you are; on a phone the breadcrumb is
+     both redundant and (with `white-space: nowrap`) wider than the column it
+     sits in. */
+  .hh-dashboard-breadcrumb {
+    display: none;
   }
 }
 

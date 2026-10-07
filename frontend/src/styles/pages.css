@@ -22,8 +22,8 @@
    left alone — it carries a search bar and is meant to fill the viewport. */
 @media (max-width: 767.98px) {
   .hh-page-hero {
-    padding-block: clamp(2rem, 4vw, 2.75rem);
-    min-height: clamp(240px, 30vh, 320px);
+    padding-block: clamp(1.5rem, 5vw, 2rem);
+    min-height: clamp(200px, 26vh, 280px);
   }
 }
 
@@ -232,20 +232,32 @@
   line-height: var(--hh-type-body-lh);
   letter-spacing: var(--hh-type-body-ls);
   display: inline-flex;
-  align-items: center;
+  align-items: flex-start;
   gap: var(--hh-space-2);
   color: var(--hh-secondary);
   cursor: pointer;
   user-select: none;
-  white-space: nowrap;
+  /* Was `nowrap`: a long label ran straight past the phone viewport edge
+     (Settings measured 937px of content in a 390px screen). Wrapping keeps
+     the row inside the card, and flex-start + the 4px nudge below still
+     centres the box against a single line of text. */
+  white-space: normal;
 }
 
 .hh-check input {
+  flex: 0 0 auto;
   width: 16px;
   height: 16px;
   accent-color: var(--hh-primary);
-  margin: 0;
+  /* Half-leading of the label's first line: keeps the box optically centred
+     on one line and aligned with it once the label wraps. */
+  margin-top: calc((var(--hh-type-body-lh) * var(--hh-type-body-size) - 16px) / 2);
   cursor: pointer;
+}
+
+.hh-check label {
+  min-width: 0;
+  overflow-wrap: break-word;
 }
 
 .hh-result-count {
@@ -1319,9 +1331,25 @@
 }
 
 @media (max-width: 767.98px) {
+  .hh-jobs-search {
+    margin-top: var(--hh-space-4);
+  }
+
   .hh-jobs-search .hh-hero-search-bar {
     flex-direction: column;
     align-items: stretch;
+  }
+
+  /* `flex: 2 1 240px` above is written for the desktop row, where the basis
+     is a width. On phones the bar stacks vertically, so the same basis turns
+     into a 240px HEIGHT and the keyword input floats down inside it, leaving
+     ~110px of empty card above the field. Drop the basis when the axis
+     flips; min-width 0 lets the field shrink with the card instead of
+     forcing it wider than the viewport. */
+  .hh-jobs-search .hh-search-field,
+  .hh-jobs-search .hh-search-field:first-of-type {
+    flex: 0 0 auto;
+    min-width: 0;
   }
 
   .hh-jobs-search .hh-search-field {

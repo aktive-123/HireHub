@@ -26,6 +26,24 @@
   padding: var(--hh-space-5);
 }
 
+/* Phones: a full-width timezone picker must hand the browser a label it does
+   not have to cut into an ellipsis. Relax the card to the page gutter,
+   reclaim the select's arrow gutter, and drop the control's own font one size
+   for the two settings screens — combined they end the longest label
+   ("Coordinated Universal Time (UTC)") well inside the chevron. This is a
+   form control, not page copy, so 0.9375rem is not the "smaller text on a
+   smaller screen" direction the base type scale warns against. */
+@media (max-width: 575.98px) {
+  .hh-card-body {
+    padding: 12px;
+  }
+
+  .hh-card-body .form-select {
+    font-size: 0.9375rem;
+    padding-right: 1.25rem;
+  }
+}
+
 .hh-card-title-md {
   font-size: var(--hh-type-card-title-size);
   font-weight: var(--hh-type-card-title-weight);
@@ -1329,6 +1347,67 @@
 }
 
 /* -------------------------------------------------------------
+   Phones: the action drops onto its own line.
+   Both list rows share one failure mode below 768px. `.hh-app-action` is
+   `flex-shrink: 0`, so once a badge and a button sit side by side it is
+   wider than the card and the copy column collapses: notifications squeeze
+   to a word per line, and applications collapse to zero width so the
+   location text runs underneath the badge (the "Lag⊙sNew" overlap). Stack
+   the action instead — the copy then gets the full row. Matches the
+   .hh-page-hero mobile block in pages.css so both land on the same phones.
+------------------------------------------------------------- */
+@media (max-width: 767.98px) {
+  .hh-note-item {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    grid-template-areas:
+      "icon content dot"
+      "icon action action";
+    column-gap: var(--hh-space-4);
+    row-gap: var(--hh-space-3);
+    align-items: start;
+  }
+
+  .hh-note-icon {
+    grid-area: icon;
+  }
+
+  .hh-note-content {
+    grid-area: content;
+  }
+
+  .hh-note-dot {
+    grid-area: dot;
+    align-self: start;
+  }
+
+  .hh-note-item .hh-app-action {
+    grid-area: action;
+  }
+
+  .hh-app-row {
+    flex-wrap: wrap;
+    row-gap: var(--hh-space-3);
+  }
+
+  /* Percentage basis, not a fixed one: the leading element is 56px for an
+     avatar, 46px for a logo, 42px for a file icon, and 70% of the row
+     leaves room for all of them while still forcing the action (basis
+     100%) onto the next line. */
+  .hh-app-info,
+  .hh-file-info {
+    flex: 1 1 70%;
+    min-width: 0;
+  }
+
+  .hh-app-row .hh-app-action {
+    flex: 1 1 100%;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+  }
+}
+
+/* -------------------------------------------------------------
    Settings / danger zone
 ------------------------------------------------------------- */
 .hh-settings-desc {
@@ -2123,6 +2202,21 @@
 
 .hh-table-pagination .pagination {
   margin: 0;
+}
+
+/* On phones the page-number row is wider than the card it lives in when a
+   table has several pages: the "next" control runs past the viewport and
+   grows the document. Let the items wrap inside the card instead. */
+@media (max-width: 575.98px) {
+  .hh-table-pagination nav {
+    min-width: 0;
+    max-width: 100%;
+  }
+
+  .hh-table-pagination .pagination {
+    flex-wrap: wrap;
+    justify-content: center;
+  }
 }
 
 .hh-results-meta {

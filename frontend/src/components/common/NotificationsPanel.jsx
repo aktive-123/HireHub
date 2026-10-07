@@ -168,7 +168,7 @@ export default function NotificationsPanel({ api, eyebrow, subtitle }) {
                       <div className="hh-note-time">{note.time}</div>
                     </div>
                     {note.unread ? <span className="hh-note-dot" aria-hidden="true" /> : null}
-                    <div className="hh-app-action ms-2">
+                    <div className="hh-app-action">
                       {/*
                         A notification's call to action is a navigation, so the
                         link is the control. Nesting a <button> inside the
