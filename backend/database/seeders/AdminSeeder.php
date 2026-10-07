@@ -20,8 +20,8 @@ class AdminSeeder extends Seeder
 
         $admins = [
             [
-                'name' => 'Sarah Bello',
-                'email' => 'sarah.admin@hirehub.com',
+                'name' => 'HireHub Admin',
+                'email' => 'hirehub87@gmail.com',
                 'role' => UserRole::Admin,
                 'status' => AccountStatus::Active,
             ],
