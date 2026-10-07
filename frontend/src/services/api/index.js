@@ -199,6 +199,29 @@ export const authApi = {
   },
 }
 
+/**
+ * The public half of invite-only admin creation.
+ *
+ * The invitee has no account yet, so there is no session to authenticate
+ * against — both calls are addressed by the single-use token from the
+ * emailed link, which is exactly what the API authorises on. The accept
+ * response carries a normal login payload so the caller can store the session
+ * the same way /login does.
+ */
+export const adminInviteApi = {
+  async preview(token) {
+    const res = await apiClient.get(`/v1/admin-invitations/${encodeURIComponent(token)}`)
+    return res.data
+  },
+  async accept(token, payload) {
+    const res = await apiClient.post(
+      `/v1/admin-invitations/${encodeURIComponent(token)}/accept`,
+      payload
+    )
+    return res.data
+  },
+}
+
 export const plansApi = {
   async list() {
     const res = await apiClient.get('/v1/plans')
@@ -627,6 +650,28 @@ export const adminApi = {
   },
   async deleteUser(id) {
     return apiClient.delete(`/v1/admin/users/${num(id)}`)
+  },
+
+  // --- Admin invitations (invite-only admin creation) -----------------
+  //
+  // The only way to mint another admin: an existing one invites an address
+  // here, and the account is finished through the emailed link. Never wired
+  // to a public form — the endpoint is behind role:admin.
+
+  async invitations() {
+    const res = await apiClient.get('/v1/admin/invitations')
+    return res.data ?? []
+  },
+  // Returns { invitation, invite_url, notification_sent }. `invite_url` is
+  // present only in this response: the server stores the hash of its token,
+  // so there is no way to recover the link later and the UI has to offer the
+  // copy action while the result is on screen.
+  async inviteAdmin(email) {
+    const res = await apiClient.post('/v1/admin/invitations', { email })
+    return res.data
+  },
+  async revokeInvitation(id) {
+    return apiClient.delete(`/v1/admin/invitations/${num(id)}`)
   },
   async jobSeekers(params = {}) {
     const res = await apiClient.get(`/v1/admin/job-seekers${buildQuery({ per_page: 50, ...params })}`)

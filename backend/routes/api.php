@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Api\V1\AdminController;
+use App\Http\Controllers\Api\V1\AdminInvitationController;
 use App\Http\Controllers\Api\V1\ApplicationController;
 use App\Http\Controllers\Api\V1\AuthController;
 use App\Http\Controllers\Api\V1\CategoryController;
@@ -57,6 +58,20 @@ Route::prefix('v1')->group(function (): void {
     Route::get('newsletter/unsubscribe/{token}', [NewsletterController::class, 'unsubscribe'])
         ->middleware(['signed', 'throttle:public-read'])
         ->name('newsletter.unsubscribe');
+
+    // --- Admin invitations ---
+    //
+    // Unauthenticated on purpose: the invitee has no account yet, so the
+    // token in the path *is* the credential. It is 32 random bytes, looked up
+    // by hash, single-use and expiring — which is what lets these two live
+    // without a session. The GET is read-only and capped with the other
+    // public reads; the POST mints accounts, so it carries the generic
+    // credential cap.
+    Route::get('admin-invitations/{token}', [AdminInvitationController::class, 'preview'])
+        ->middleware('throttle:public-read');
+    Route::post('admin-invitations/{token}/accept', [AdminInvitationController::class, 'accept'])
+        ->middleware('throttle:auth');
+
     // --- Auth ---
     // Credential endpoints carry their own named limiters: the generic `auth`
     // cap stops one host from spraying, while `login` additionally counts per
@@ -216,6 +231,11 @@ Route::middleware(['auth:sanctum', 'role:admin'])->prefix('v1/admin')->group(fun
     Route::patch('users/{user}/status', [AdminController::class, 'updateUserStatus'])->middleware('throttle:write');
     Route::post('users/{user}/reset-password', [AdminController::class, 'resetUserPassword'])->middleware('throttle:write');
     Route::delete('users/{user}', [AdminController::class, 'deleteUser'])->middleware('throttle:write');
+    // Invite-only admin creation: issuance and revocation are admin-gated
+    // here; the public accept half lives outside this group above.
+    Route::get('invitations', [AdminInvitationController::class, 'index']);
+    Route::post('invitations', [AdminInvitationController::class, 'store'])->middleware('throttle:write');
+    Route::delete('invitations/{invitation}', [AdminInvitationController::class, 'destroy'])->middleware('throttle:write');
     Route::get('job-seekers', [AdminController::class, 'jobSeekers']);
     Route::get('employers', [AdminController::class, 'employers']);
     Route::get('companies', [AdminController::class, 'companies']);

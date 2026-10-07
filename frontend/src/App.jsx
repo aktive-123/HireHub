@@ -33,6 +33,7 @@ import RegisterEmployerPage from './pages/auth/RegisterEmployerPage'
 import ForgotPasswordPage from './pages/auth/ForgotPasswordPage'
 import ResetPasswordPage from './pages/auth/ResetPasswordPage'
 import VerifyEmailPage from './pages/auth/VerifyEmailPage'
+import AdminInvitePage from './pages/auth/AdminInvitePage'
 
 // Job Seeker Pages
 import SeekerDashboardPage from './pages/seeker/SeekerDashboardPage'
@@ -110,6 +111,10 @@ export default function App() {
               <Route path="/forgot-password" element={<ForgotPasswordPage />} />
               <Route path="/reset-password" element={<ResetPasswordPage />} />
               <Route path="/verify-email" element={<VerifyEmailPage />} />
+              {/* Invite-only admin creation: the token in the path is the
+                  credential — the account does not exist until the form on
+                  this page succeeds, so there is no session to check. */}
+              <Route path="/admin-invite/:token" element={<AdminInvitePage />} />
             </Route>
 
             {/* Job Seeker Dashboard Routes */}

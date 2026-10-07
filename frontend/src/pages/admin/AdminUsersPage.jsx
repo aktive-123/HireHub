@@ -3,6 +3,7 @@ import AdminPageHeader from '../../components/admin/AdminPageHeader'
 import UserCell from '../../components/admin/UserCell'
 import RowDetailModal from '../../components/admin/RowDetailModal'
 import ResetPasswordButton from '../../components/admin/ResetPasswordButton'
+import AdminInvitationsCard from '../../components/admin/AdminInvitationsCard'
 import Badge from '../../components/ui/Badge'
 import StatusBadge from '../../components/ui/StatusBadge'
 import DataTable from '../../components/ui/DataTable'
@@ -214,6 +215,8 @@ export default function AdminUsersPage() {
           total={filtered.length}
           onPageChange={setPage}
         />
+
+        <AdminInvitationsCard />
 
         <RowDetailModal
           isOpen={Boolean(viewing)}
